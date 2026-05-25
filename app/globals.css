@@ -744,9 +744,78 @@ select {
   color: white;
 }
 
+.auth-hero-stack {
+  display: grid;
+  gap: 22px;
+}
+
+.auth-hero-eyebrow {
+  color: white;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.auth-hero-title {
+  margin: 20px 0 12px;
+  font-size: clamp(2.8rem, 5vw, 4.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.auth-hero-copy {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
 .auth-panel {
   padding: 40px;
   background: rgba(255, 255, 255, 0.96);
+}
+
+.auth-panel-center {
+  display: grid;
+  place-items: center;
+}
+
+.auth-panel-inner {
+  width: 100%;
+}
+
+.auth-panel-center-inner {
+  max-width: 440px;
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+}
+
+.auth-panel-intro {
+  text-align: center;
+  max-width: 26rem;
+}
+
+.auth-panel-eyebrow {
+  margin: 0 0 8px;
+  color: var(--text-faint);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.auth-panel-title {
+  margin-bottom: 10px;
+  text-wrap: balance;
+}
+
+.auth-panel-copy {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.auth-clerk-shell {
+  width: 100%;
 }
 
 .overlay-panel-shell {
@@ -1097,12 +1166,52 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     grid-template-columns: 1fr;
   }
 
+  .auth-shell,
+  .onboarding-shell {
+    padding: 16px;
+    place-items: start center;
+  }
+
+  .auth-card {
+    width: min(100%, 560px);
+  }
+
+  .auth-hero,
+  .auth-panel {
+    order: initial;
+  }
+
   .auth-hero {
-    order: 2;
+    gap: 16px;
+    padding-bottom: 18px;
+  }
+
+  .auth-hero-title {
+    margin: 16px 0 10px;
+    font-size: clamp(2rem, 8vw, 2.7rem);
+  }
+
+  .auth-hero-copy {
+    font-size: 0.96rem;
+    line-height: 1.55;
   }
 
   .auth-panel {
-    order: 1;
+    padding-top: 20px;
+  }
+
+  .auth-panel-center-inner {
+    max-width: 100%;
+    gap: 18px;
+  }
+
+  .auth-panel-intro {
+    text-align: left;
+    width: 100%;
+  }
+
+  .auth-clerk-shell {
+    width: 100%;
   }
 
   .page-header,
@@ -1150,5 +1259,52 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .nav-links {
     display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-shell,
+  .onboarding-shell {
+    padding: 12px;
+  }
+
+  .auth-card {
+    border-radius: 24px;
+  }
+
+  .auth-hero {
+    display: none;
+  }
+
+  .auth-hero,
+  .auth-panel {
+    padding: 18px;
+  }
+
+  .auth-hero-title {
+    font-size: clamp(1.8rem, 9vw, 2.35rem);
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+  }
+
+  .auth-hero-copy {
+    font-size: 0.92rem;
+  }
+
+  .auth-panel-center-inner {
+    gap: 16px;
+    justify-items: stretch;
+  }
+
+  .auth-panel-intro {
+    display: none;
+  }
+
+  .auth-panel {
+    padding-top: 18px;
+  }
+
+  .auth-clerk-shell {
+    min-width: 0;
   }
 }
