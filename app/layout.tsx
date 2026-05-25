@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Plus_Jakarta_Sans } from 'next/font/google'
+import { baseClerkAppearance } from '@/lib/clerk-appearance'
 import { getSiteUrl } from '@/lib/site-url'
 import './globals.css'
 
@@ -26,26 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider
-      appearance={{
-        variables: {
-          colorPrimary: '#0071e3',
-          colorBackground: '#ffffff',
-          colorInputBackground: '#f5f5f7',
-          colorInputText: '#1d1d1f',
-          colorText: '#1d1d1f',
-          colorTextSecondary: '#6e6e73',
-          colorDanger: '#ff3b30',
-          borderRadius: '18px',
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-          fontSize: '17px',
-        },
-        elements: {
-          card: 'shadow-none border border-[rgba(15,23,42,0.08)] rounded-[28px] backdrop-blur-xl',
-          formButtonPrimary: 'rounded-full font-medium',
-        },
-      }}
-    >
+    <ClerkProvider appearance={baseClerkAppearance}>
       <html lang="en" className={`${plusJakarta.variable} h-full`}>
         <body
           className="min-h-full flex flex-col antialiased"

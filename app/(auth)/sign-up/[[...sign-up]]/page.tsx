@@ -1,4 +1,5 @@
 import { SignUp } from '@clerk/nextjs'
+import { authClerkAppearance } from '@/lib/clerk-appearance'
 
 export default function SignUpPage() {
   return (
@@ -25,28 +26,7 @@ export default function SignUpPage() {
         <section className="auth-panel auth-panel-center">
           <div className="auth-panel-inner auth-panel-center-inner">
             <div className="auth-clerk-shell">
-              <SignUp
-                appearance={{
-                  variables: {
-                    colorPrimary: '#0071e3',
-                    colorBackground: '#ffffff',
-                    colorInputBackground: '#f5f5f7',
-                    colorInputText: '#1d1d1f',
-                    colorText: '#1d1d1f',
-                    colorTextSecondary: '#6e6e73',
-                    colorDanger: '#ff3b30',
-                    borderRadius: '18px',
-                    fontFamily: '"Plus Jakarta Sans", sans-serif',
-                    fontSize: '17px',
-                  },
-                  elements: {
-                    rootBox: 'w-full',
-                    cardBox: 'w-full',
-                    card: 'shadow-none border border-[rgba(15,23,42,0.08)] rounded-[28px]',
-                    formButtonPrimary: 'rounded-full font-medium',
-                  },
-                }}
-              />
+              <SignUp appearance={authClerkAppearance} />
             </div>
           </div>
         </section>

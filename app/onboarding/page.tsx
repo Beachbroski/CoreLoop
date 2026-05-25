@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function OnboardingPage() {
+  const router = useRouter()
   const [status, setStatus] = useState<'checking' | 'idle' | 'loading' | 'error'>('checking')
   const [selectedRole, setSelectedRole] = useState<'BRAND' | 'CREATOR' | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -11,12 +13,12 @@ export default function OnboardingPage() {
     fetch('/api/users/me')
       .then(r => r.json())
       .then(data => {
-        if (data?.role === 'BRAND') { window.location.href = '/brand'; return }
-        if (data?.role === 'CREATOR') { window.location.href = '/creator'; return }
+        if (data?.role === 'BRAND') { router.replace('/brand'); return }
+        if (data?.role === 'CREATOR') { router.replace('/creator'); return }
         setStatus('idle')
       })
       .catch(() => setStatus('idle'))
-  }, [])
+  }, [router])
 
   async function selectRole(role: 'BRAND' | 'CREATOR') {
     setStatus('loading')
@@ -31,7 +33,7 @@ export default function OnboardingPage() {
       })
       const text = await res.text()
       if (res.ok) {
-        window.location.href = role === 'BRAND' ? '/brand' : '/creator'
+        router.replace(role === 'BRAND' ? '/brand' : '/creator')
       } else {
         let msg = `HTTP ${res.status}`
         try { msg = JSON.parse(text).error ?? msg } catch {}
