@@ -1269,7 +1269,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .auth-card {
+    border: 0;
     border-radius: 24px;
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
     overflow: visible;
   }
 
@@ -1312,9 +1316,87 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-radius: 28px;
     background: rgba(255, 255, 255, 0.96);
     box-shadow: var(--shadow-sm);
+    overflow: hidden;
   }
 
   .auth-clerk-shell {
     min-width: 0;
+  }
+
+  .auth-clerk-shell .cl-cardBox,
+  .auth-clerk-shell .cl-card {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .auth-clerk-shell .cl-main {
+    gap: 18px !important;
+  }
+
+  .auth-clerk-shell .cl-header {
+    margin: 0 0 18px !important;
+  }
+
+  .auth-clerk-shell .cl-headerTitle {
+    font-size: clamp(2rem, 8vw, 2.65rem) !important;
+    line-height: 1 !important;
+    letter-spacing: -0.05em !important;
+    text-wrap: balance !important;
+  }
+
+  .auth-clerk-shell .cl-headerSubtitle {
+    margin-top: 12px !important;
+    font-size: 1rem !important;
+    line-height: 1.55 !important;
+    text-wrap: balance !important;
+  }
+
+  .auth-clerk-shell .cl-socialButtons {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .auth-clerk-shell .cl-socialButtonsBlockButton {
+    width: 100% !important;
+    min-height: 52px !important;
+    justify-content: flex-start !important;
+    padding: 0 18px !important;
+  }
+
+  .auth-clerk-shell .cl-socialButtonsBlockButtonText {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .auth-clerk-shell .cl-footer {
+    display: grid !important;
+    gap: 14px !important;
+    justify-items: center !important;
+    margin-top: 20px !important;
+    padding: 18px 0 0 !important;
+    background: transparent !important;
+    border-top: 1px solid rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .auth-clerk-shell .cl-footerAction {
+    margin: 0 !important;
+    text-align: center !important;
+  }
+
+  .auth-clerk-shell .cl-footerPages {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px 14px !important;
+  }
+
+  .auth-clerk-shell .cl-footerPages a,
+  .auth-clerk-shell .cl-footerPageLink {
+    color: var(--text-faint) !important;
+    font-size: 0.84rem !important;
   }
 }
