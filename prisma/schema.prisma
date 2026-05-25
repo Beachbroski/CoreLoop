@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String   @id @default(cuid())
+  clerkId         String   @unique
+  email           String   @unique
+  role            Role     @default(CREATOR)
+  name            String?
+  avatarUrl       String?
+  bio             String?
+  stripeAccountId String?
+  stripeOnboarded Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  campaigns    Campaign[]
+  applications Application[]
+  submissions  Submission[]
+  payouts      Payout[]
+}
+
+enum Role {
+  BRAND
+  CREATOR
+  ADMIN
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  brandId     String
+  brand       User           @relation(fields: [brandId], references: [id])
+  title       String
+  description String
+  objective   String?
+  deliverables String?
+  targetAudience String?
+  creatorRequirements String?
+  callToAction String?
+  usageRights String?
+  creatorsNeeded Int?
+  budget      Int
+  deadline    DateTime
+  niche       String
+  platforms   String[]
+  status      CampaignStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  applications Application[]
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  IN_PROGRESS
+  COMPLETE
+  CANCELLED
+}
+
+model Application {
+  id              String            @id @default(cuid())
+  campaignId      String
+  campaign        Campaign          @relation(fields: [campaignId], references: [id])
+  creatorId       String
+  creator         User              @relation(fields: [creatorId], references: [id])
+  pitch           String
+  proposedRate    Int
+  status          ApplicationStatus @default(PENDING)
+  paymentIntentId String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  submissions Submission[]
+
+  @@unique([campaignId, creatorId])
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Submission {
+  id            String           @id @default(cuid())
+  applicationId String
+  application   Application      @relation(fields: [applicationId], references: [id])
+  creatorId     String
+  creator       User             @relation(fields: [creatorId], references: [id])
+  contentUrl    String
+  caption       String?
+  notes         String?
+  status        SubmissionStatus @default(PENDING)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  payout Payout?
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REVISION_REQUESTED
+  REJECTED
+}
+
+model Payout {
+  id               String       @id @default(cuid())
+  submissionId     String       @unique
+  submission       Submission   @relation(fields: [submissionId], references: [id])
+  creatorId        String
+  creator          User         @relation(fields: [creatorId], references: [id])
+  amount           Int
+  platformFee      Int
+  stripeTransferId String?
+  status           PayoutStatus @default(PENDING)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
