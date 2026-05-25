@@ -14,11 +14,11 @@ interface ApplicationActionsProps {
 }
 
 function CheckoutForm({
-  applicationId,
+  acceptApplication,
   onSuccess,
   onCancel,
 }: {
-  applicationId: string
+  acceptApplication: () => Promise<void>
   onSuccess: () => void
   onCancel: () => void
 }) {
@@ -43,14 +43,10 @@ function CheckoutForm({
     })
     if (confirmError) { setError(confirmError.message ?? 'Payment failed'); setLoading(false); return }
 
-    const res = await fetch(`/api/applications/${applicationId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'ACCEPTED' }),
-    })
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error ?? 'Failed to accept application')
+    try {
+      await acceptApplication()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to accept application')
       setLoading(false)
       return
     }
@@ -93,6 +89,19 @@ export function ApplicationActions({ applicationId, proposedRate, creatorName }:
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  async function acceptApplication() {
+    const res = await fetch(`/api/applications/${applicationId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'ACCEPTED' }),
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.error ?? 'Failed to accept application')
+    }
+  }
+
   async function handleAccept() {
     setState('loading-intent')
     setError(null)
@@ -104,6 +113,11 @@ export function ApplicationActions({ applicationId, proposedRate, creatorName }:
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to initiate payment')
+      if (data.paymentAuthorized) {
+        await acceptApplication()
+        window.location.reload()
+        return
+      }
       setClientSecret(data.clientSecret)
       setState('payment')
     } catch (err) {
@@ -142,7 +156,7 @@ export function ApplicationActions({ applicationId, proposedRate, creatorName }:
         </p>
         <Elements stripe={stripePromise} options={{ clientSecret }}>
           <CheckoutForm
-            applicationId={applicationId}
+            acceptApplication={acceptApplication}
             onSuccess={() => window.location.reload()}
             onCancel={() => setState('idle')}
           />

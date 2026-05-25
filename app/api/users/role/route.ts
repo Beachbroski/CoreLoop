@@ -1,6 +1,7 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
+import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 const schema = z.object({
   role: z.enum(['BRAND', 'CREATOR']),
@@ -8,8 +9,23 @@ const schema = z.object({
 
 export async function PATCH(req: Request) {
   try {
+    if (!isTrustedOrigin(req)) {
+      return Response.json({ error: 'Invalid request origin' }, { status: 403 })
+    }
+
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const rateLimit = checkRateLimit(`users:role:${userId}:${getRequestIp(req)}`, {
+      limit: 10,
+      windowMs: 60_000,
+    })
+    if (!rateLimit.ok) {
+      return Response.json(
+        { error: 'Too many role update attempts. Please try again shortly.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } },
+      )
+    }
 
     const body = await req.json()
     const parsed = schema.safeParse(body)

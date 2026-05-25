@@ -2,9 +2,14 @@ import { auth } from '@clerk/nextjs/server'
 import { stripe } from '@/lib/stripe'
 import prisma from '@/lib/prisma'
 import { getSiteUrl } from '@/lib/site-url'
+import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 export async function POST(_req: Request) {
   try {
+    if (!isTrustedOrigin(_req)) {
+      return Response.json({ error: 'Invalid request origin' }, { status: 403 })
+    }
+
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -12,6 +17,17 @@ export async function POST(_req: Request) {
     if (!user) return Response.json({ error: 'User not found' }, { status: 404 })
     if (user.role !== 'CREATOR') {
       return Response.json({ error: 'Only creators can connect Stripe' }, { status: 403 })
+    }
+
+    const rateLimit = checkRateLimit(`stripe:onboard:${user.id}:${getRequestIp(_req)}`, {
+      limit: 5,
+      windowMs: 60_000,
+    })
+    if (!rateLimit.ok) {
+      return Response.json(
+        { error: 'Too many onboarding attempts. Please try again shortly.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } },
+      )
     }
 
     const siteUrl = getSiteUrl()

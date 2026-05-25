@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
+import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 const campaignSchema = z.object({
   title: z.string().min(5).max(100),
@@ -48,6 +49,10 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    if (!isTrustedOrigin(req)) {
+      return Response.json({ error: 'Invalid request origin' }, { status: 403 })
+    }
+
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -55,6 +60,17 @@ export async function POST(req: Request) {
     if (!user) return Response.json({ error: 'User not found' }, { status: 404 })
     if (user.role !== 'BRAND') {
       return Response.json({ error: 'Only brands can create campaigns' }, { status: 403 })
+    }
+
+    const rateLimit = checkRateLimit(`campaigns:create:${user.id}:${getRequestIp(req)}`, {
+      limit: 10,
+      windowMs: 60_000,
+    })
+    if (!rateLimit.ok) {
+      return Response.json(
+        { error: 'Too many campaign creation attempts. Please try again shortly.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } },
+      )
     }
 
     const body = await req.json()

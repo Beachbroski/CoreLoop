@@ -5,7 +5,10 @@ import { Pool } from 'pg'
 function createPrismaClient() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL })
   const adapter = new PrismaPg(pool)
-  return new PrismaClient({ adapter, log: ['query'] })
+  return new PrismaClient({
+    adapter,
+    log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'error', 'warn'],
+  })
 }
 
 type PrismaClientSingleton = ReturnType<typeof createPrismaClient>
