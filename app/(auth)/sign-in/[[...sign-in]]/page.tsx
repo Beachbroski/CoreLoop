@@ -26,7 +26,12 @@ export default function SignInPage() {
         <section className="auth-panel auth-panel-center">
           <div className="auth-panel-inner auth-panel-center-inner">
             <div className="auth-clerk-shell">
-              <SignIn appearance={authClerkAppearance} />
+              <SignIn
+                appearance={authClerkAppearance}
+                oauthFlow="redirect"
+                fallbackRedirectUrl="/onboarding"
+                signUpUrl="/sign-up"
+              />
             </div>
           </div>
         </section>
