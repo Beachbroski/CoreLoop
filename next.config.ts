@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline' https:",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
       "connect-src 'self' https: wss:",
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://connect-js.stripe.com",
-      "form-action 'self' https://hooks.stripe.com https://connect.stripe.com",
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://connect-js.stripe.com https://*.clerk.accounts.dev https://*.clerk.com https://accounts.google.com https://*.google.com",
+      "form-action 'self' https://hooks.stripe.com https://connect.stripe.com https://*.clerk.accounts.dev https://*.clerk.com https://accounts.google.com https://*.google.com",
     ].join('; ')
 
     return [
