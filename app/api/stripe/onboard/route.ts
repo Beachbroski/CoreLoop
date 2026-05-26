@@ -62,6 +62,11 @@ export async function POST(_req: Request) {
     return Response.json({ url: accountLink.url })
   } catch (err) {
     console.error('[POST /api/stripe/onboard]', err)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    const message =
+      err instanceof Error && err.message
+        ? err.message
+        : 'Unable to start Stripe onboarding right now.'
+
+    return Response.json({ error: message }, { status: 500 })
   }
 }
