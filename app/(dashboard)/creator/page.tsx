@@ -45,7 +45,7 @@ async function CreatorDashboardContent() {
   return (
     <div className="subtle-grid" style={{ gap: 26 }}>
       <div className="page-header">
-        <div>
+        <div className="page-header-copy">
           <p style={{ margin: '0 0 8px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
             Creator dashboard
           </p>
@@ -54,7 +54,7 @@ async function CreatorDashboardContent() {
             Keep your pipeline warm, stay on top of approvals, and make it easy for brands to say yes.
           </p>
         </div>
-        <Link href="/creator/campaigns" className="apple-btn">Browse campaigns</Link>
+        <Link href="/creator/campaigns" className="apple-btn page-header-action">Browse campaigns</Link>
       </div>
 
       {!user.stripeOnboarded && (
@@ -65,7 +65,7 @@ async function CreatorDashboardContent() {
               You’ll need a connected payout account before you can apply to live campaigns.
             </p>
           </div>
-          <Link href="/creator/settings" className="apple-btn">Set up payments</Link>
+          <Link href="/creator/settings" className="apple-btn page-header-action">Set up payments</Link>
         </div>
       )}
 
@@ -73,19 +73,19 @@ async function CreatorDashboardContent() {
         {stats.map(stat => (
           <div key={stat.label} className="metric-card">
             <p className="metric-value">{stat.value}</p>
-            <p className="metric-label">{stat.label}</p>
+            <p className="metric-label" style={{ maxWidth: 180 }}>{stat.label}</p>
           </div>
         ))}
       </div>
 
       <div className="subtle-grid two-col">
         <section className="dashboard-panel">
-          <div className="split-row">
-            <div>
+          <div className="section-header">
+            <div className="section-header-copy">
               <h2 style={{ margin: 0 }}>Recent applications</h2>
               <p style={{ margin: '6px 0 0', color: 'var(--text-soft)' }}>See what needs follow-up and where momentum is building.</p>
             </div>
-            <Link href="/creator/applications" className="apple-link">View all</Link>
+            <Link href="/creator/applications" className="apple-link section-header-action">View all</Link>
           </div>
 
           {applications.length === 0 ? (

@@ -7,12 +7,13 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "object-src 'none'",
       "frame-ancestors 'none'",
-      "img-src 'self' data: blob: https:",
+      "img-src 'self' data: blob: https: https://img.clerk.com",
       "font-src 'self' data: https:",
       "style-src 'self' 'unsafe-inline' https:",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
-      "connect-src 'self' https: wss:",
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://connect-js.stripe.com https://*.clerk.accounts.dev https://*.clerk.com https://accounts.google.com https://*.google.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: https://challenges.cloudflare.com",
+      "connect-src 'self' https: wss: https://clerk-telemetry.com https://*.clerk-telemetry.com",
+      "worker-src 'self' blob:",
+      "frame-src 'self' https://challenges.cloudflare.com https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://connect-js.stripe.com https://*.clerk.accounts.dev https://*.clerk.com https://accounts.google.com https://*.google.com",
       "form-action 'self' https://hooks.stripe.com https://connect.stripe.com https://*.clerk.accounts.dev https://*.clerk.com https://accounts.google.com https://*.google.com",
     ].join('; ')
 

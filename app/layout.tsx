@@ -11,6 +11,13 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 const siteUrl = getSiteUrl()
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ''
+
+if (process.env.NODE_ENV === 'production' && clerkPublishableKey.startsWith('pk_test_')) {
+  console.warn(
+    '[auth] NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is using a development Clerk instance on a production build. Safari and OAuth flows may fail until you switch Vercel to your Clerk production keys/domain.',
+  )
+}
 
 export const metadata: Metadata = {
   title: 'CoreLoop — Creator Marketplace',

@@ -8,7 +8,10 @@ export default async function BrandLayout({ children }: { children: React.ReactN
 
   const user = await prisma.user.findUnique({ where: { clerkId: userId } })
   if (!user) redirect('/onboarding')
-  if (user.role !== 'BRAND') redirect('/creator')
+  if (user.role !== 'BRAND') {
+    if (user.role === 'CREATOR') redirect('/creator')
+    redirect('/onboarding')
+  }
 
   return <>{children}</>
 }

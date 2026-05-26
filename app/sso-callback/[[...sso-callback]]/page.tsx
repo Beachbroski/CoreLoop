@@ -6,7 +6,7 @@ export default function SSOCallbackPage() {
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       continueSignUpUrl="/onboarding"
-      signInFallbackRedirectUrl="/onboarding"
+      signInFallbackRedirectUrl="/"
       signUpFallbackRedirectUrl="/onboarding"
     />
   )

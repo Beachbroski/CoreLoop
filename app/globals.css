@@ -216,6 +216,7 @@ select {
 .page-title {
   font-size: clamp(2.1rem, 4vw, 3.2rem);
   line-height: 1.02;
+  text-wrap: balance;
 }
 
 .hero-copy,
@@ -448,6 +449,7 @@ select {
   margin: 0 0 10px;
   font-size: 1.32rem;
   letter-spacing: -0.04em;
+  line-height: 1.12;
 }
 
 .muted {
@@ -473,6 +475,7 @@ select {
   padding: 7px 12px;
   font-size: 0.88rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .pill,
@@ -495,9 +498,14 @@ select {
 .learn-more-link,
 .feature-link,
 .apple-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--accent);
   text-decoration: none;
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .footer-link {
@@ -675,7 +683,36 @@ select {
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
+  flex-wrap: wrap;
   margin-bottom: 34px;
+}
+
+.page-header-copy {
+  min-width: 0;
+  flex: 1 1 420px;
+}
+
+.page-header-action {
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.section-header-copy {
+  min-width: 0;
+  flex: 1 1 260px;
+}
+
+.section-header-action {
+  flex: 0 0 auto;
+  align-self: flex-start;
 }
 
 .dashboard-panel {
@@ -688,8 +725,31 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  flex-wrap: wrap;
   padding: 16px 0;
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.split-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.page-header > :first-child,
+.section-header > :first-child,
+.split-row > :first-child,
+.list-row > :first-child {
+  min-width: 0;
+}
+
+.page-header > :last-child,
+.section-header > :last-child,
+.split-row > :last-child,
+.list-row > :last-child {
+  flex-shrink: 0;
 }
 
 .list-row:last-child {
@@ -998,13 +1058,6 @@ select {
   border-color: rgba(225, 29, 72, 0.22);
 }
 
-.split-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-}
-
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.45;
   cursor: pointer;
@@ -1215,6 +1268,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .page-header,
+  .section-header,
   .audience-header,
   .split-row,
   .list-row {

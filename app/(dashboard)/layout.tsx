@@ -8,12 +8,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!userId) redirect('/sign-in')
 
   const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+  if (!user || (user.role !== 'BRAND' && user.role !== 'CREATOR')) redirect('/onboarding')
 
   const isBrand = user.role === 'BRAND'
   const navItems = isBrand
     ? [
-        { label: 'Dashboard', href: '/brand' },
+        { label: 'My Campaigns', href: '/brand' },
         { label: 'New Campaign', href: '/brand/campaigns/new' },
       ]
     : [

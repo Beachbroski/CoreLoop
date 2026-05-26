@@ -26,7 +26,6 @@ export const authClerkAppearance = {
     privacyPageUrl: '/privacy',
     termsPageUrl: '/terms',
     helpPageUrl: '/support',
-    unsafe_disableDevelopmentModeWarnings: true,
   },
   elements: {
     ...baseClerkAppearance.elements,

@@ -38,12 +38,28 @@ export async function PATCH(req: Request) {
     })
 
     if (existingUser) {
+      const [campaignCount, applicationCount] = await Promise.all([
+        prisma.campaign.count({ where: { brandId: existingUser.id } }),
+        prisma.application.count({ where: { creatorId: existingUser.id } }),
+      ])
+
+      if (campaignCount > 0 || applicationCount > 0) {
+        return Response.json(
+          { error: 'Role cannot be changed after activity has begun' },
+          { status: 409 },
+        )
+      }
+
       const user = await prisma.user.update({
         where: { id: existingUser.id },
         data: { role: parsed.data.role },
       })
 
-      return Response.json({ success: true, data: user })
+      return Response.json({
+        success: true,
+        data: user,
+        redirectTo: user.role === 'BRAND' ? '/brand' : '/creator',
+      })
     }
 
     const clerkUser = await currentUser()
@@ -69,7 +85,11 @@ export async function PATCH(req: Request) {
         },
       })
 
-      return Response.json({ success: true, data: user })
+      return Response.json({
+        success: true,
+        data: user,
+        redirectTo: user.role === 'BRAND' ? '/brand' : '/creator',
+      })
     }
 
     const user = await prisma.user.create({
@@ -82,7 +102,11 @@ export async function PATCH(req: Request) {
       },
     })
 
-    return Response.json({ success: true, data: user })
+    return Response.json({
+      success: true,
+      data: user,
+      redirectTo: user.role === 'BRAND' ? '/brand' : '/creator',
+    })
   } catch (err) {
     console.error('[PATCH /api/users/role]', err)
     return Response.json({ error: 'Internal server error' }, { status: 500 })

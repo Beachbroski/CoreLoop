@@ -55,7 +55,7 @@ async function BrandDashboardContent() {
   return (
     <div className="subtle-grid" style={{ gap: 26 }}>
       <div className="page-header">
-        <div>
+        <div className="page-header-copy">
           <p style={{ margin: '0 0 8px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
             Brand dashboard
           </p>
@@ -64,14 +64,14 @@ async function BrandDashboardContent() {
             Keep the top of funnel moving, spot strong creator fit early, and manage every live brief in one clean system.
           </p>
         </div>
-        <Link href="/brand/campaigns/new" className="apple-btn">New campaign</Link>
+        <Link href="/brand/campaigns/new" className="apple-btn page-header-action">New campaign</Link>
       </div>
 
       <div className="subtle-grid three-col">
         {stats.map(stat => (
           <div key={stat.label} className="metric-card">
             <p className="metric-value">{stat.value}</p>
-            <p className="metric-label">{stat.label}</p>
+            <p className="metric-label" style={{ maxWidth: 190 }}>{stat.label}</p>
           </div>
         ))}
       </div>

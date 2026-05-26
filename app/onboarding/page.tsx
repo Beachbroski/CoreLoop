@@ -3,6 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+type AccountStateResponse = {
+  authenticated: boolean
+  hasProfile: boolean
+  role: 'BRAND' | 'CREATOR' | null
+  onboardingRequired: boolean
+  redirectTo: string
+}
+
 export default function OnboardingPage() {
   const router = useRouter()
   const [status, setStatus] = useState<'checking' | 'idle' | 'loading' | 'error'>('checking')
@@ -10,14 +18,48 @@ export default function OnboardingPage() {
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
-    fetch('/api/users/me')
-      .then(r => r.json())
-      .then(data => {
-        if (data?.role === 'BRAND') { router.replace('/brand'); return }
-        if (data?.role === 'CREATOR') { router.replace('/creator'); return }
+    const controller = new AbortController()
+
+    async function loadAccountState() {
+      try {
+        const res = await fetch('/api/users/me', {
+          cache: 'no-store',
+          signal: controller.signal,
+        })
+
+        const data = await res.json() as AccountStateResponse | null
+        if (controller.signal.aborted) return
+
+        if (res.status === 401) {
+          router.replace('/sign-in')
+          return
+        }
+
+        if (!res.ok || !data) {
+          throw new Error('Unable to confirm account state.')
+        }
+
+        if (!data.authenticated) {
+          router.replace('/sign-in')
+          return
+        }
+
+        if (!data.onboardingRequired && data.redirectTo) {
+          router.replace(data.redirectTo)
+          return
+        }
+
         setStatus('idle')
-      })
-      .catch(() => setStatus('idle'))
+      } catch (err) {
+        if (controller.signal.aborted) return
+        setErrorMsg(err instanceof Error ? err.message : 'Unable to confirm account state.')
+        setStatus('error')
+      }
+    }
+
+    void loadAccountState()
+
+    return () => controller.abort()
   }, [router])
 
   async function selectRole(role: 'BRAND' | 'CREATOR') {
@@ -33,16 +75,21 @@ export default function OnboardingPage() {
       })
       const text = await res.text()
       if (res.ok) {
-        router.replace(role === 'BRAND' ? '/brand' : '/creator')
+        let redirectTo = role === 'BRAND' ? '/brand' : '/creator'
+        try {
+          const data = JSON.parse(text) as { redirectTo?: string }
+          redirectTo = data.redirectTo ?? redirectTo
+        } catch {}
+        router.replace(redirectTo)
       } else {
         let msg = `HTTP ${res.status}`
         try { msg = JSON.parse(text).error ?? msg } catch {}
         setErrorMsg(msg)
-        setStatus('idle')
+        setStatus('error')
       }
     } catch (err) {
       setErrorMsg(String(err))
-      setStatus('idle')
+      setStatus('error')
     }
   }
 
@@ -62,6 +109,8 @@ export default function OnboardingPage() {
       </main>
     )
   }
+
+  const isBusy = status === 'loading'
 
   return (
     <main className="onboarding-shell">
@@ -129,11 +178,11 @@ export default function OnboardingPage() {
             <button
               key={role}
               onClick={() => selectRole(role)}
-              disabled={status === 'loading'}
+              disabled={isBusy}
               className="role-card"
               style={{
-                cursor: status === 'loading' ? 'not-allowed' : 'pointer',
-                opacity: status === 'loading' && selectedRole !== role ? 0.5 : 1,
+                cursor: isBusy ? 'not-allowed' : 'pointer',
+                opacity: isBusy && selectedRole !== role ? 0.5 : 1,
               }}
             >
               <div>
@@ -141,7 +190,7 @@ export default function OnboardingPage() {
                 <p style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', margin: '0 0 8px', letterSpacing: '-0.04em' }}>{title}</p>
                 <p style={{ fontSize: 15, color: 'var(--text-soft)', margin: 0, lineHeight: 1.6 }}>{description}</p>
               </div>
-              {status === 'loading' && selectedRole === role && (
+              {isBusy && selectedRole === role && (
                 <div
                   style={{
                     width: 20,

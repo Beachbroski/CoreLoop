@@ -29,7 +29,8 @@ export default function SignInPage() {
               <SignIn
                 appearance={authClerkAppearance}
                 oauthFlow="redirect"
-                fallbackRedirectUrl="/onboarding"
+                forceRedirectUrl="/"
+                fallbackRedirectUrl="/"
                 signUpUrl="/sign-up"
               />
             </div>
