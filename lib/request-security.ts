@@ -15,28 +15,49 @@ if (!globalStore.__coreloopRateLimitStore) {
   globalStore.__coreloopRateLimitStore = rateLimitStore
 }
 
-function getAllowedOrigin(): string | null {
+function getAllowedOrigins(req: Request): Set<string> {
+  const allowedOrigins = new Set<string>()
+
   const siteUrl = getSiteUrl()
-  if (!siteUrl) return null
+  if (siteUrl) {
+    try {
+      allowedOrigins.add(new URL(siteUrl).origin)
+    } catch {}
+  }
 
   try {
-    return new URL(siteUrl).origin
-  } catch {
-    return null
+    allowedOrigins.add(new URL(req.url).origin)
+  } catch {}
+
+  const forwardedHost = req.headers.get('x-forwarded-host')
+  const forwardedProto = req.headers.get('x-forwarded-proto') ?? 'https'
+  if (forwardedHost) {
+    allowedOrigins.add(`${forwardedProto}://${forwardedHost}`)
   }
+
+  const host = req.headers.get('host')
+  if (host) {
+    allowedOrigins.add(`${forwardedProto}://${host}`)
+  }
+
+  return allowedOrigins
 }
 
 export function isTrustedOrigin(req: Request): boolean {
-  const allowedOrigin = getAllowedOrigin()
-  if (!allowedOrigin) return true
+  const allowedOrigins = getAllowedOrigins(req)
+  if (allowedOrigins.size === 0) {
+    // In production, a missing site URL is a misconfiguration — block the request.
+    // In development, allow through so local dev works without NEXT_PUBLIC_URL set.
+    return process.env.NODE_ENV !== 'production'
+  }
 
   const origin = req.headers.get('origin')
-  if (origin && origin !== allowedOrigin) return false
+  if (origin && !allowedOrigins.has(origin)) return false
 
   const referer = req.headers.get('referer')
   if (!origin && referer) {
     try {
-      if (new URL(referer).origin !== allowedOrigin) return false
+      if (!allowedOrigins.has(new URL(referer).origin)) return false
     } catch {
       return false
     }
