@@ -13,12 +13,19 @@ export function isTurnstileConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY)
 }
 
+// VERCEL_ENV is 'production' only on the real prod deployment.
+// Preview ('preview') and local (undefined) never enforce Turnstile,
+// since the widget's hostnames are scoped to the production domain.
+function isProductionDeployment() {
+  return process.env.VERCEL_ENV === 'production'
+}
+
 export function shouldBypassTurnstile() {
-  return process.env.NODE_ENV !== 'production' && !isTurnstileConfigured()
+  return !isProductionDeployment() && !isTurnstileConfigured()
 }
 
 export function isTurnstileFailClosed() {
-  return process.env.NODE_ENV === 'production' && !isTurnstileConfigured()
+  return isProductionDeployment() && !isTurnstileConfigured()
 }
 
 export async function verifyTurnstileToken(token: string, remoteIp?: string) {
