@@ -1,6 +1,7 @@
 export const INTERNAL_ADMIN_PATH = '/internal/waitlist'
 export const INTERNAL_ADMIN_EXPORT_PATH = '/internal/waitlist/export'
 export const ADMIN_SECRET_HEADER = 'x-creatordocks-admin-secret-route'
+export const ADMIN_SECRET_REWRITE_PARAM = '__admin_secret_route'
 
 export type AdminUserLike = {
   email: string

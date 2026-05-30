@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import {
   ADMIN_SECRET_HEADER,
+  ADMIN_SECRET_REWRITE_PARAM,
   getAdminExportPath,
   getAdminSecretPath,
   isAllowedAdminUser,
@@ -29,9 +30,19 @@ function buildReferralLink(referralCode: string) {
   }
 }
 
-export default async function InternalWaitlistPage() {
+export default async function InternalWaitlistPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
   const requestHeaders = await headers()
-  if (isProductionDeployment() && requestHeaders.get(ADMIN_SECRET_HEADER) !== '1') {
+  const resolvedSearchParams = searchParams ? await searchParams : {}
+  const rewriteMarker = resolvedSearchParams[ADMIN_SECRET_REWRITE_PARAM]
+  if (
+    isProductionDeployment() &&
+    requestHeaders.get(ADMIN_SECRET_HEADER) !== '1' &&
+    rewriteMarker !== '1'
+  ) {
     notFound()
   }
 

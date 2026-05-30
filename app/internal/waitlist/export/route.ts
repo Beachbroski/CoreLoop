@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma'
 import { getCurrentAppUser } from '@/lib/current-app-user'
 import {
   ADMIN_SECRET_HEADER,
+  ADMIN_SECRET_REWRITE_PARAM,
   isAllowedAdminUser,
   isProductionDeployment,
 } from '@/lib/admin-config'
@@ -14,9 +15,14 @@ function escapeCsv(value: string | number | null | undefined) {
   return `"${stringValue.replace(/"/g, '""')}"`
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const requestHeaders = await headers()
-  if (isProductionDeployment() && requestHeaders.get(ADMIN_SECRET_HEADER) !== '1') {
+  const rewriteMarker = new URL(request.url).searchParams.get(ADMIN_SECRET_REWRITE_PARAM)
+  if (
+    isProductionDeployment() &&
+    requestHeaders.get(ADMIN_SECRET_HEADER) !== '1' &&
+    rewriteMarker !== '1'
+  ) {
     return new Response('Not found', { status: 404 })
   }
 

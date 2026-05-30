@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import {
   ADMIN_SECRET_HEADER,
+  ADMIN_SECRET_REWRITE_PARAM,
   getInternalAdminRewritePath,
   isInternalAdminPath,
   isProductionDeployment,
@@ -27,6 +28,7 @@ export default clerkMiddleware(async (auth, req) => {
 
     const rewriteUrl = req.nextUrl.clone()
     rewriteUrl.pathname = adminRewritePath
+    rewriteUrl.searchParams.set(ADMIN_SECRET_REWRITE_PARAM, '1')
 
     const requestHeaders = new Headers(req.headers)
     requestHeaders.set(ADMIN_SECRET_HEADER, '1')
