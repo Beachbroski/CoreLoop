@@ -8,17 +8,17 @@ export default function SignInPage() {
         <section className="auth-hero auth-hero-stack">
           <div className="brand-lockup">
             <span className="brand-mark" />
-            <span className="brand-wordmark">CoreLoop</span>
+            <span className="brand-wordmark">CreatorDocks</span>
           </div>
           <div>
             <span className="eyebrow auth-hero-eyebrow">
-              Welcome back
+              Internal dashboard access
             </span>
             <h1 className="auth-hero-title">
-              Sign in and pick up where the deal left off.
+              Sign in and jump back into the CreatorDocks test environment.
             </h1>
             <p className="auth-hero-copy">
-              Campaigns, applications, approvals, and payout steps are all waiting in one place.
+              Campaigns, applications, approvals, payouts, and internal waitlist ops all live behind this sign-in for approved testers.
             </p>
           </div>
         </section>

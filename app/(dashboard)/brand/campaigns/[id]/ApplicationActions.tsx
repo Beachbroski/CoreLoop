@@ -88,6 +88,7 @@ export function ApplicationActions({ applicationId, proposedRate, creatorName }:
   const [state, setState] = useState<'idle' | 'loading-intent' | 'payment' | 'rejecting'>('idle')
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [confirmReject, setConfirmReject] = useState(false)
 
   async function acceptApplication() {
     const res = await fetch(`/api/applications/${applicationId}`, {
@@ -177,14 +178,36 @@ export function ApplicationActions({ applicationId, proposedRate, creatorName }:
       >
         {state === 'loading-intent' ? 'Loading…' : 'Accept'}
       </button>
-      <button
-        onClick={handleReject}
-        disabled={state !== 'idle'}
-        className="apple-btn-ghost"
-        style={{ color: '#ff3b30', borderColor: '#ff3b30', padding: '10px 20px', fontSize: 15 }}
-      >
-        {state === 'rejecting' ? 'Rejecting…' : 'Reject'}
-      </button>
+      {confirmReject ? (
+        <>
+          <span style={{ fontSize: 14, color: '#ff3b30', alignSelf: 'center' }}>Are you sure?</span>
+          <button
+            onClick={handleReject}
+            disabled={state !== 'idle'}
+            className="apple-btn-ghost"
+            style={{ color: '#ff3b30', borderColor: '#ff3b30', padding: '10px 20px', fontSize: 15 }}
+          >
+            {state === 'rejecting' ? 'Rejecting…' : 'Confirm reject'}
+          </button>
+          <button
+            onClick={() => setConfirmReject(false)}
+            disabled={state !== 'idle'}
+            className="apple-btn-ghost"
+            style={{ padding: '10px 20px', fontSize: 15 }}
+          >
+            Cancel
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={() => setConfirmReject(true)}
+          disabled={state !== 'idle'}
+          className="apple-btn-ghost"
+          style={{ color: '#ff3b30', borderColor: '#ff3b30', padding: '10px 20px', fontSize: 15 }}
+        >
+          Reject
+        </button>
+      )}
       </div>
     </div>
   )

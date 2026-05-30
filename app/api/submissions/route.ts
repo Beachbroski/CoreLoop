@@ -1,13 +1,14 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
+import { requireAdminApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 const createSchema = z.object({
   applicationId: z.string().min(1),
   contentUrl: z.string().url(),
-  caption: z.string().optional(),
-  notes: z.string().optional(),
+  caption: z.string().trim().max(2000).optional().or(z.literal('')),
+  notes: z.string().trim().max(2000).optional().or(z.literal('')),
 })
 
 export async function POST(req: Request) {
@@ -15,6 +16,9 @@ export async function POST(req: Request) {
     if (!isTrustedOrigin(req)) {
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
+
+    const adminGate = await requireAdminApiUser()
+    if (adminGate.response) return adminGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -58,8 +62,8 @@ export async function POST(req: Request) {
         applicationId: parsed.data.applicationId,
         creatorId: user.id,
         contentUrl: parsed.data.contentUrl,
-        caption: parsed.data.caption,
-        notes: parsed.data.notes,
+        caption: parsed.data.caption || null,
+        notes: parsed.data.notes || null,
       },
     })
 
@@ -72,6 +76,9 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
+    const adminGate = await requireAdminApiUser()
+    if (adminGate.response) return adminGate.response
+
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 

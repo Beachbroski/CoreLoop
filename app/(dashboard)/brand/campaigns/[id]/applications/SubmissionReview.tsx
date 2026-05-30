@@ -7,6 +7,7 @@ export function SubmissionReview({ submissionId }: { submissionId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [confirmReject, setConfirmReject] = useState(false)
 
   async function updateStatus(status: 'APPROVED' | 'REVISION_REQUESTED' | 'REJECTED') {
     setLoading(status)
@@ -50,20 +51,39 @@ export function SubmissionReview({ submissionId }: { submissionId: string }) {
         >
           {loading === 'REVISION_REQUESTED' ? 'Requesting…' : 'Request Revision'}
         </button>
-        <button
-          type="button"
-          onClick={() => updateStatus('REJECTED')}
-          disabled={loading !== null}
-          className="apple-btn-ghost"
-          style={{
-            padding: '12px 16px',
-            fontSize: '.95rem',
-            color: 'var(--danger)',
-            borderColor: 'rgba(225, 29, 72, 0.28)',
-          }}
-        >
-          {loading === 'REJECTED' ? 'Rejecting…' : 'Reject'}
-        </button>
+        {confirmReject ? (
+          <>
+            <span style={{ fontSize: 14, color: 'var(--danger)', alignSelf: 'center' }}>Are you sure?</span>
+            <button
+              type="button"
+              onClick={() => { setConfirmReject(false); updateStatus('REJECTED') }}
+              disabled={loading !== null}
+              className="apple-btn-ghost"
+              style={{ padding: '12px 16px', fontSize: '.95rem', color: 'var(--danger)', borderColor: 'rgba(225, 29, 72, 0.28)' }}
+            >
+              {loading === 'REJECTED' ? 'Rejecting…' : 'Confirm reject'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmReject(false)}
+              disabled={loading !== null}
+              className="apple-btn-ghost"
+              style={{ padding: '12px 16px', fontSize: '.95rem' }}
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmReject(true)}
+            disabled={loading !== null}
+            className="apple-btn-ghost"
+            style={{ padding: '12px 16px', fontSize: '.95rem', color: 'var(--danger)', borderColor: 'rgba(225, 29, 72, 0.28)' }}
+          >
+            Reject
+          </button>
+        )}
       </div>
     </div>
   )

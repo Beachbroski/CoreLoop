@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
+import { requireAdminApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 import {
@@ -19,6 +20,9 @@ export async function PATCH(
     if (!isTrustedOrigin(req)) {
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
+
+    const adminGate = await requireAdminApiUser()
+    if (adminGate.response) return adminGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -94,23 +98,47 @@ export async function PATCH(
       }
     }
 
-    const updated = await prisma.application.update({
-      where: { id },
-      data: {
-        status: parsed.data.status,
-        ...(parsed.data.status === 'REJECTED' ? { paymentIntentId: null } : {}),
-      },
-    })
+    const updated = await prisma.$transaction(async (tx) => {
+      if (parsed.data.status === 'ACCEPTED') {
+        const acceptedCount = await tx.application.count({
+          where: { campaignId: application.campaignId, status: 'ACCEPTED' },
+        })
+        const creatorsNeeded = application.campaign.creatorsNeeded ?? 1
+        if (acceptedCount >= creatorsNeeded) {
+          throw new Error('Campaign already has enough accepted creators')
+        }
+      }
 
-    if (parsed.data.status === 'ACCEPTED') {
-      await prisma.campaign.update({
-        where: { id: application.campaignId },
-        data: { status: 'IN_PROGRESS' },
+      const nextApplication = await tx.application.update({
+        where: { id },
+        data: {
+          status: parsed.data.status,
+          ...(parsed.data.status === 'REJECTED' ? { paymentIntentId: null } : {}),
+        },
       })
-    }
+
+      if (parsed.data.status === 'ACCEPTED') {
+        const acceptedCount = await tx.application.count({
+          where: { campaignId: application.campaignId, status: 'ACCEPTED' },
+        })
+        const creatorsNeeded = application.campaign.creatorsNeeded ?? 1
+        if (acceptedCount >= creatorsNeeded) {
+          await tx.campaign.update({
+            where: { id: application.campaignId },
+            data: { status: 'IN_PROGRESS' },
+          })
+        }
+      }
+
+      return nextApplication
+    })
 
     return Response.json({ success: true, data: updated })
   } catch (err) {
+    if (err instanceof Error && err.message === 'Campaign already has enough accepted creators') {
+      return Response.json({ error: err.message }, { status: 409 })
+    }
+
     console.error('[PATCH /api/applications/[id]]', err)
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }

@@ -128,6 +128,15 @@ async function CampaignDetailContent({ id }: { id: string }) {
               {campaign.applications.length} creator{campaign.applications.length !== 1 ? 's have' : ' has'} applied so far.
             </p>
           </div>
+          {campaign.applications.some(a => a.status === 'ACCEPTED') && (
+            <a
+              href={`/brand/campaigns/${campaign.id}/applications`}
+              className="apple-btn"
+              style={{ padding: '8px 18px', fontSize: 15, textDecoration: 'none' }}
+            >
+              Review submissions
+            </a>
+          )}
         </div>
 
         {campaign.applications.length === 0 ? (

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
+import { Analytics } from '@vercel/analytics/next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { baseClerkAppearance } from '@/lib/clerk-appearance'
 import { getSiteUrl } from '@/lib/site-url'
@@ -20,15 +21,25 @@ if (process.env.NODE_ENV === 'production' && clerkPublishableKey.startsWith('pk_
 }
 
 export const metadata: Metadata = {
-  title: 'CoreLoop — Creator Marketplace',
-  description: 'Connect brands with creators. Get paid for your content.',
+  title: 'CreatorDocks — Creator Waitlist',
+  description: 'Join CreatorDocks free and get matched with local brand deals that fit.',
   metadataBase: siteUrl ? new URL(siteUrl) : undefined,
+  alternates: {
+    canonical: siteUrl || undefined,
+  },
   openGraph: {
-    title: 'CoreLoop — Creator Marketplace',
-    description: 'A cleaner way for brands and creators to work together.',
+    title: 'CreatorDocks — Local Brand Deals for Creators',
+    description: 'Join free, get matched with local brands, and get paid through the platform when deals go live.',
     url: siteUrl || undefined,
-    siteName: 'CoreLoop',
+    siteName: 'CreatorDocks',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'CreatorDocks creator waitlist' }],
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CreatorDocks — Creator Waitlist',
+    description: 'We match creators with local brand deals that fit.',
+    images: ['/opengraph-image'],
   },
 }
 
@@ -41,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           style={{ fontFamily: 'var(--font-display), sans-serif' }}
         >
           {children}
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>

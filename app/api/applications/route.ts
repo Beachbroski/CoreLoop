@@ -1,12 +1,13 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
+import { requireAdminApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 const createSchema = z.object({
   campaignId: z.string().min(1),
-  pitch: z.string().min(20),
-  proposedRate: z.number().int().min(100),
+  pitch: z.string().min(20).max(2000),
+  proposedRate: z.number().int().min(100).max(10_000_000),
 })
 
 export async function POST(req: Request) {
@@ -14,6 +15,9 @@ export async function POST(req: Request) {
     if (!isTrustedOrigin(req)) {
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
+
+    const adminGate = await requireAdminApiUser()
+    if (adminGate.response) return adminGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -84,6 +88,9 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
+    const adminGate = await requireAdminApiUser()
+    if (adminGate.response) return adminGate.response
+
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 

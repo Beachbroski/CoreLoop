@@ -155,6 +155,12 @@ export function SubmitContentModal({ applicationId }: SubmitContentModalProps) {
                 />
               </div>
 
+              {!uploadedUrl && (
+                <p style={{ margin: 0, fontSize: 13, color: '#6e6e73' }}>
+                  Upload a file above before submitting.
+                </p>
+              )}
+
               <div className="overlay-panel-actions">
                 <button
                   type="submit"

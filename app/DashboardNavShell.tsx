@@ -38,7 +38,7 @@ export function DashboardNavShell({
       <div className="mobile-dashboard-bar">
         <Link href={homeHref} className="brand-lockup">
           <span className="brand-mark" />
-          <span className="brand-wordmark">CoreLoop</span>
+          <span className="brand-wordmark">CreatorDocks</span>
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -68,7 +68,7 @@ export function DashboardNavShell({
                 <p className="sidebar-label" style={{ margin: '0 0 6px' }}>{homeLabel}</p>
                 <div className="brand-lockup">
                   <span className="brand-mark" />
-                  <span className="brand-wordmark">CoreLoop</span>
+                  <span className="brand-wordmark">CreatorDocks</span>
                 </div>
               </div>
               <button
@@ -108,7 +108,7 @@ export function DashboardNavShell({
         <div className="sidebar-block">
           <Link href={homeHref} className="brand-lockup">
             <span className="brand-mark" />
-            <span className="brand-wordmark">CoreLoop</span>
+            <span className="brand-wordmark">CreatorDocks</span>
           </Link>
           <p className="sidebar-label">{homeLabel}</p>
         </div>

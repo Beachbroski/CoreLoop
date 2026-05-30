@@ -23,7 +23,8 @@ export default function NewCampaignPage() {
     const form = e.currentTarget
     const data = new FormData(form)
     const budgetCents = Math.round(parseFloat(data.get('budget') as string) * 100)
-    const deadline = new Date(data.get('deadline') as string).toISOString()
+    // Append end-of-day time so "June 1" means June 1 23:59:59 local, not UTC midnight
+    const deadline = new Date(`${data.get('deadline') as string}T23:59:59`).toISOString()
 
     try {
       const res = await fetch('/api/campaigns', {

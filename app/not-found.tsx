@@ -6,7 +6,7 @@ export default function NotFound() {
       <div className="section-frame subtle-grid spacing-xl" style={{ width: 'min(760px, 100%)', textAlign: 'center' }}>
         <div className="brand-lockup" style={{ justifyContent: 'center' }}>
           <span className="brand-mark" />
-          <span className="brand-wordmark">CoreLoop</span>
+          <span className="brand-wordmark">CreatorDocks</span>
         </div>
 
         <div>

@@ -25,32 +25,57 @@ model User {
   payouts      Payout[]
 }
 
+model WaitlistSubmission {
+  id                 String               @id @default(cuid())
+  name               String?
+  email              String               @unique
+  primaryPlatform    String?
+  handle             String?
+  niche              String?
+  followerRange      String?
+  referralCode       String               @unique
+  referredById       String?
+  referredBy         WaitlistSubmission?  @relation("WaitlistReferrals", fields: [referredById], references: [id])
+  referrals          WaitlistSubmission[] @relation("WaitlistReferrals")
+  status             WaitlistStatus       @default(NEW)
+  profileCompletedAt DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
 enum Role {
   BRAND
   CREATOR
   ADMIN
 }
 
+enum WaitlistStatus {
+  NEW
+  CONTACTED
+  APPROVED
+  INVITED
+}
+
 model Campaign {
-  id          String         @id @default(cuid())
-  brandId     String
-  brand       User           @relation(fields: [brandId], references: [id])
-  title       String
-  description String
-  objective   String?
-  deliverables String?
-  targetAudience String?
+  id                  String         @id @default(cuid())
+  brandId             String
+  brand               User           @relation(fields: [brandId], references: [id])
+  title               String
+  description         String
+  objective           String?
+  deliverables        String?
+  targetAudience      String?
   creatorRequirements String?
-  callToAction String?
-  usageRights String?
-  creatorsNeeded Int?
-  budget      Int
-  deadline    DateTime
-  niche       String
-  platforms   String[]
-  status      CampaignStatus @default(DRAFT)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  callToAction        String?
+  usageRights         String?
+  creatorsNeeded      Int?
+  budget              Int
+  deadline            DateTime
+  niche               String
+  platforms           String[]
+  status              CampaignStatus @default(DRAFT)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   applications Application[]
 }

@@ -22,7 +22,7 @@ const audienceContent: Record<
     label: 'For creators',
     title: 'Find better-fit campaigns and get paid without the awkward chase.',
     copy:
-      'CoreLoop helps creators discover paid opportunities, apply quickly, submit work in one place, and build a real track record brands can trust.',
+      'CreatorDocks helps creators discover paid opportunities, apply quickly, submit work in one place, and build a real track record brands can trust.',
     bullets: [
       'Discover live campaigns that actually match your niche and platforms.',
       'Apply with a short pitch instead of endless outbound outreach.',
@@ -43,7 +43,7 @@ const audienceContent: Record<
     label: 'For businesses',
     title: 'Run creator campaigns without juggling ten conversations across ten tools.',
     copy:
-      'CoreLoop gives businesses one place to post briefs, review applicants, manage content delivery, and release payment only when the work is approved.',
+      'CreatorDocks gives businesses one place to post briefs, review applicants, manage content delivery, and release payment only when the work is approved.',
     bullets: [
       'Post a campaign brief in minutes with budget, niche, and delivery details.',
       'Review creator applications and rates in one calm workspace.',
@@ -72,10 +72,10 @@ export function HomeAudienceTabs() {
         <div style={{ maxWidth: 720 }}>
           <span className="eyebrow">Choose your side</span>
           <h2 className="section-title" style={{ marginTop: 18, marginBottom: 12 }}>
-            CoreLoop gives each side of the deal a better outcome.
+            CreatorDocks gives each side of the deal a better outcome.
           </h2>
           <p className="section-copy" style={{ margin: 0 }}>
-            Pick the view that matches how you use the platform and see what CoreLoop actually helps you obtain.
+            Pick the view that matches how you use the platform and see what CreatorDocks actually helps you obtain.
           </p>
         </div>
 

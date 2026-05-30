@@ -56,16 +56,10 @@ export async function POST(req: Request) {
             avatarUrl: image_url,
           },
         })
-      } else {
-        await prisma.user.create({
-          data: {
-            clerkId: id,
-            email: primaryEmail,
-            name: `${first_name ?? ''} ${last_name ?? ''}`.trim() || null,
-            avatarUrl: image_url,
-          },
-        })
       }
+      // New users are created lazily in /api/users/role once they complete onboarding.
+      // Creating here would assign the schema default role (CREATOR) before the user
+      // has chosen, causing the onboarding page to skip role selection entirely.
     } catch (err) {
       console.error('[clerk webhook] user.created failed', err)
       return new Response('Database error', { status: 500 })

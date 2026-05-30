@@ -5,14 +5,14 @@ export default function SupportPage() {
   return (
     <PublicPageShell
       eyebrow="Support"
-      title="Get help with campaigns, payouts, and account issues."
-      description="Use this page as the main support surface for brands and creators. It covers where to reach out and what details help resolve issues fastest."
+      title="Get help with waitlist access, testing accounts, and payout setup."
+      description="Use this page as the main support surface for CreatorDocks. It covers public waitlist questions plus internal testing issues for approved accounts."
     >
       <section className="dashboard-panel">
         <h2>Contact support</h2>
         <p className="page-copy" style={{ margin: 0 }}>
-          Email <a href="mailto:support@coreloop.com" className="apple-link">support@coreloop.com</a> for account access issues,
-          payout questions, campaign problems, or anything blocking a creator or brand workflow.
+          Email <a href="mailto:support@creatordocks.com" className="apple-link">support@creatordocks.com</a> for waitlist questions,
+          tester access issues, payout setup problems, or anything blocking a creator workflow.
         </p>
       </section>
 
@@ -41,12 +41,12 @@ export default function SupportPage() {
       <section className="dashboard-panel">
         <h2>Need to go back?</h2>
         <p className="page-copy" style={{ margin: '0 0 14px' }}>
-          Return to the homepage, sign in, or continue creating your account.
+          Return to the homepage, join the waitlist, or sign in if you already have internal access.
         </p>
         <div className="cta-row">
           <Link href="/" className="apple-btn-ghost">Home</Link>
+          <Link href="/waitlist" className="apple-btn-ghost">Waitlist</Link>
           <Link href="/sign-in" className="apple-btn-ghost">Sign in</Link>
-          <Link href="/sign-up" className="apple-btn">Create account</Link>
         </div>
       </section>
     </PublicPageShell>

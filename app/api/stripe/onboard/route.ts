@@ -1,4 +1,5 @@
 import { auth } from '@clerk/nextjs/server'
+import { requireAdminApiUser } from '@/lib/admin-api-guard'
 import { stripe } from '@/lib/stripe'
 import prisma from '@/lib/prisma'
 import { getSiteUrl } from '@/lib/site-url'
@@ -9,6 +10,9 @@ export async function POST(_req: Request) {
     if (!isTrustedOrigin(_req)) {
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
+
+    const adminGate = await requireAdminApiUser()
+    if (adminGate.response) return adminGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })

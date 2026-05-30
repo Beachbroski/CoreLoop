@@ -63,6 +63,10 @@ export function isTrustedOrigin(req: Request): boolean {
     }
   }
 
+  if (!origin && !referer && process.env.NODE_ENV === 'production') {
+    return false
+  }
+
   const secFetchSite = req.headers.get('sec-fetch-site')
   if (secFetchSite && !['same-origin', 'same-site', 'none'].includes(secFetchSite)) {
     return false

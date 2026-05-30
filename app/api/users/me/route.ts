@@ -1,9 +1,8 @@
-import { auth } from '@clerk/nextjs/server'
-import prisma from '@/lib/prisma'
+import { getCurrentAppUser } from '@/lib/current-app-user'
 
 export async function GET() {
   try {
-    const { userId } = await auth()
+    const { userId, user } = await getCurrentAppUser()
     if (!userId) {
       return Response.json(
         {
@@ -17,33 +16,24 @@ export async function GET() {
       )
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      select: { role: true },
-    })
-
     if (!user) {
       return Response.json({
         authenticated: true,
         hasProfile: false,
         role: null,
-        onboardingRequired: true,
-        redirectTo: '/onboarding',
+        onboardingRequired: false,
+        redirectTo: '/waitlist',
       })
     }
 
-    const isSupportedRole = user.role === 'BRAND' || user.role === 'CREATOR'
-    const redirectTo = user.role === 'BRAND'
-      ? '/brand'
-      : user.role === 'CREATOR'
-        ? '/creator'
-        : '/onboarding'
+    const isAdmin = user.role === 'ADMIN'
+    const redirectTo = isAdmin ? '/internal/waitlist' : '/waitlist'
 
     return Response.json({
       authenticated: true,
       hasProfile: true,
-      role: isSupportedRole ? user.role : null,
-      onboardingRequired: !isSupportedRole,
+      role: isAdmin ? user.role : null,
+      onboardingRequired: false,
       redirectTo,
     })
   } catch (err) {

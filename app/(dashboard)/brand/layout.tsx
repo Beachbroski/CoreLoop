@@ -1,17 +1,12 @@
-import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import prisma from '@/lib/prisma'
+import { getCurrentAppUser } from '@/lib/current-app-user'
 
 export default async function BrandLayout({ children }: { children: React.ReactNode }) {
-  const { userId } = await auth()
+  const { userId, user } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
-  if (user.role !== 'BRAND') {
-    if (user.role === 'CREATOR') redirect('/creator')
-    redirect('/onboarding')
-  }
+  if (!user) redirect('/waitlist')
+  if (user.role !== 'ADMIN') redirect('/waitlist')
 
   return <>{children}</>
 }

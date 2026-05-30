@@ -111,6 +111,7 @@ export function ApplyModal({ campaignId, campaignTitle, budget }: ApplyModalProp
                   name="pitch"
                   required
                   minLength={20}
+                  maxLength={2000}
                   rows={5}
                   placeholder="Why are you the right creator for this campaign? What's your approach?"
                   style={{ ...inputStyle, resize: 'none' }}
@@ -136,6 +137,7 @@ export function ApplyModal({ campaignId, campaignTitle, budget }: ApplyModalProp
                   type="number"
                   required
                   min={1}
+                  max={100000}
                   step={0.01}
                   placeholder={String(budget / 100)}
                   style={inputStyle}

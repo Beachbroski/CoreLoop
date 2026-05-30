@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
+import { requireAdminApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
 import { releasePayout } from '@/lib/payout'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
@@ -16,6 +17,9 @@ export async function PATCH(
     if (!isTrustedOrigin(req)) {
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
+
+    const adminGate = await requireAdminApiUser()
+    if (adminGate.response) return adminGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -58,6 +62,13 @@ export async function PATCH(
       return Response.json({ error: parsed.error.issues[0].message }, { status: 400 })
     }
 
+    if (submission.status === 'APPROVED') {
+      return Response.json(
+        { error: 'Approved submissions can no longer be moved to another state' },
+        { status: 409 },
+      )
+    }
+
     if (parsed.data.status === 'APPROVED') {
       const paymentIntentId = submission.application.paymentIntentId
       if (!paymentIntentId) {
@@ -70,13 +81,6 @@ export async function PATCH(
       await releasePayout(submission.id, paymentIntentId)
       const approvedSubmission = await prisma.submission.findUnique({ where: { id } })
       return Response.json({ success: true, data: approvedSubmission })
-    }
-
-    if (submission.status === 'APPROVED') {
-      return Response.json(
-        { error: 'Approved submissions can no longer be moved to another state' },
-        { status: 409 },
-      )
     }
 
     const updated = await prisma.submission.update({

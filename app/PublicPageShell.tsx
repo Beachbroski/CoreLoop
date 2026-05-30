@@ -18,16 +18,17 @@ export function PublicPageShell({
       <nav className="apple-nav">
         <Link href="/" className="brand-lockup">
           <span className="brand-mark" />
-          <span className="brand-wordmark">CoreLoop</span>
+          <span className="brand-wordmark">CreatorDocks</span>
         </Link>
         <div className="nav-links">
           <Link href="/" className="nav-link">Home</Link>
+          <Link href="/waitlist" className="nav-link">Waitlist</Link>
           <Link href="/privacy" className="nav-link">Privacy</Link>
           <Link href="/terms" className="nav-link">Terms</Link>
           <Link href="/support" className="nav-link">Support</Link>
-          <Link href="/sign-in" className="apple-btn-ghost">Sign in</Link>
+          <Link href="/sign-in" className="nav-link tester-link">Tester sign in</Link>
         </div>
-        <Link href="/sign-up" className="apple-btn mobile-nav-cta">Get started</Link>
+        <Link href="/waitlist" className="apple-btn mobile-nav-cta">Join waitlist</Link>
       </nav>
 
       <main className="apple-shell" style={{ paddingTop: 28, paddingBottom: 60 }}>
