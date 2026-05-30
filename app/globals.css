@@ -142,10 +142,14 @@ select {
   width: 34px;
   height: 34px;
   border-radius: 11px;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), transparent 45%),
-    linear-gradient(145deg, #111827 0%, #1d4ed8 54%, #60a5fa 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 14px 30px rgba(19, 113, 255, 0.22);
+  display: inline-block;
+  flex: 0 0 auto;
+  background-color: #ff503d;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23ff503d'/%3E%3Ctext x='50' y='70' text-anchor='middle' font-family='Arial, Helvetica, sans-serif' font-size='66' font-weight='900' fill='white'%3ED%3C/text%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 14px 30px rgba(255, 80, 61, 0.22);
 }
 
 .brand-wordmark {
@@ -1215,6 +1219,42 @@ select {
   flex-wrap: wrap;
 }
 
+.admin-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-newest-grid,
+.admin-filter-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-newest-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-newest-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(241, 245, 249, 0.56);
+}
+
+.admin-filter-grid {
+  grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(150px, 1fr));
+  align-items: end;
+  margin: 22px 0;
+}
+
+.admin-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.45;
   cursor: pointer;
@@ -1231,6 +1271,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .feature-card {
     grid-column: span 12;
+  }
+
+  .admin-metric-grid,
+  .admin-newest-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .bento-card,
@@ -1378,6 +1427,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .three-col,
   .two-col,
   .role-grid,
+  .admin-metric-grid,
+  .admin-newest-grid,
+  .admin-filter-grid,
   .waitlist-field-grid,
   .waitlist-meta-grid {
     grid-template-columns: 1fr;

@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation'
+import { isAllowedAdminUser } from '@/lib/admin-config'
 import { getCurrentAppUser } from '@/lib/current-app-user'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { userId, user } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
-  if (!user) redirect('/waitlist')
-  if (user.role !== 'ADMIN') redirect('/waitlist')
+  if (!isAllowedAdminUser(user)) redirect('/waitlist')
 
   return <>{children}</>
 }

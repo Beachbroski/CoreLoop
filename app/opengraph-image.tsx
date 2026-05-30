@@ -29,9 +29,18 @@ export default function Image() {
               width: 66,
               height: 66,
               borderRadius: 20,
-              background: 'linear-gradient(145deg, #111827 0%, #1d4ed8 54%, #60a5fa 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#ff503d',
+              color: 'white',
+              fontSize: 44,
+              fontWeight: 900,
+              letterSpacing: '-0.08em',
             }}
-          />
+          >
+            D
+          </div>
           CreatorDocks
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>

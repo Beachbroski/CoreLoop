@@ -1,4 +1,5 @@
 import { getCurrentAppUser } from '@/lib/current-app-user'
+import { getAdminSecretPath, isAllowedAdminUser } from '@/lib/admin-config'
 
 export async function GET() {
   try {
@@ -26,8 +27,8 @@ export async function GET() {
       })
     }
 
-    const isAdmin = user.role === 'ADMIN'
-    const redirectTo = isAdmin ? '/internal/waitlist' : '/waitlist'
+    const isAdmin = isAllowedAdminUser(user)
+    const redirectTo = isAdmin ? (getAdminSecretPath() ?? '/waitlist') : '/waitlist'
 
     return Response.json({
       authenticated: true,

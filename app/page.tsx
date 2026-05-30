@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { getCurrentAppUser } from '@/lib/current-app-user'
+import { Suspense } from 'react'
 import { WaitlistForm } from './waitlist/WaitlistForm'
 
 const creatorSignals = [
@@ -44,15 +43,7 @@ const faqItems = [
   },
 ]
 
-export default async function HomePage() {
-  const { userId, user } = await getCurrentAppUser()
-
-  if (userId) {
-    if (!user) redirect('/waitlist')
-    if (user.role === 'ADMIN') redirect('/internal/waitlist')
-    redirect('/waitlist')
-  }
-
+export default function HomePage() {
   return (
     <div>
       <nav className="apple-nav">
@@ -193,7 +184,9 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <WaitlistForm />
+            <Suspense fallback={<div className="dashboard-panel">Loading waitlist form...</div>}>
+              <WaitlistForm />
+            </Suspense>
           </div>
         </section>
 

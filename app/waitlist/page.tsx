@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { getCurrentAppUser } from '@/lib/current-app-user'
+import { Suspense } from 'react'
 import { getSiteUrl } from '@/lib/site-url'
 import { WaitlistForm } from './WaitlistForm'
 
@@ -30,13 +29,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function WaitlistPage() {
-  const { userId, user } = await getCurrentAppUser()
-
-  if (userId) {
-    if (user?.role === 'ADMIN') redirect('/internal/waitlist')
-  }
-
+export default function WaitlistPage() {
   return (
     <div>
       <nav className="apple-nav">
@@ -70,7 +63,9 @@ export default async function WaitlistPage() {
           </div>
 
           <section id="form">
-            <WaitlistForm compact />
+            <Suspense fallback={<div className="dashboard-panel">Loading waitlist form...</div>}>
+              <WaitlistForm compact />
+            </Suspense>
           </section>
         </section>
       </main>

@@ -37,12 +37,14 @@ export function WaitlistStatusControl({
 
       if (!res.ok) {
         const text = await res.text()
+        let errorMessage = 'Unable to update status.'
         try {
           const parsed = JSON.parse(text) as { error?: string }
-          throw new Error(parsed.error ?? 'Unable to update status.')
+          errorMessage = parsed.error ?? errorMessage
         } catch {
-          throw new Error('Unable to update status.')
+          // Keep the generic fallback when the server returns non-JSON.
         }
+        throw new Error(errorMessage)
       }
 
       setMessage('Saved')

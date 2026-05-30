@@ -1,5 +1,11 @@
 import prisma from '@/lib/prisma'
 import { getCurrentAppUser } from '@/lib/current-app-user'
+import {
+  ADMIN_SECRET_HEADER,
+  isAllowedAdminUser,
+  isProductionDeployment,
+} from '@/lib/admin-config'
+import { headers } from 'next/headers'
 
 function escapeCsv(value: string | number | null | undefined) {
   const rawValue = value == null ? '' : String(value)
@@ -9,12 +15,17 @@ function escapeCsv(value: string | number | null | undefined) {
 }
 
 export async function GET() {
+  const requestHeaders = await headers()
+  if (isProductionDeployment() && requestHeaders.get(ADMIN_SECRET_HEADER) !== '1') {
+    return new Response('Not found', { status: 404 })
+  }
+
   const { userId, user } = await getCurrentAppUser()
   if (!userId) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  if (!user || user.role !== 'ADMIN') {
+  if (!isAllowedAdminUser(user)) {
     return new Response('Forbidden', { status: 403 })
   }
 
@@ -30,7 +41,7 @@ export async function GET() {
     },
   })
 
-  const headers = [
+  const csvHeaders = [
     'name',
     'email',
     'primaryPlatform',
@@ -62,7 +73,7 @@ export async function GET() {
     submission.createdAt.toISOString(),
   ].map(escapeCsv).join(',')))
 
-  const csv = [headers.join(','), ...rows].join('\n')
+  const csv = [csvHeaders.join(','), ...rows].join('\n')
 
   return new Response(csv, {
     status: 200,
