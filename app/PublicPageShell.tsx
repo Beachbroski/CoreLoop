@@ -1,49 +1,110 @@
 import Link from 'next/link'
+import { PublicWaitlistLink } from './PublicWaitlistLink'
 
 interface PublicPageShellProps {
-  eyebrow: string
-  title: string
-  description: string
+  variant?: 'content' | 'form'
+  eyebrow?: string
+  title?: string
+  description?: string
   children: React.ReactNode
 }
 
+const waitlistQuerySyncScript = `
+(() => {
+  const syncWaitlistLinks = () => {
+    const query = window.location.search
+    if (!query) return
+
+    document.querySelectorAll('a[data-public-waitlist-link="true"]').forEach((link) => {
+      link.setAttribute('href', '/waitlist' + query)
+    })
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncWaitlistLinks, { once: true })
+  } else {
+    syncWaitlistLinks()
+  }
+})()
+`
+
+function PublicNav({ variant }: { variant: 'content' | 'form' }) {
+  return (
+    <nav className={`apple-nav public-nav public-nav-${variant}`}>
+      <Link href="/" className="brand-lockup">
+        <span className="brand-mark" />
+        <span className="brand-wordmark">CreatorDocks</span>
+      </Link>
+
+      {variant === 'form' ? (
+        <div className="nav-links">
+          <Link href="/" className="nav-link">← Back to site</Link>
+        </div>
+      ) : (
+        <>
+          <div className="nav-links">
+            <Link href="/#how-it-works" className="nav-link">How it works</Link>
+            <Link href="/#local-brands" className="nav-link">Local brands</Link>
+          </div>
+          <PublicWaitlistLink className="apple-btn public-nav-cta">Join waitlist</PublicWaitlistLink>
+        </>
+      )}
+    </nav>
+  )
+}
+
+function PublicFooter() {
+  const year = new Date().getFullYear()
+
+  return (
+    <footer className="public-footer apple-shell">
+      <div className="brand-lockup">
+        <span className="brand-mark" />
+        <span className="brand-wordmark">CreatorDocks</span>
+      </div>
+      <div className="public-footer-links">
+        <Link href="/privacy" className="footer-link">Privacy</Link>
+        <Link href="/terms" className="footer-link">Terms</Link>
+        <Link href="/support" className="footer-link">Support</Link>
+        <Link href="/sign-in" className="footer-link tester-link">Tester sign in</Link>
+      </div>
+      {/* Social links placeholder: add TikTok/Instagram/X handles once finalized. */}
+      <p className="public-footer-copy">© CreatorDocks {year}</p>
+    </footer>
+  )
+}
+
 export function PublicPageShell({
+  variant = 'content',
   eyebrow,
   title,
   description,
   children,
 }: PublicPageShellProps) {
+  const hasIntro = Boolean(eyebrow || title || description)
+
   return (
     <div>
-      <nav className="apple-nav">
-        <Link href="/" className="brand-lockup">
-          <span className="brand-mark" />
-          <span className="brand-wordmark">CreatorDocks</span>
-        </Link>
-        <div className="nav-links">
-          <Link href="/" className="nav-link">Home</Link>
-          <Link href="/waitlist" className="nav-link">Waitlist</Link>
-          <Link href="/privacy" className="nav-link">Privacy</Link>
-          <Link href="/terms" className="nav-link">Terms</Link>
-          <Link href="/support" className="nav-link">Support</Link>
-          <Link href="/sign-in" className="nav-link tester-link">Tester sign in</Link>
-        </div>
-        <Link href="/waitlist" className="apple-btn mobile-nav-cta">Join waitlist</Link>
-      </nav>
+      <PublicNav variant={variant} />
 
-      <main className="apple-shell" style={{ paddingTop: 28, paddingBottom: 60 }}>
-        <section className="section-frame subtle-grid spacing-xl">
-          <div style={{ maxWidth: 820 }}>
-            <span className="eyebrow">{eyebrow}</span>
-            <h1 className="page-title" style={{ marginTop: 18, marginBottom: 12 }}>{title}</h1>
-            <p className="page-copy" style={{ margin: 0, maxWidth: 720 }}>{description}</p>
-          </div>
+      <main className="apple-shell" style={{ paddingTop: hasIntro ? 28 : 0, paddingBottom: 60 }}>
+        {hasIntro ? (
+          <section className="section-frame subtle-grid spacing-xl">
+            <div style={{ maxWidth: 820 }}>
+              {eyebrow ? <span className="eyebrow">{eyebrow}</span> : null}
+              {title ? <h1 className="page-title" style={{ marginTop: 18, marginBottom: 12 }}>{title}</h1> : null}
+              {description ? <p className="page-copy" style={{ margin: 0, maxWidth: 720 }}>{description}</p> : null}
+            </div>
 
-          <div className="subtle-grid">
-            {children}
-          </div>
-        </section>
+            <div className="subtle-grid">
+              {children}
+            </div>
+          </section>
+        ) : children}
       </main>
+
+      <PublicFooter />
+      <script dangerouslySetInnerHTML={{ __html: waitlistQuerySyncScript }} />
     </div>
   )
 }

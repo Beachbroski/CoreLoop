@@ -184,6 +184,35 @@ select {
   background: rgba(255, 255, 255, 0.7);
 }
 
+.public-nav-cta {
+  flex: 0 0 auto;
+}
+
+.public-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 0 auto 22px;
+  padding: 24px 0 36px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.public-footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.public-footer-copy {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 0.92rem;
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
@@ -1383,12 +1412,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .apple-nav {
     margin-top: 8px;
     padding: 8px 10px;
+    gap: 10px;
   }
 
   .mobile-nav-cta {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .public-nav-cta {
+    padding-inline: 14px;
   }
 
   .hero-grid {
@@ -1527,12 +1561,27 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     width: 100%;
   }
 
-  .nav-links {
+  .public-nav-content .nav-links {
     display: none;
+  }
+
+  .public-nav-form .nav-links {
+    display: flex;
+    margin-left: auto;
   }
 }
 
 @media (max-width: 640px) {
+  .public-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-bottom: 28px;
+  }
+
+  .public-footer-links {
+    justify-content: flex-start;
+  }
+
   .brand-mark {
     width: 30px;
     height: 30px;

@@ -1,6 +1,5 @@
-import Link from 'next/link'
-import { Suspense } from 'react'
-import { WaitlistForm } from './waitlist/WaitlistForm'
+import { PublicPageShell } from './PublicPageShell'
+import { PublicWaitlistLink } from './PublicWaitlistLink'
 
 const creatorSignals = [
   { value: 'Free for creators', label: 'Brands pay the platform fee when paid deals happen.' },
@@ -45,22 +44,7 @@ const faqItems = [
 
 export default function HomePage() {
   return (
-    <div>
-      <nav className="apple-nav">
-        <Link href="/" className="brand-lockup">
-          <span className="brand-mark" />
-          <span className="brand-wordmark">CreatorDocks</span>
-        </Link>
-        <div className="nav-links">
-          <a href="#how-it-works" className="nav-link">How it works</a>
-          <a href="#local-brands" className="nav-link">Local brands</a>
-          <a href="#waitlist" className="nav-link">Join waitlist</a>
-          <Link href="/sign-in" className="nav-link tester-link">Tester sign in</Link>
-        </div>
-        <a href="#waitlist" className="apple-btn mobile-nav-cta">Join waitlist</a>
-      </nav>
-
-      <main className="apple-shell">
+    <PublicPageShell>
         <section className="hero-grid">
           <div className="hero-copy-stack">
             <span className="eyebrow">Invite-led creator cohort</span>
@@ -69,8 +53,7 @@ export default function HomePage() {
               CreatorDocks is building a curated creator roster for local businesses that need real content. Join free, get matched in rolling waves, and get paid through the platform when deals go live.
             </p>
             <div className="cta-row">
-              <a href="#waitlist" className="apple-btn">Join the waitlist</a>
-              <Link href="/waitlist" className="apple-btn-ghost">Open full form</Link>
+              <PublicWaitlistLink className="apple-btn">Join the waitlist</PublicWaitlistLink>
             </div>
             <div className="chip-row">
               {localBrandTypes.map(type => (
@@ -172,21 +155,21 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="waitlist" className="marketing-section" style={{ paddingBottom: 24 }}>
+        <section className="marketing-section" style={{ paddingBottom: 24 }}>
           <div className="section-frame subtle-grid spacing-xl">
             <div style={{ maxWidth: 760 }}>
               <span className="eyebrow">Join the waitlist</span>
               <h2 className="section-title" style={{ marginTop: 18, marginBottom: 12 }}>
-                Save your spot now. Add details when you have another minute.
+                Ready to get matched with local brand deals that fit?
               </h2>
               <p className="section-copy" style={{ margin: 0 }}>
-                The first step only needs your email. The second helps us curate matches by niche, handle, follower range, and platform.
+                Join the invite-led CreatorDocks roster in under a minute. We will use your details to curate the first creator cohorts.
               </p>
             </div>
 
-            <Suspense fallback={<div className="dashboard-panel">Loading waitlist form...</div>}>
-              <WaitlistForm />
-            </Suspense>
+            <div className="cta-row">
+              <PublicWaitlistLink className="apple-btn">Join the waitlist</PublicWaitlistLink>
+            </div>
           </div>
         </section>
 
@@ -209,7 +192,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-      </main>
-    </div>
+    </PublicPageShell>
   )
 }
