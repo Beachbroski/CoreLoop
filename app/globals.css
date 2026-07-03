@@ -507,10 +507,6 @@ select {
   line-height: 1.12;
 }
 
-.muted {
-  color: var(--text-soft);
-}
-
 .chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -550,8 +546,6 @@ select {
   border-radius: 999px;
 }
 
-.learn-more-link,
-.feature-link,
 .apple-link {
   display: inline-flex;
   align-items: center;
@@ -569,8 +563,6 @@ select {
 }
 
 .footer-link:hover,
-.learn-more-link:hover,
-.feature-link:hover,
 .apple-link:hover {
   color: var(--accent-strong);
 }
@@ -842,30 +834,6 @@ select {
   display: grid;
   gap: 24px;
   justify-items: center;
-}
-
-.auth-panel-intro {
-  text-align: center;
-  max-width: 26rem;
-}
-
-.auth-panel-eyebrow {
-  margin: 0 0 8px;
-  color: var(--text-faint);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.auth-panel-title {
-  margin-bottom: 10px;
-  text-wrap: balance;
-}
-
-.auth-panel-copy {
-  margin: 0;
-  text-wrap: pretty;
 }
 
 .auth-clerk-shell {
@@ -1436,11 +1404,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     gap: 18px;
   }
 
-  .auth-panel-intro {
-    text-align: left;
-    width: 100%;
-  }
-
   .auth-clerk-shell {
     width: 100%;
   }
@@ -1578,9 +1541,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     justify-items: stretch;
   }
 
-  .auth-panel-intro {
-    display: none;
-  }
 
   .auth-panel {
     padding: 0;

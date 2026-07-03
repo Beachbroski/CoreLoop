@@ -9,13 +9,9 @@ This app is already a good fit for Vercel because it is a full Next.js applicati
 - PostgreSQL / Prisma
 - UploadThing
 
-## 1. Create the GitHub repo
+## 1. GitHub repo
 
-The project currently has **no git remote configured**, so start here.
-
-1. Create a new GitHub repository.
-2. Push `/Users/jsteele/Desktop/CreatorDocks/marketplace` to that repo.
-3. Keep `main` as the initial production branch unless you want previews gated behind a separate branch.
+The project already lives at `github.com/Beachbroski/CoreLoop`, with `main` as the production branch. Push feature branches there and merge to `main` when ready to deploy.
 
 ## 2. Buy the domain
 
