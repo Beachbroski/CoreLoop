@@ -72,9 +72,9 @@ export default function HomePage() {
                     <p style={{ margin: '0 0 4px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
                       The first cohort
                     </p>
-                    <h2 style={{ margin: 0, fontSize: '1.7rem', letterSpacing: '-0.04em' }}>
+                    <p style={{ margin: 0, fontSize: '1.7rem', fontWeight: 600, letterSpacing: '-0.04em' }}>
                       Local deals, curated by fit.
-                    </h2>
+                    </p>
                   </div>
                   <span className="status-pill" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
                     Rolling
@@ -134,19 +134,19 @@ export default function HomePage() {
 
             <div className="bento-grid">
               <section className="dashboard-panel bento-card bento-card-wide">
-                <h2>Why local first</h2>
+                <h3>Why local first</h3>
                 <p className="section-copy" style={{ margin: 0 }}>
                   Local brands care about creators who understand the city, the audience, and the kind of content that makes someone actually show up.
                 </p>
               </section>
               <section className="dashboard-panel bento-card">
-                <h2>Creators stay free</h2>
+                <h3>Creators stay free</h3>
                 <p className="section-copy" style={{ margin: 0 }}>
                   You do not pay to join the waitlist or get reviewed for the first creator cohort.
                 </p>
               </section>
               <section className="dashboard-panel bento-card">
-                <h2>Rolling invites</h2>
+                <h3>Rolling invites</h3>
                 <p className="section-copy" style={{ margin: 0 }}>
                   We are opening access in waves as the right brand opportunities come in.
                 </p>
@@ -185,7 +185,7 @@ export default function HomePage() {
             <div className="faq-grid">
               {faqItems.map(item => (
                 <section key={item.question} className="dashboard-panel">
-                  <h2>{item.question}</h2>
+                  <h3>{item.question}</h3>
                   <p className="section-copy" style={{ margin: 0 }}>{item.answer}</p>
                 </section>
               ))}

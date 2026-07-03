@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         const submission = await prisma.submission.findUnique({
           where: { id: submissionId },
           include: {
-            application: true,
+            application: { include: { campaign: true } },
           },
         })
 
@@ -68,10 +68,20 @@ export async function POST(req: Request) {
             data: { status: 'APPROVED' },
           })
 
-          await tx.campaign.updateMany({
-            where: { id: submission.application.campaignId },
-            data: { status: 'COMPLETE' },
+          // The campaign is only complete once every needed creator has an approved submission.
+          const approvedApplications = await tx.application.count({
+            where: {
+              campaignId: submission.application.campaignId,
+              submissions: { some: { status: 'APPROVED' } },
+            },
           })
+
+          if (approvedApplications >= (submission.application.campaign.creatorsNeeded ?? 1)) {
+            await tx.campaign.updateMany({
+              where: { id: submission.application.campaignId },
+              data: { status: 'COMPLETE' },
+            })
+          }
         })
         break
       }

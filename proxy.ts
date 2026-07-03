@@ -1,12 +1,4 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
-import {
-  ADMIN_SECRET_HEADER,
-  ADMIN_SECRET_REWRITE_PARAM,
-  getInternalAdminRewritePath,
-  isInternalAdminPath,
-  isProductionDeployment,
-} from '@/lib/admin-config'
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -22,28 +14,6 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, req) => {
-  const adminRewritePath = getInternalAdminRewritePath(req.nextUrl.pathname)
-  if (adminRewritePath) {
-    await auth.protect()
-
-    const rewriteUrl = req.nextUrl.clone()
-    rewriteUrl.pathname = adminRewritePath
-    rewriteUrl.searchParams.set(ADMIN_SECRET_REWRITE_PARAM, '1')
-
-    const requestHeaders = new Headers(req.headers)
-    requestHeaders.set(ADMIN_SECRET_HEADER, '1')
-
-    return NextResponse.rewrite(rewriteUrl, {
-      request: {
-        headers: requestHeaders,
-      },
-    })
-  }
-
-  if (isProductionDeployment() && isInternalAdminPath(req.nextUrl.pathname)) {
-    return NextResponse.rewrite(new URL('/404', req.url))
-  }
-
   if (!isPublicRoute(req)) await auth.protect()
 })
 

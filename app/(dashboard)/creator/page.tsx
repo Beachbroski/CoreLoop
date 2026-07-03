@@ -23,21 +23,23 @@ async function CreatorDashboardContent() {
   const user = await prisma.user.findUnique({ where: { clerkId: userId } })
   if (!user) redirect('/onboarding')
 
-  const applications: CreatorDashboardApplication[] = await prisma.application.findMany({
-    where: { creatorId: user.id },
-    include: { campaign: { select: { title: true } } },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
-  })
-
-  const accepted = applications.filter(a => a.status === 'ACCEPTED').length
-  const totalEarned = await prisma.payout.aggregate({
-    where: { creatorId: user.id, status: 'PAID' },
-    _sum: { amount: true },
-  })
+  const [applications, totalApplications, accepted, totalEarned] = await Promise.all([
+    prisma.application.findMany({
+      where: { creatorId: user.id },
+      include: { campaign: { select: { title: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    }) as Promise<CreatorDashboardApplication[]>,
+    prisma.application.count({ where: { creatorId: user.id } }),
+    prisma.application.count({ where: { creatorId: user.id, status: 'ACCEPTED' } }),
+    prisma.payout.aggregate({
+      where: { creatorId: user.id, status: 'PAID' },
+      _sum: { amount: true },
+    }),
+  ])
 
   const stats = [
-    { label: 'Applications submitted', value: String(applications.length) },
+    { label: 'Applications submitted', value: String(totalApplications) },
     { label: 'Accepted this cycle', value: String(accepted) },
     { label: 'Total earned', value: formatCents(totalEarned._sum.amount ?? 0) },
   ]

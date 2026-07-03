@@ -1,12 +1,6 @@
 import prisma from '@/lib/prisma'
 import { getCurrentAppUser } from '@/lib/current-app-user'
-import {
-  ADMIN_SECRET_HEADER,
-  ADMIN_SECRET_REWRITE_PARAM,
-  isAllowedAdminUser,
-  isProductionDeployment,
-} from '@/lib/admin-config'
-import { headers } from 'next/headers'
+import { isAllowedAdminUser } from '@/lib/admin-config'
 
 function escapeCsv(value: string | number | null | undefined) {
   const rawValue = value == null ? '' : String(value)
@@ -15,24 +9,15 @@ function escapeCsv(value: string | number | null | undefined) {
   return `"${stringValue.replace(/"/g, '""')}"`
 }
 
-export async function GET(request: Request) {
-  const requestHeaders = await headers()
-  const rewriteMarker = new URL(request.url).searchParams.get(ADMIN_SECRET_REWRITE_PARAM)
-  if (
-    isProductionDeployment() &&
-    requestHeaders.get(ADMIN_SECRET_HEADER) !== '1' &&
-    rewriteMarker !== '1'
-  ) {
-    return new Response('Not found', { status: 404 })
-  }
-
+export async function GET() {
   const { userId, user } = await getCurrentAppUser()
   if (!userId) {
     return new Response('Unauthorized', { status: 401 })
   }
 
   if (!isAllowedAdminUser(user)) {
-    return new Response('Forbidden', { status: 403 })
+    // 404 instead of 403 so the export path stays concealed from non-admins.
+    return new Response('Not found', { status: 404 })
   }
 
   const submissions = await prisma.waitlistSubmission.findMany({

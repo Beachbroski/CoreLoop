@@ -1,4 +1,4 @@
-# CoreLoop Vercel + Domain Launch
+# CreatorDocks Vercel + Domain Launch
 
 This app is already a good fit for Vercel because it is a full Next.js application with:
 
@@ -14,7 +14,7 @@ This app is already a good fit for Vercel because it is a full Next.js applicati
 The project currently has **no git remote configured**, so start here.
 
 1. Create a new GitHub repository.
-2. Push `/Users/jsteele/Desktop/CoreLoop/marketplace` to that repo.
+2. Push `/Users/jsteele/Desktop/CreatorDocks/marketplace` to that repo.
 3. Keep `main` as the initial production branch unless you want previews gated behind a separate branch.
 
 ## 2. Buy the domain
@@ -65,8 +65,8 @@ Notes:
 1. In Vercel, open the project settings.
 2. Add the purchased domain.
 3. Add both:
-   - apex/root domain, for example `coreloop.com`
-   - `www`, for example `www.coreloop.com`
+   - apex/root domain, for example `creatordocks.com`
+   - `www`, for example `www.creatordocks.com`
 4. Use the DNS records Vercel gives you.
 
 Default canonical setup:

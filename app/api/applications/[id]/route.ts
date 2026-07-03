@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
-import { requireAdminApiUser } from '@/lib/admin-api-guard'
+import { requireTesterApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 import {
@@ -21,8 +21,8 @@ export async function PATCH(
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
 
-    const adminGate = await requireAdminApiUser()
-    if (adminGate.response) return adminGate.response
+    const testerGate = await requireTesterApiUser()
+    if (testerGate.response) return testerGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })

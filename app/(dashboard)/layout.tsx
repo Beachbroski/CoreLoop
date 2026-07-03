@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation'
-import { isAllowedAdminUser } from '@/lib/admin-config'
+import { isTesterEmailAllowed } from '@/lib/admin-config'
 import { getCurrentAppUser } from '@/lib/current-app-user'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { userId, user } = await getCurrentAppUser()
+  const { userId, user, email } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
-  if (!isAllowedAdminUser(user)) redirect('/waitlist')
+  if (!isTesterEmailAllowed(email)) redirect('/waitlist')
+  if (!user) redirect('/onboarding')
 
   return <>{children}</>
 }

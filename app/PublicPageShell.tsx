@@ -9,25 +9,6 @@ interface PublicPageShellProps {
   children: React.ReactNode
 }
 
-const waitlistQuerySyncScript = `
-(() => {
-  const syncWaitlistLinks = () => {
-    const query = window.location.search
-    if (!query) return
-
-    document.querySelectorAll('a[data-public-waitlist-link="true"]').forEach((link) => {
-      link.setAttribute('href', '/waitlist' + query)
-    })
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', syncWaitlistLinks, { once: true })
-  } else {
-    syncWaitlistLinks()
-  }
-})()
-`
-
 function PublicNav({ variant }: { variant: 'content' | 'form' }) {
   return (
     <nav className={`apple-nav public-nav public-nav-${variant}`}>
@@ -104,7 +85,6 @@ export function PublicPageShell({
       </main>
 
       <PublicFooter />
-      <script dangerouslySetInnerHTML={{ __html: waitlistQuerySyncScript }} />
     </div>
   )
 }

@@ -35,13 +35,8 @@ async function BrandDashboardContent() {
   )
   const totalSpent = await prisma.payout.aggregate({
     where: {
-      creator: {
-        id: {
-          in: campaigns.flatMap((campaign: CampaignWithApplications) =>
-            campaign.applications.map(app => app.creatorId),
-          ),
-        },
-      },
+      status: 'PAID',
+      submission: { application: { campaign: { brandId: user.id } } },
     },
     _sum: { amount: true },
   })
