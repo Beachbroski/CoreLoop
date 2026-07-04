@@ -4,7 +4,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import prisma from '@/lib/prisma'
-import { formatCents } from '@/lib/utils'
+import { compareToLastWeek, formatCents, type Trend } from '@/lib/utils'
 
 const STATUS: Record<string, { bg: string; color: string; label: string }> = {
   DRAFT: { bg: 'rgba(15,23,42,0.06)', color: 'var(--text-soft)', label: 'Draft' },
@@ -29,10 +29,21 @@ async function BrandDashboardContent() {
     orderBy: { createdAt: 'desc' },
   })
 
-  const totalApplications = campaigns.reduce(
-    (sum: number, campaign: CampaignWithApplications) => sum + campaign.applications.length,
-    0,
-  )
+  const allApplications = campaigns.flatMap((campaign: CampaignWithApplications) => campaign.applications)
+  const totalApplications = allApplications.length
+  const acceptedCount = allApplications.filter(app => app.status === 'ACCEPTED').length
+  const pendingCount = allApplications.filter(app => app.status === 'PENDING').length
+  const acceptanceRate = totalApplications > 0 ? Math.round((acceptedCount / totalApplications) * 100) : null
+
+  const now = new Date()
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+  const applicationsThisWeek = allApplications.filter(app => app.createdAt >= oneWeekAgo).length
+  const applicationsLastWeek = allApplications.filter(
+    app => app.createdAt >= twoWeeksAgo && app.createdAt < oneWeekAgo,
+  ).length
+  const applicationsTrend = compareToLastWeek(applicationsThisWeek, applicationsLastWeek)
+
   const totalSpent = await prisma.payout.aggregate({
     where: {
       status: 'PAID',
@@ -41,9 +52,10 @@ async function BrandDashboardContent() {
     _sum: { amount: true },
   })
 
-  const stats = [
-    { label: 'Campaigns launched', value: String(campaigns.length) },
-    { label: 'Applications received', value: String(totalApplications) },
+  const stats: Array<{ label: string; value: string; trend?: Trend }> = [
+    { label: 'Applications received', value: String(totalApplications), trend: applicationsTrend },
+    { label: 'Acceptance rate', value: acceptanceRate === null ? '—' : `${acceptanceRate}%` },
+    { label: 'Awaiting review', value: String(pendingCount) },
     { label: 'Total creator spend', value: formatCents(totalSpent._sum.amount ?? 0) },
   ]
 
@@ -62,11 +74,16 @@ async function BrandDashboardContent() {
         <Link href="/brand/campaigns/new" className="apple-btn page-header-action">New campaign</Link>
       </div>
 
-      <div className="subtle-grid three-col">
+      <div className="subtle-grid four-col">
         {stats.map(stat => (
           <div key={stat.label} className="metric-card">
             <p className="metric-value">{stat.value}</p>
             <p className="metric-label" style={{ maxWidth: 190 }}>{stat.label}</p>
+            {stat.trend && (
+              <p className={`metric-trend metric-trend-${stat.trend.direction}`}>
+                {stat.trend.direction === 'up' ? '↑' : stat.trend.direction === 'down' ? '↓' : '→'} {stat.trend.label}
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -153,8 +170,8 @@ function DashboardSkeleton() {
         <div className="shimmer" style={{ height: 52, width: 320, marginBottom: 12 }} />
         <div className="shimmer" style={{ height: 22, width: 460 }} />
       </div>
-      <div className="subtle-grid three-col">
-        {[0, 1, 2].map(i => <div className="shimmer" key={i} style={{ height: 140, borderRadius: 28 }} />)}
+      <div className="subtle-grid four-col">
+        {[0, 1, 2, 3].map(i => <div className="shimmer" key={i} style={{ height: 140, borderRadius: 28 }} />)}
       </div>
       <div className="subtle-grid two-col">
         {[0, 1].map(i => <div className="shimmer" key={i} style={{ height: 360, borderRadius: 28 }} />)}

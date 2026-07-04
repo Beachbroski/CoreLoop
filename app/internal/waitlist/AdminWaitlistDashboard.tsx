@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { compareToLastWeek } from '@/lib/utils'
 import { WaitlistStatusControl } from './WaitlistStatusControl'
 
 type WaitlistStatus = 'NEW' | 'CONTACTED' | 'APPROVED' | 'INVITED'
@@ -28,6 +29,9 @@ type AdminWaitlistDashboardProps = {
   exportHref: string
 }
 
+type SortKey = 'name' | 'referralCount' | 'status' | 'createdAt'
+type SortDirection = 'asc' | 'desc'
+
 const statusOptions: Array<{ value: 'ALL' | WaitlistStatus; label: string }> = [
   { value: 'ALL', label: 'All statuses' },
   { value: 'NEW', label: 'New' },
@@ -35,6 +39,13 @@ const statusOptions: Array<{ value: 'ALL' | WaitlistStatus; label: string }> = [
   { value: 'APPROVED', label: 'Approved' },
   { value: 'INVITED', label: 'Invited' },
 ]
+
+const DEFAULT_SORT_DIRECTION: Record<SortKey, SortDirection> = {
+  name: 'asc',
+  referralCount: 'desc',
+  status: 'asc',
+  createdAt: 'desc',
+}
 
 function profileSummary(submission: AdminWaitlistSubmission) {
   const parts = [
@@ -55,6 +66,16 @@ function formatDate(value: string) {
   }).format(new Date(value))
 }
 
+function formatShortDate(value: Date) {
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(value)
+}
+
+function topEntries(counts: Map<string, number>, limit: number) {
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+}
+
 export function AdminWaitlistDashboard({
   submissions,
   exportHref,
@@ -64,6 +85,8 @@ export function AdminWaitlistDashboard({
   const [profileFilter, setProfileFilter] = useState<'ALL' | 'COMPLETE' | 'INCOMPLETE'>('ALL')
   const [referralFilter, setReferralFilter] = useState<'ALL' | 'ONE_PLUS' | 'THREE_PLUS'>('ALL')
   const [copiedId, setCopiedId] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('createdAt')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const metrics = useMemo(() => {
     const complete = submissions.filter(submission => submission.profileCompletedAt).length
@@ -79,12 +102,61 @@ export function AdminWaitlistDashboard({
     }
   }, [submissions])
 
+  const signupTrend = useMemo(() => {
+    const days: { date: Date; label: string; count: number }[] = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    for (let i = 13; i >= 0; i -= 1) {
+      const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000)
+      days.push({ date, label: formatShortDate(date), count: 0 })
+    }
+
+    for (const submission of submissions) {
+      const createdAt = new Date(submission.createdAt)
+      createdAt.setHours(0, 0, 0, 0)
+      const bucket = days.find(day => day.date.getTime() === createdAt.getTime())
+      if (bucket) bucket.count += 1
+    }
+
+    const max = Math.max(1, ...days.map(day => day.count))
+    const thisWeek = days.slice(7, 14).reduce((sum, day) => sum + day.count, 0)
+    const lastWeek = days.slice(0, 7).reduce((sum, day) => sum + day.count, 0)
+
+    return { days, max, thisWeek, lastWeek }
+  }, [submissions])
+
+  const topReferrers = useMemo(() => {
+    return submissions
+      .filter(submission => submission.referralCount > 0)
+      .sort((a, b) => b.referralCount - a.referralCount)
+      .slice(0, 5)
+  }, [submissions])
+
+  const breakdowns = useMemo(() => {
+    function countBy(pick: (submission: AdminWaitlistSubmission) => string | null) {
+      const counts = new Map<string, number>()
+      for (const submission of submissions) {
+        const value = pick(submission)
+        if (!value) continue
+        counts.set(value, (counts.get(value) ?? 0) + 1)
+      }
+      return topEntries(counts, 6)
+    }
+
+    return {
+      platform: countBy(submission => submission.primaryPlatform),
+      niche: countBy(submission => submission.niche),
+      followerRange: countBy(submission => submission.followerRange),
+    }
+  }, [submissions])
+
   const newestSubmissions = submissions.slice(0, 5)
 
   const filteredSubmissions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
-    return submissions.filter(submission => {
+    const filtered = submissions.filter(submission => {
       const searchableText = [
         submission.name,
         submission.email,
@@ -105,7 +177,36 @@ export function AdminWaitlistDashboard({
 
       return true
     })
-  }, [profileFilter, query, referralFilter, status, submissions])
+
+    const direction = sortDirection === 'asc' ? 1 : -1
+    return filtered.sort((a, b) => {
+      switch (sortKey) {
+        case 'name':
+          return direction * (a.name || a.email).localeCompare(b.name || b.email)
+        case 'referralCount':
+          return direction * (a.referralCount - b.referralCount)
+        case 'status':
+          return direction * a.status.localeCompare(b.status)
+        case 'createdAt':
+        default:
+          return direction * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      }
+    })
+  }, [profileFilter, query, referralFilter, sortDirection, sortKey, status, submissions])
+
+  function toggleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDirection(direction => (direction === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDirection(DEFAULT_SORT_DIRECTION[key])
+    }
+  }
+
+  function sortIndicator(key: SortKey) {
+    if (key !== sortKey) return ''
+    return sortDirection === 'asc' ? ' ↑' : ' ↓'
+  }
 
   async function copyReferralLink(submission: AdminWaitlistSubmission) {
     try {
@@ -123,6 +224,14 @@ export function AdminWaitlistDashboard({
         <article className="metric-card">
           <p className="metric-value">{metrics.total}</p>
           <p className="metric-label">Creators on the waitlist</p>
+          {(() => {
+            const trend = compareToLastWeek(signupTrend.thisWeek, signupTrend.lastWeek)
+            return (
+              <p className={`metric-trend metric-trend-${trend.direction}`}>
+                {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {trend.label}
+              </p>
+            )
+          })()}
         </article>
         <article className="metric-card">
           <p className="metric-value">{metrics.complete}</p>
@@ -140,6 +249,99 @@ export function AdminWaitlistDashboard({
           <p className="metric-value">{metrics.rewardCandidates}</p>
           <p className="metric-label">3+ referral candidates</p>
         </article>
+      </section>
+
+      <div className="subtle-grid two-col">
+        <section className="dashboard-panel">
+          <div className="section-header">
+            <div className="section-header-copy">
+              <h2 style={{ margin: 0 }}>Signups, last 14 days</h2>
+              <p className="page-copy" style={{ margin: '8px 0 0' }}>
+                {signupTrend.thisWeek} this week vs {signupTrend.lastWeek} the week before.
+              </p>
+            </div>
+          </div>
+          <div className="admin-trend-chart">
+            {signupTrend.days.map(day => (
+              <div key={day.label} className="admin-trend-bar-col" title={`${day.label}: ${day.count}`}>
+                <div
+                  className="admin-trend-bar"
+                  style={{ height: `${Math.max(4, (day.count / signupTrend.max) * 100)}%` }}
+                />
+                <span className="admin-trend-bar-label">{day.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="dashboard-panel">
+          <div className="section-header">
+            <div className="section-header-copy">
+              <h2 style={{ margin: 0 }}>Top referrers</h2>
+              <p className="page-copy" style={{ margin: '8px 0 0' }}>
+                Who&apos;s actually driving signups.
+              </p>
+            </div>
+          </div>
+          {topReferrers.length === 0 ? (
+            <p className="page-copy" style={{ margin: 0 }}>No referrals tracked yet.</p>
+          ) : (
+            <div className="subtle-grid" style={{ gap: 10 }}>
+              {topReferrers.map((submission, index) => (
+                <div key={submission.id} className="list-row">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span className="pill" style={{ minWidth: 28, justifyContent: 'center' }}>{index + 1}</span>
+                    <span style={{ fontWeight: 600 }}>{submission.name || submission.email}</span>
+                  </div>
+                  <span className="status-pill" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
+                    {submission.referralCount} referral{submission.referralCount === 1 ? '' : 's'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <section className="dashboard-panel">
+        <div className="section-header">
+          <div className="section-header-copy">
+            <h2 style={{ margin: 0 }}>Creator profile breakdown</h2>
+            <p className="page-copy" style={{ margin: '8px 0 0' }}>
+              Where the waitlist skews by platform, niche, and audience size.
+            </p>
+          </div>
+        </div>
+        <div className="subtle-grid three-col">
+          {(['platform', 'niche', 'followerRange'] as const).map(key => {
+            const rows = breakdowns[key]
+            const max = Math.max(1, ...rows.map(([, count]) => count))
+            const heading = key === 'platform' ? 'Platform' : key === 'niche' ? 'Niche' : 'Follower range'
+
+            return (
+              <div key={key}>
+                <p className="sidebar-label" style={{ margin: '0 0 10px' }}>{heading}</p>
+                {rows.length === 0 ? (
+                  <p className="page-copy" style={{ margin: 0, fontSize: '.9rem' }}>No data yet.</p>
+                ) : (
+                  <div className="subtle-grid" style={{ gap: 8 }}>
+                    {rows.map(([label, count]) => (
+                      <div key={label}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.85rem', marginBottom: 3 }}>
+                          <span>{label}</span>
+                          <span style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>{count}</span>
+                        </div>
+                        <div className="admin-breakdown-track">
+                          <div className="admin-breakdown-fill" style={{ width: `${(count / max) * 100}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </section>
 
       <section className="dashboard-panel">
@@ -176,7 +378,7 @@ export function AdminWaitlistDashboard({
           <div className="section-header-copy">
             <h2 style={{ margin: 0 }}>Waitlist submissions</h2>
             <p className="page-copy" style={{ margin: '8px 0 0' }}>
-              Search, filter, copy referral links, export, and move creator leads through the invite pipeline.
+              Search, filter, sort, copy referral links, export, and move creator leads through the invite pipeline.
             </p>
           </div>
           <div className="section-header-action">
@@ -244,70 +446,69 @@ export function AdminWaitlistDashboard({
             </p>
           </div>
         ) : (
-          <div className="waitlist-admin-grid">
-            {filteredSubmissions.map(submission => (
-              <article key={submission.id} className="dashboard-panel waitlist-admin-card">
-                <div className="section-header">
-                  <div className="section-header-copy">
-                    <h3 style={{ margin: 0 }}>{submission.name || 'Creator lead'}</h3>
-                    <p className="page-copy" style={{ margin: '8px 0 0' }}>
-                      {submission.email}
-                    </p>
-                  </div>
-                  <div className="section-header-action">
-                    <WaitlistStatusControl submissionId={submission.id} initialStatus={submission.status} />
-                  </div>
-                </div>
-
-                <div className="waitlist-meta-grid">
-                  <div>
-                    <p className="sidebar-label" style={{ margin: '0 0 6px' }}>Creator profile</p>
-                    <p className="page-copy" style={{ margin: 0 }}>{profileSummary(submission)}</p>
-                  </div>
-                  <div>
-                    <p className="sidebar-label" style={{ margin: '0 0 6px' }}>Referral code</p>
-                    <p className="page-copy" style={{ margin: 0, fontWeight: 600, color: 'var(--text)' }}>
-                      {submission.referralCode}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="sidebar-label" style={{ margin: '0 0 6px' }}>Referred by</p>
-                    <p className="page-copy" style={{ margin: 0 }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="waitlist-table">
+              <thead>
+                <tr>
+                  <th>
+                    <button type="button" className="waitlist-table-sort" onClick={() => toggleSort('name')}>
+                      Creator{sortIndicator('name')}
+                    </button>
+                  </th>
+                  <th>Profile</th>
+                  <th>Referred by</th>
+                  <th>
+                    <button type="button" className="waitlist-table-sort" onClick={() => toggleSort('referralCount')}>
+                      Referrals{sortIndicator('referralCount')}
+                    </button>
+                  </th>
+                  <th>
+                    <button type="button" className="waitlist-table-sort" onClick={() => toggleSort('status')}>
+                      Status{sortIndicator('status')}
+                    </button>
+                  </th>
+                  <th>
+                    <button type="button" className="waitlist-table-sort" onClick={() => toggleSort('createdAt')}>
+                      Joined{sortIndicator('createdAt')}
+                    </button>
+                  </th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSubmissions.map(submission => (
+                  <tr key={submission.id}>
+                    <td>
+                      <p style={{ margin: 0, fontWeight: 600 }}>{submission.name || 'Creator lead'}</p>
+                      <p style={{ margin: '2px 0 0', color: 'var(--text-soft)', fontSize: '.85rem' }}>{submission.email}</p>
+                    </td>
+                    <td style={{ color: 'var(--text-soft)', fontSize: '.9rem' }}>{profileSummary(submission)}</td>
+                    <td style={{ color: 'var(--text-soft)', fontSize: '.9rem' }}>
                       {submission.referredBy
                         ? `${submission.referredBy.name || 'Creator lead'} (${submission.referredBy.referralCode})`
                         : 'Direct signup'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="sidebar-label" style={{ margin: '0 0 6px' }}>Referral count</p>
-                    <p className="page-copy" style={{ margin: 0 }}>{submission.referralCount}</p>
-                  </div>
-                  <div>
-                    <p className="sidebar-label" style={{ margin: '0 0 6px' }}>Profile status</p>
-                    <p className="page-copy" style={{ margin: 0 }}>
-                      {submission.profileCompletedAt ? 'Complete' : 'Email-only'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="sidebar-label" style={{ margin: '0 0 6px' }}>Joined</p>
-                    <p className="page-copy" style={{ margin: 0 }}>{formatDate(submission.createdAt)}</p>
-                  </div>
-                </div>
-
-                <div className="admin-card-actions">
-                  <button
-                    type="button"
-                    className="apple-btn-ghost"
-                    onClick={() => copyReferralLink(submission)}
-                  >
-                    {copiedId === submission.id ? 'Copied' : 'Copy referral link'}
-                  </button>
-                  <a href={submission.referralLink} className="apple-btn-ghost">
-                    Open referral link
-                  </a>
-                </div>
-              </article>
-            ))}
+                    </td>
+                    <td style={{ fontVariantNumeric: 'tabular-nums' }}>{submission.referralCount}</td>
+                    <td>
+                      <WaitlistStatusControl submissionId={submission.id} initialStatus={submission.status} />
+                    </td>
+                    <td style={{ color: 'var(--text-soft)', fontSize: '.9rem', whiteSpace: 'nowrap' }}>
+                      {formatDate(submission.createdAt)}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="apple-btn-ghost"
+                        style={{ whiteSpace: 'nowrap' }}
+                        onClick={() => copyReferralLink(submission)}
+                      >
+                        {copiedId === submission.id ? 'Copied' : 'Copy link'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

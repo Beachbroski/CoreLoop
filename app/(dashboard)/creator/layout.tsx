@@ -20,6 +20,7 @@ export default async function CreatorLayout({ children }: { children: React.Reac
           { label: 'Dashboard', href: '/creator' },
           { label: 'Browse campaigns', href: '/creator/campaigns' },
           { label: 'Applications', href: '/creator/applications' },
+          { label: 'Payouts', href: '/creator/payouts' },
           { label: 'Settings', href: '/creator/settings' },
         ]}
       />

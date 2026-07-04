@@ -4,7 +4,7 @@ import type { Application } from '@prisma/client'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
-import { formatCents } from '@/lib/utils'
+import { compareToLastWeek, formatCents, type Trend } from '@/lib/utils'
 
 const APP_STATUS: Record<string, { bg: string; color: string; label: string }> = {
   PENDING: { bg: 'var(--warning-soft)', color: 'var(--warning)', label: 'Pending' },
@@ -23,7 +23,19 @@ async function CreatorDashboardContent() {
   const user = await prisma.user.findUnique({ where: { clerkId: userId } })
   if (!user) redirect('/onboarding')
 
-  const [applications, totalApplications, accepted, totalEarned] = await Promise.all([
+  const now = new Date()
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+
+  const [
+    applications,
+    totalApplications,
+    accepted,
+    pending,
+    totalEarned,
+    applicationsThisWeek,
+    applicationsLastWeek,
+  ] = await Promise.all([
     prisma.application.findMany({
       where: { creatorId: user.id },
       include: { campaign: { select: { title: true } } },
@@ -32,15 +44,24 @@ async function CreatorDashboardContent() {
     }) as Promise<CreatorDashboardApplication[]>,
     prisma.application.count({ where: { creatorId: user.id } }),
     prisma.application.count({ where: { creatorId: user.id, status: 'ACCEPTED' } }),
+    prisma.application.count({ where: { creatorId: user.id, status: 'PENDING' } }),
     prisma.payout.aggregate({
       where: { creatorId: user.id, status: 'PAID' },
       _sum: { amount: true },
     }),
+    prisma.application.count({ where: { creatorId: user.id, createdAt: { gte: oneWeekAgo } } }),
+    prisma.application.count({
+      where: { creatorId: user.id, createdAt: { gte: twoWeeksAgo, lt: oneWeekAgo } },
+    }),
   ])
 
-  const stats = [
-    { label: 'Applications submitted', value: String(totalApplications) },
-    { label: 'Accepted this cycle', value: String(accepted) },
+  const acceptanceRate = totalApplications > 0 ? Math.round((accepted / totalApplications) * 100) : null
+  const applicationsTrend = compareToLastWeek(applicationsThisWeek, applicationsLastWeek)
+
+  const stats: Array<{ label: string; value: string; trend?: Trend }> = [
+    { label: 'Applications submitted', value: String(totalApplications), trend: applicationsTrend },
+    { label: 'Acceptance rate', value: acceptanceRate === null ? '—' : `${acceptanceRate}%` },
+    { label: 'Pending review', value: String(pending) },
     { label: 'Total earned', value: formatCents(totalEarned._sum.amount ?? 0) },
   ]
 
@@ -71,11 +92,16 @@ async function CreatorDashboardContent() {
         </div>
       )}
 
-      <div className="subtle-grid three-col">
+      <div className="subtle-grid four-col">
         {stats.map(stat => (
           <div key={stat.label} className="metric-card">
             <p className="metric-value">{stat.value}</p>
             <p className="metric-label" style={{ maxWidth: 180 }}>{stat.label}</p>
+            {stat.trend && (
+              <p className={`metric-trend metric-trend-${stat.trend.direction}`}>
+                {stat.trend.direction === 'up' ? '↑' : stat.trend.direction === 'down' ? '↓' : '→'} {stat.trend.label}
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -152,8 +178,8 @@ function Skeleton() {
         <div className="shimmer" style={{ height: 52, width: 320, marginBottom: 12 }} />
         <div className="shimmer" style={{ height: 22, width: 460 }} />
       </div>
-      <div className="subtle-grid three-col">
-        {[0, 1, 2].map(i => <div className="shimmer" key={i} style={{ height: 140, borderRadius: 28 }} />)}
+      <div className="subtle-grid four-col">
+        {[0, 1, 2, 3].map(i => <div className="shimmer" key={i} style={{ height: 140, borderRadius: 28 }} />)}
       </div>
       <div className="subtle-grid two-col">
         {[0, 1].map(i => <div className="shimmer" key={i} style={{ height: 360, borderRadius: 28 }} />)}

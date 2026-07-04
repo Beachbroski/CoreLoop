@@ -463,6 +463,31 @@ select {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.four-col {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metric-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.metric-trend-up {
+  color: var(--success);
+}
+
+.metric-trend-down {
+  color: var(--danger);
+}
+
+.metric-trend-flat {
+  color: var(--text-faint);
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -1128,11 +1153,6 @@ select {
   word-break: break-word;
 }
 
-.waitlist-admin-grid {
-  display: grid;
-  gap: 18px;
-}
-
 .waitlist-status-control {
   display: flex;
   align-items: center;
@@ -1200,11 +1220,90 @@ select {
   margin: 22px 0;
 }
 
-.admin-card-actions {
+.admin-trend-chart {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 18px;
+  align-items: flex-end;
+  gap: 6px;
+  height: 160px;
+  padding-top: 10px;
+}
+
+.admin-trend-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 6px;
+}
+
+.admin-trend-bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 6px 6px 2px 2px;
+  background: var(--accent);
+  transition: height 200ms ease;
+}
+
+.admin-trend-bar-label {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+
+.admin-breakdown-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.admin-breakdown-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.waitlist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.waitlist-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.waitlist-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+  vertical-align: top;
+}
+
+.waitlist-table-sort {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.waitlist-table-sort:hover {
+  color: var(--text);
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -1375,6 +1474,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .three-col,
+  .four-col,
   .two-col,
   .role-grid,
   .admin-metric-grid,
