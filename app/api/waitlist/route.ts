@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
+import { sendReferralMilestoneEmail, sendWaitlistConfirmationEmail } from '@/lib/email'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 import { getSiteUrl } from '@/lib/site-url'
 import {
@@ -113,6 +114,19 @@ async function resolveReferrer(referralCode: string | undefined, email: string) 
   return referrer.id
 }
 
+async function notifyReferralMilestone(referrerId: string | undefined) {
+  if (!referrerId) return
+
+  const referrer = await prisma.waitlistSubmission.findUnique({
+    where: { id: referrerId },
+    select: { email: true, name: true, _count: { select: { referrals: true } } },
+  })
+
+  if (referrer && referrer._count.referrals === 3) {
+    await sendReferralMilestoneEmail(referrer.email, { name: referrer.name })
+  }
+}
+
 function validateProfileFields(data: z.infer<typeof waitlistSchema>) {
   if (!data.primaryPlatform || data.primaryPlatform.length < 2) return 'Choose a primary platform.'
   if (!data.handle || data.handle.length < 2) return 'Handle is required.'
@@ -211,6 +225,12 @@ export async function POST(req: Request) {
             },
           })
 
+          await sendWaitlistConfirmationEmail(created.email, {
+            name: created.name,
+            referralLink: buildReferralLink(created.referralCode, req),
+          })
+          await notifyReferralMilestone(referredById)
+
           return Response.json({
             success: true,
             existing: false,
@@ -297,6 +317,12 @@ export async function POST(req: Request) {
             },
           },
         })
+
+        await sendWaitlistConfirmationEmail(created.email, {
+          name: created.name,
+          referralLink: buildReferralLink(created.referralCode, req),
+        })
+        await notifyReferralMilestone(referredById)
 
         return Response.json({
           success: true,

@@ -127,10 +127,6 @@ select {
   box-shadow: var(--shadow-sm);
 }
 
-.mobile-nav-cta {
-  display: none;
-}
-
 .brand-lockup {
   display: flex;
   align-items: center;
@@ -182,6 +178,35 @@ select {
 .nav-link:hover {
   color: var(--text);
   background: rgba(255, 255, 255, 0.7);
+}
+
+.public-nav-cta {
+  flex: 0 0 auto;
+}
+
+.public-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 0 auto 22px;
+  padding: 24px 0 36px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.public-footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.public-footer-copy {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 0.92rem;
 }
 
 .hero-grid {
@@ -438,6 +463,31 @@ select {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.four-col {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metric-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.metric-trend-up {
+  color: var(--success);
+}
+
+.metric-trend-down {
+  color: var(--danger);
+}
+
+.metric-trend-flat {
+  color: var(--text-faint);
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -451,11 +501,11 @@ select {
 }
 
 .bento-card {
-  grid-column: span 4;
+  grid-column: span 6;
 }
 
 .bento-card-wide {
-  grid-column: span 8;
+  grid-column: span 12;
 }
 
 .faq-grid {
@@ -480,10 +530,6 @@ select {
   font-size: 1.32rem;
   letter-spacing: -0.04em;
   line-height: 1.12;
-}
-
-.muted {
-  color: var(--text-soft);
 }
 
 .chip-row {
@@ -525,8 +571,6 @@ select {
   border-radius: 999px;
 }
 
-.learn-more-link,
-.feature-link,
 .apple-link {
   display: inline-flex;
   align-items: center;
@@ -544,8 +588,6 @@ select {
 }
 
 .footer-link:hover,
-.learn-more-link:hover,
-.feature-link:hover,
 .apple-link:hover {
   color: var(--accent-strong);
 }
@@ -564,67 +606,6 @@ select {
 
 .spacing-xl {
   gap: 26px;
-}
-
-.audience-shell {
-  display: grid;
-  gap: 30px;
-}
-
-.audience-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.audience-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.74);
-  box-shadow: var(--shadow-sm);
-}
-
-.audience-tab {
-  border: 0;
-  border-radius: 999px;
-  padding: 12px 18px;
-  background: transparent;
-  color: var(--text-soft);
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 180ms ease,
-    color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
-}
-
-.audience-tab:hover {
-  color: var(--text);
-}
-
-.audience-tab-active {
-  background: linear-gradient(180deg, #2f8cff 0%, #1371ff 100%);
-  color: white;
-  box-shadow: 0 18px 30px rgba(19, 113, 255, 0.18);
-}
-
-.audience-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 24px;
-}
-
-.audience-sidecard {
-  display: grid;
-  gap: 16px;
-  align-content: start;
 }
 
 .dashboard-layout {
@@ -880,30 +861,6 @@ select {
   justify-items: center;
 }
 
-.auth-panel-intro {
-  text-align: center;
-  max-width: 26rem;
-}
-
-.auth-panel-eyebrow {
-  margin: 0 0 8px;
-  color: var(--text-faint);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.auth-panel-title {
-  margin-bottom: 10px;
-  text-wrap: balance;
-}
-
-.auth-panel-copy {
-  margin: 0;
-  text-wrap: pretty;
-}
-
 .auth-clerk-shell {
   width: 100%;
 }
@@ -1096,6 +1053,26 @@ select {
   border-color: rgba(225, 29, 72, 0.22);
 }
 
+.admin-preview-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 20px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.admin-preview-banner-link {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
 .waitlist-page-grid {
   align-items: start;
   min-height: auto;
@@ -1103,8 +1080,7 @@ select {
 }
 
 .waitlist-form-panel,
-.waitlist-success-panel,
-.waitlist-admin-card {
+.waitlist-success-panel {
   background: rgba(255, 255, 255, 0.88);
 }
 
@@ -1176,11 +1152,6 @@ select {
   word-break: break-word;
 }
 
-.waitlist-admin-grid {
-  display: grid;
-  gap: 18px;
-}
-
 .waitlist-status-control {
   display: flex;
   align-items: center;
@@ -1248,11 +1219,90 @@ select {
   margin: 22px 0;
 }
 
-.admin-card-actions {
+.admin-trend-chart {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 18px;
+  align-items: flex-end;
+  gap: 6px;
+  height: 160px;
+  padding-top: 10px;
+}
+
+.admin-trend-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 6px;
+}
+
+.admin-trend-bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 6px 6px 2px 2px;
+  background: var(--accent);
+  transition: height 200ms ease;
+}
+
+.admin-trend-bar-label {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+
+.admin-breakdown-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.admin-breakdown-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.waitlist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.waitlist-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.waitlist-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+  vertical-align: top;
+}
+
+.waitlist-table-sort {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.waitlist-table-sort:hover {
+  color: var(--text);
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -1264,7 +1314,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .hero-grid,
   .auth-card,
   .dashboard-layout,
-  .audience-grid,
   .waitlist-success-grid {
     grid-template-columns: 1fr;
   }
@@ -1383,12 +1432,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .apple-nav {
     margin-top: 8px;
     padding: 8px 10px;
+    gap: 10px;
   }
 
-  .mobile-nav-cta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  .public-nav-cta {
+    padding-inline: 14px;
   }
 
   .hero-grid {
@@ -1425,6 +1473,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .three-col,
+  .four-col,
   .two-col,
   .role-grid,
   .admin-metric-grid,
@@ -1474,32 +1523,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     gap: 18px;
   }
 
-  .auth-panel-intro {
-    text-align: left;
-    width: 100%;
-  }
-
   .auth-clerk-shell {
     width: 100%;
   }
 
   .page-header,
   .section-header,
-  .audience-header,
   .split-row,
   .list-row {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .audience-toggle {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .audience-tab {
-    flex: 1;
-    text-align: center;
   }
 
   .overlay-panel-shell {
@@ -1527,12 +1560,27 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     width: 100%;
   }
 
-  .nav-links {
+  .public-nav-content .nav-links {
     display: none;
+  }
+
+  .public-nav-form .nav-links {
+    display: flex;
+    margin-left: auto;
   }
 }
 
 @media (max-width: 640px) {
+  .public-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-bottom: 28px;
+  }
+
+  .public-footer-links {
+    justify-content: flex-start;
+  }
+
   .brand-mark {
     width: 30px;
     height: 30px;
@@ -1612,9 +1660,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     justify-items: stretch;
   }
 
-  .auth-panel-intro {
-    display: none;
-  }
 
   .auth-panel {
     padding: 0;

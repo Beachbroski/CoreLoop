@@ -1,6 +1,8 @@
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { currentUser } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
+import { isTesterEmailAllowed } from '@/lib/admin-config'
+import { getCurrentAppUser } from '@/lib/current-app-user'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 const schema = z.object({
@@ -13,8 +15,12 @@ export async function PATCH(req: Request) {
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
 
-    const { userId } = await auth()
+    const { userId, email } = await getCurrentAppUser()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    if (!isTesterEmailAllowed(email)) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const rateLimit = checkRateLimit(`users:role:${userId}:${getRequestIp(req)}`, {
       limit: 10,
@@ -38,6 +44,13 @@ export async function PATCH(req: Request) {
     })
 
     if (existingUser) {
+      if (existingUser.role === 'ADMIN') {
+        return Response.json(
+          { error: 'Admin accounts cannot change role here' },
+          { status: 409 },
+        )
+      }
+
       const [campaignCount, applicationCount] = await Promise.all([
         prisma.campaign.count({ where: { brandId: existingUser.id } }),
         prisma.application.count({ where: { creatorId: existingUser.id } }),

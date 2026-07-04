@@ -1,12 +1,14 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
-import { requireAdminApiUser } from '@/lib/admin-api-guard'
+import { requireTesterApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
+import { sendSubmissionApprovedEmail } from '@/lib/email'
 import { releasePayout } from '@/lib/payout'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 const updateSchema = z.object({
   status: z.enum(['APPROVED', 'REVISION_REQUESTED', 'REJECTED']),
+  reviewNote: z.string().max(2000).optional(),
 })
 
 export async function PATCH(
@@ -18,8 +20,8 @@ export async function PATCH(
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
 
-    const adminGate = await requireAdminApiUser()
-    if (adminGate.response) return adminGate.response
+    const testerGate = await requireTesterApiUser()
+    if (testerGate.response) return testerGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -46,6 +48,7 @@ export async function PATCH(
     const submission = await prisma.submission.findUnique({
       where: { id },
       include: {
+        creator: true,
         application: {
           include: { campaign: true },
         },
@@ -80,12 +83,18 @@ export async function PATCH(
 
       await releasePayout(submission.id, paymentIntentId)
       const approvedSubmission = await prisma.submission.findUnique({ where: { id } })
+      await sendSubmissionApprovedEmail(submission.creator.email, {
+        campaignTitle: submission.application.campaign.title,
+      })
       return Response.json({ success: true, data: approvedSubmission })
     }
 
     const updated = await prisma.submission.update({
       where: { id },
-      data: { status: parsed.data.status },
+      data: {
+        status: parsed.data.status,
+        ...(parsed.data.reviewNote !== undefined ? { reviewNote: parsed.data.reviewNote } : {}),
+      },
     })
 
     return Response.json({ success: true, data: updated })

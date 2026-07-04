@@ -90,9 +90,19 @@ export async function releasePayout(submissionId: string, paymentIntentId: strin
       data: { status: 'APPROVED' },
     })
 
-    await tx.campaign.update({
-      where: { id: submission.application.campaignId },
-      data: { status: 'COMPLETE' },
+    // The campaign is only complete once every needed creator has an approved submission.
+    const approvedApplications = await tx.application.count({
+      where: {
+        campaignId: submission.application.campaignId,
+        submissions: { some: { status: 'APPROVED' } },
+      },
     })
+
+    if (approvedApplications >= (submission.application.campaign.creatorsNeeded ?? 1)) {
+      await tx.campaign.update({
+        where: { id: submission.application.campaignId },
+        data: { status: 'COMPLETE' },
+      })
+    }
   })
 }

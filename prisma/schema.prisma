@@ -122,6 +122,7 @@ model Submission {
   caption       String?
   notes         String?
   status        SubmissionStatus @default(PENDING)
+  reviewNote    String?
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 

@@ -4,6 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { formatCents } from '@/lib/utils'
 import { ApplicationActions } from './ApplicationActions'
+import { CampaignEditControls } from './CampaignEditControls'
 
 const APP_STATUS: Record<string, { bg: string; color: string; label: string }> = {
   PENDING: { bg: 'var(--warning-soft)', color: 'var(--warning)', label: 'Pending' },
@@ -80,6 +81,21 @@ async function CampaignDetailContent({ id }: { id: string }) {
             </span>
           ) : null}
         </div>
+
+        <CampaignEditControls
+          campaign={{
+            id: campaign.id,
+            status: campaign.status,
+            title: campaign.title,
+            description: campaign.description,
+            objective: campaign.objective,
+            deliverables: campaign.deliverables,
+            targetAudience: campaign.targetAudience,
+            callToAction: campaign.callToAction,
+            creatorRequirements: campaign.creatorRequirements,
+            usageRights: campaign.usageRights,
+          }}
+        />
       </section>
 
       <section className="dashboard-panel">

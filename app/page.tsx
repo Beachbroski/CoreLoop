@@ -1,11 +1,10 @@
-import Link from 'next/link'
-import { Suspense } from 'react'
-import { WaitlistForm } from './waitlist/WaitlistForm'
+import { PublicPageShell } from './PublicPageShell'
+import { PublicWaitlistLink } from './PublicWaitlistLink'
 
 const creatorSignals = [
   { value: 'Free for creators', label: 'Brands pay the platform fee when paid deals happen.' },
   { value: 'Local brand matches', label: 'Cafes, gyms, salons, boutiques, and home services.' },
-  { value: '$25 creator reward', label: 'Refer 3 creators and complete 3 campaigns after launch.' },
+  { value: 'Invite your circle', label: 'Referral links help us open more matches, faster.' },
 ]
 
 const localBrandTypes = ['Cafes', 'Gyms', 'Salons', 'Boutiques', 'Home services']
@@ -45,22 +44,7 @@ const faqItems = [
 
 export default function HomePage() {
   return (
-    <div>
-      <nav className="apple-nav">
-        <Link href="/" className="brand-lockup">
-          <span className="brand-mark" />
-          <span className="brand-wordmark">CreatorDocks</span>
-        </Link>
-        <div className="nav-links">
-          <a href="#how-it-works" className="nav-link">How it works</a>
-          <a href="#local-brands" className="nav-link">Local brands</a>
-          <a href="#waitlist" className="nav-link">Join waitlist</a>
-          <Link href="/sign-in" className="nav-link tester-link">Tester sign in</Link>
-        </div>
-        <a href="#waitlist" className="apple-btn mobile-nav-cta">Join waitlist</a>
-      </nav>
-
-      <main className="apple-shell">
+    <PublicPageShell>
         <section className="hero-grid">
           <div className="hero-copy-stack">
             <span className="eyebrow">Invite-led creator cohort</span>
@@ -69,8 +53,7 @@ export default function HomePage() {
               CreatorDocks is building a curated creator roster for local businesses that need real content. Join free, get matched in rolling waves, and get paid through the platform when deals go live.
             </p>
             <div className="cta-row">
-              <a href="#waitlist" className="apple-btn">Join the waitlist</a>
-              <Link href="/waitlist" className="apple-btn-ghost">Open full form</Link>
+              <PublicWaitlistLink className="apple-btn">Join the waitlist</PublicWaitlistLink>
             </div>
             <div className="chip-row">
               {localBrandTypes.map(type => (
@@ -89,9 +72,9 @@ export default function HomePage() {
                     <p style={{ margin: '0 0 4px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
                       The first cohort
                     </p>
-                    <h2 style={{ margin: 0, fontSize: '1.7rem', letterSpacing: '-0.04em' }}>
+                    <p style={{ margin: 0, fontSize: '1.7rem', fontWeight: 600, letterSpacing: '-0.04em' }}>
                       Local deals, curated by fit.
-                    </h2>
+                    </p>
                   </div>
                   <span className="status-pill" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
                     Rolling
@@ -151,19 +134,19 @@ export default function HomePage() {
 
             <div className="bento-grid">
               <section className="dashboard-panel bento-card bento-card-wide">
-                <h2>Why local first</h2>
+                <h3>Why local first</h3>
                 <p className="section-copy" style={{ margin: 0 }}>
                   Local brands care about creators who understand the city, the audience, and the kind of content that makes someone actually show up.
                 </p>
               </section>
               <section className="dashboard-panel bento-card">
-                <h2>Creators stay free</h2>
+                <h3>Creators stay free</h3>
                 <p className="section-copy" style={{ margin: 0 }}>
                   You do not pay to join the waitlist or get reviewed for the first creator cohort.
                 </p>
               </section>
               <section className="dashboard-panel bento-card">
-                <h2>Rolling invites</h2>
+                <h3>Rolling invites</h3>
                 <p className="section-copy" style={{ margin: 0 }}>
                   We are opening access in waves as the right brand opportunities come in.
                 </p>
@@ -172,21 +155,21 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="waitlist" className="marketing-section" style={{ paddingBottom: 24 }}>
+        <section className="marketing-section" style={{ paddingBottom: 24 }}>
           <div className="section-frame subtle-grid spacing-xl">
             <div style={{ maxWidth: 760 }}>
               <span className="eyebrow">Join the waitlist</span>
               <h2 className="section-title" style={{ marginTop: 18, marginBottom: 12 }}>
-                Save your spot now. Add details when you have another minute.
+                Ready to get matched with local brand deals that fit?
               </h2>
               <p className="section-copy" style={{ margin: 0 }}>
-                The first step only needs your email. The second helps us curate matches by niche, handle, follower range, and platform.
+                Join the invite-led CreatorDocks roster in under a minute. We will use your details to curate the first creator cohorts.
               </p>
             </div>
 
-            <Suspense fallback={<div className="dashboard-panel">Loading waitlist form...</div>}>
-              <WaitlistForm />
-            </Suspense>
+            <div className="cta-row">
+              <PublicWaitlistLink className="apple-btn">Join the waitlist</PublicWaitlistLink>
+            </div>
           </div>
         </section>
 
@@ -202,14 +185,13 @@ export default function HomePage() {
             <div className="faq-grid">
               {faqItems.map(item => (
                 <section key={item.question} className="dashboard-panel">
-                  <h2>{item.question}</h2>
+                  <h3>{item.question}</h3>
                   <p className="section-copy" style={{ margin: 0 }}>{item.answer}</p>
                 </section>
               ))}
             </div>
           </div>
         </section>
-      </main>
-    </div>
+    </PublicPageShell>
   )
 }

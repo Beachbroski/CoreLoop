@@ -2,6 +2,7 @@ import { createUploadthing, type FileRouter } from 'uploadthing/next'
 import { createRouteHandler } from 'uploadthing/next'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
+import { isTesterEmailAllowed } from '@/lib/admin-config'
 
 const f = createUploadthing()
 
@@ -16,11 +17,11 @@ export const ourFileRouter = {
 
       const user = await prisma.user.findUnique({
         where: { clerkId: userId },
-        select: { id: true, role: true },
+        select: { id: true, email: true, role: true },
       })
 
-      if (!user || user.role !== 'ADMIN') {
-        throw new Error('Only admin accounts can upload content while CreatorDocks is in waitlist mode')
+      if (!user || user.role !== 'CREATOR' || !isTesterEmailAllowed(user.email)) {
+        throw new Error('Only allowlisted creator accounts can upload content while CreatorDocks is in waitlist mode')
       }
 
       return { userId }

@@ -164,17 +164,15 @@ export default function OnboardingPage() {
           {[
             {
               role: 'BRAND' as const,
-              icon: 'Brand',
               title: 'Brand',
               description: 'Post campaigns, shortlist creators, and manage payouts in one calm workspace.',
             },
             {
               role: 'CREATOR' as const,
-              icon: 'Creator',
               title: 'Creator',
               description: 'Apply to better briefs, submit content, and get paid without chasing invoices.',
             },
-          ].map(({ role, icon, title, description }) => (
+          ].map(({ role, title, description }) => (
             <button
               key={role}
               onClick={() => selectRole(role)}
@@ -186,7 +184,6 @@ export default function OnboardingPage() {
               }}
             >
               <div>
-                <span className="eyebrow" style={{ marginBottom: 14 }}>{icon}</span>
                 <p style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', margin: '0 0 8px', letterSpacing: '-0.04em' }}>{title}</p>
                 <p style={{ fontSize: 15, color: 'var(--text-soft)', margin: 0, lineHeight: 1.6 }}>{description}</p>
               </div>

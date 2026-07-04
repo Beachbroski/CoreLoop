@@ -1,9 +1,10 @@
 import { getCurrentAppUser } from '@/lib/current-app-user'
-import { getAdminSecretPath, isAllowedAdminUser } from '@/lib/admin-config'
+import { isAllowedAdminUser, isTesterEmailAllowed } from '@/lib/admin-config'
+import { resolvePostLoginPath } from '@/lib/post-login'
 
 export async function GET() {
   try {
-    const { userId, user } = await getCurrentAppUser()
+    const { userId, user, email } = await getCurrentAppUser()
     if (!userId) {
       return Response.json(
         {
@@ -17,25 +18,17 @@ export async function GET() {
       )
     }
 
-    if (!user) {
-      return Response.json({
-        authenticated: true,
-        hasProfile: false,
-        role: null,
-        onboardingRequired: false,
-        redirectTo: '/waitlist',
-      })
-    }
-
     const isAdmin = isAllowedAdminUser(user)
-    const redirectTo = isAdmin ? (getAdminSecretPath() ?? '/waitlist') : '/waitlist'
+    const isTester = isTesterEmailAllowed(email)
+    const onboardingRequired =
+      isTester && !isAdmin && (!user || (user.role !== 'BRAND' && user.role !== 'CREATOR'))
 
     return Response.json({
       authenticated: true,
-      hasProfile: true,
-      role: isAdmin ? user.role : null,
-      onboardingRequired: false,
-      redirectTo,
+      hasProfile: Boolean(user),
+      role: user?.role ?? null,
+      onboardingRequired,
+      redirectTo: resolvePostLoginPath(user, email),
     })
   } catch (err) {
     console.error('[GET /api/users/me]', err)

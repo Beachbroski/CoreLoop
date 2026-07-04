@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
-import { requireAdminApiUser } from '@/lib/admin-api-guard'
+import { requireTesterApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
@@ -16,8 +16,8 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
     }
 
-    const adminGate = await requireAdminApiUser()
-    if (adminGate.response) return adminGate.response
+    const testerGate = await requireTesterApiUser()
+    if (testerGate.response) return testerGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -59,6 +59,9 @@ export async function POST(req: Request) {
     if (campaign.status !== 'ACTIVE') {
       return Response.json({ error: 'Campaign is not accepting applications' }, { status: 400 })
     }
+    if (campaign.deadline < new Date()) {
+      return Response.json({ error: 'This campaign\'s deadline has passed' }, { status: 400 })
+    }
     if (campaign.brandId === user.id) {
       return Response.json({ error: 'Cannot apply to your own campaign' }, { status: 403 })
     }
@@ -88,8 +91,8 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    const adminGate = await requireAdminApiUser()
-    if (adminGate.response) return adminGate.response
+    const testerGate = await requireTesterApiUser()
+    if (testerGate.response) return testerGate.response
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })

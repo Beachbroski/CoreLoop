@@ -6,13 +6,13 @@ type RateLimitBucket = {
 }
 
 const globalStore = globalThis as unknown as {
-  __coreloopRateLimitStore?: Map<string, RateLimitBucket>
+  __creatordocksRateLimitStore?: Map<string, RateLimitBucket>
 }
 
-const rateLimitStore = globalStore.__coreloopRateLimitStore ?? new Map<string, RateLimitBucket>()
+const rateLimitStore = globalStore.__creatordocksRateLimitStore ?? new Map<string, RateLimitBucket>()
 
-if (!globalStore.__coreloopRateLimitStore) {
-  globalStore.__coreloopRateLimitStore = rateLimitStore
+if (!globalStore.__creatordocksRateLimitStore) {
+  globalStore.__creatordocksRateLimitStore = rateLimitStore
 }
 
 function getAllowedOrigins(req: Request): Set<string> {

@@ -1,3 +1,5 @@
+import { isProductionDeployment } from '@/lib/admin-config'
+
 type TurnstileSiteverifyResponse = {
   success: boolean
   challenge_ts?: string
@@ -16,10 +18,6 @@ export function isTurnstileConfigured() {
 // VERCEL_ENV is 'production' only on the real prod deployment.
 // Preview ('preview') and local (undefined) never enforce Turnstile,
 // since the widget's hostnames are scoped to the production domain.
-function isProductionDeployment() {
-  return process.env.VERCEL_ENV === 'production'
-}
-
 export function shouldBypassTurnstile() {
   return !isProductionDeployment() && !isTurnstileConfigured()
 }

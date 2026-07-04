@@ -101,7 +101,7 @@ async function CampaignFeedContent({ niche, platform }: { niche?: string; platfo
               ) : null}
             </div>
 
-            {(campaign.objective || campaign.deliverables || campaign.callToAction) && (
+            {(campaign.objective || campaign.deliverables || campaign.callToAction || campaign.targetAudience || campaign.creatorRequirements || campaign.usageRights) && (
               <div className="subtle-grid" style={{ gap: 10 }}>
                 {campaign.objective ? (
                   <div className="glass-card" style={{ boxShadow: 'var(--shadow-sm)', padding: '14px 16px' }}>
@@ -132,6 +132,39 @@ async function CampaignFeedContent({ niche, platform }: { niche?: string; platfo
                     </p>
                     <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>
                       {truncateText(campaign.callToAction, 120)}
+                    </p>
+                  </div>
+                ) : null}
+
+                {campaign.targetAudience ? (
+                  <div className="glass-card" style={{ boxShadow: 'var(--shadow-sm)', padding: '14px 16px' }}>
+                    <p style={{ margin: '0 0 4px', color: 'var(--text-faint)', fontSize: '.78rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                      Target audience
+                    </p>
+                    <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>
+                      {truncateText(campaign.targetAudience, 160)}
+                    </p>
+                  </div>
+                ) : null}
+
+                {campaign.creatorRequirements ? (
+                  <div className="glass-card" style={{ boxShadow: 'var(--shadow-sm)', padding: '14px 16px' }}>
+                    <p style={{ margin: '0 0 4px', color: 'var(--text-faint)', fontSize: '.78rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                      Creator requirements
+                    </p>
+                    <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>
+                      {truncateText(campaign.creatorRequirements, 160)}
+                    </p>
+                  </div>
+                ) : null}
+
+                {campaign.usageRights ? (
+                  <div className="glass-card" style={{ boxShadow: 'var(--shadow-sm)', padding: '14px 16px' }}>
+                    <p style={{ margin: '0 0 4px', color: 'var(--text-faint)', fontSize: '.78rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                      Usage rights
+                    </p>
+                    <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>
+                      {truncateText(campaign.usageRights, 160)}
                     </p>
                   </div>
                 ) : null}

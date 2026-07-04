@@ -1,14 +1,10 @@
 import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
-import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import {
-  ADMIN_SECRET_HEADER,
-  ADMIN_SECRET_REWRITE_PARAM,
-  getAdminExportPath,
-  getAdminSecretPath,
+  INTERNAL_ADMIN_EXPORT_PATH,
+  INTERNAL_ADMIN_PATH,
   isAllowedAdminUser,
-  isProductionDeployment,
 } from '@/lib/admin-config'
 import prisma from '@/lib/prisma'
 import { getCurrentAppUser } from '@/lib/current-app-user'
@@ -30,27 +26,9 @@ function buildReferralLink(referralCode: string) {
   }
 }
 
-export default async function InternalWaitlistPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>
-}) {
-  const requestHeaders = await headers()
-  const resolvedSearchParams = searchParams ? await searchParams : {}
-  const rewriteMarker = resolvedSearchParams[ADMIN_SECRET_REWRITE_PARAM]
-  if (
-    isProductionDeployment() &&
-    requestHeaders.get(ADMIN_SECRET_HEADER) !== '1' &&
-    rewriteMarker !== '1'
-  ) {
-    notFound()
-  }
-
-  const adminHref = getAdminSecretPath()
-  const exportHref = getAdminExportPath()
-  if (!adminHref || !exportHref) {
-    notFound()
-  }
+export default async function InternalWaitlistPage() {
+  const adminHref = INTERNAL_ADMIN_PATH
+  const exportHref = INTERNAL_ADMIN_EXPORT_PATH
 
   const { userId, user } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
@@ -97,9 +75,7 @@ export default async function InternalWaitlistPage({
           <span className="brand-wordmark">CreatorDocks</span>
         </Link>
         <div className="nav-links">
-          <Link href={adminHref} className="nav-link">Ops</Link>
-          <Link href="/?view=public" className="nav-link">View home</Link>
-          <Link href="/waitlist?view=public" className="nav-link">View waitlist</Link>
+          <Link href="/?preview=admin" className="nav-link">View home</Link>
           <Link href={exportHref} className="apple-btn-ghost">Export CSV</Link>
         </div>
       </nav>
@@ -108,18 +84,18 @@ export default async function InternalWaitlistPage({
         <section className="subtle-grid spacing-xl">
           <header className="page-header">
             <div className="page-header-copy">
-              <span className="eyebrow">Hidden creator ops</span>
+              <span className="eyebrow">Creator ops</span>
               <h1 className="page-title" style={{ marginTop: 18, marginBottom: 12 }}>
                 Review CreatorDocks leads, referrals, and invite momentum.
               </h1>
               <p className="page-copy" style={{ margin: 0 }}>
-                This dashboard is hidden behind your secret URL and requires your admin role plus an allowlisted email.
+                This dashboard requires an admin account with an allowlisted email; everyone else sees a 404.
               </p>
             </div>
             <div className="page-header-action">
               <div className="admin-user-menu">
                 <span className="pill">Admin: {adminUser.email}</span>
-                <Link href="/waitlist?view=public" className="apple-btn">View as user</Link>
+                <Link href="/waitlist?preview=admin" className="apple-btn">Preview waitlist</Link>
                 <AdminSignOutButton />
                 <UserButton appearance={{ elements: { avatarBox: 'w-10 h-10' } }} />
               </div>

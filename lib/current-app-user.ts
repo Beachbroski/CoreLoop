@@ -3,28 +3,28 @@ import prisma from '@/lib/prisma'
 
 export async function getCurrentAppUser() {
   const { userId } = await auth()
-  if (!userId) return { userId: null, user: null }
+  if (!userId) return { userId: null, user: null, email: null }
 
   const userByClerkId = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { id: true, email: true, role: true },
+    select: { id: true, email: true, name: true, role: true },
   })
 
-  if (userByClerkId) return { userId, user: userByClerkId }
+  if (userByClerkId) return { userId, user: userByClerkId, email: userByClerkId.email }
 
   const clerkUser = await currentUser()
   const primaryEmail =
     clerkUser?.emailAddresses.find(email => email.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
     clerkUser?.emailAddresses[0]?.emailAddress
 
-  if (!primaryEmail) return { userId, user: null }
+  if (!primaryEmail) return { userId, user: null, email: null }
 
   const userByEmail = await prisma.user.findUnique({
     where: { email: primaryEmail },
-    select: { id: true, email: true, role: true },
+    select: { id: true, email: true, name: true, role: true },
   })
 
-  if (!userByEmail) return { userId, user: null }
+  if (!userByEmail) return { userId, user: null, email: primaryEmail }
 
   const repairedUser = await prisma.user.update({
     where: { id: userByEmail.id },
@@ -33,8 +33,8 @@ export async function getCurrentAppUser() {
       name: `${clerkUser?.firstName ?? ''} ${clerkUser?.lastName ?? ''}`.trim() || null,
       avatarUrl: clerkUser?.imageUrl ?? null,
     },
-    select: { id: true, email: true, role: true },
+    select: { id: true, email: true, name: true, role: true },
   })
 
-  return { userId, user: repairedUser }
+  return { userId, user: repairedUser, email: repairedUser.email }
 }
