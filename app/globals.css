@@ -1080,8 +1080,7 @@ select {
 }
 
 .waitlist-form-panel,
-.waitlist-success-panel,
-.waitlist-admin-card {
+.waitlist-success-panel {
   background: rgba(255, 255, 255, 0.88);
 }
 

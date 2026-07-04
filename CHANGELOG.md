@@ -2,6 +2,34 @@
 
 All notable changes to this project are logged here, most recent first. This is a human-readable companion to `git log` — each entry summarizes the *why*, not just the diff.
 
+## 2026-07-04 — Full backlog pass: notifications, brand tooling, dashboard metrics
+
+Follow-up to the waitlist-launch fix, working through the full "what's next" backlog: bug fixes, missing brand tooling, real dashboard metrics, and the product's first transactional emails.
+
+**Fixes:**
+- Admin "View waitlist"/"View as user" buttons both linked to a dead `?view=public` parameter that nothing read. Replaced with a real admin-preview banner (`app/AdminPreviewBanner.tsx`) shown on the public site via `?preview=admin`.
+- Applications could be submitted to campaigns whose deadline had already passed (only `status === 'ACTIVE'` was checked).
+- Accepting an application never checked the sum of accepted `proposedRate` against `campaign.budget` — only headcount was capped.
+- Creators never saw a campaign's `targetAudience`/`creatorRequirements`/`usageRights` before applying, even though brands could.
+- The BRAND↔CREATOR role-switch API had no UI outside onboarding; added a `ChangeRoleControl` to both settings pages, gated to before any activity.
+
+**Notifications (new — nothing emailed anyone before this):**
+- Added `lib/email.ts` (Resend) wired into: application accepted/rejected, submission approved, payout paid, waitlist confirmation, referral milestone (3 referrals), and waitlist "Invited" status.
+- Added `RESEND_API_KEY`/`EMAIL_FROM_ADDRESS` env vars; sending no-ops with a warning if the key isn't set, rather than failing.
+
+**Brand tooling (previously creator-only equivalents existed, brand had none):**
+- Campaign edit/cancel UI (`CampaignEditControls.tsx`), using the `PATCH /api/campaigns/[id]` support that already existed but had no UI.
+- Consolidated `/brand/applications` and `/brand/submissions` views, using the aggregate GET endpoints that existed but were never called.
+- `/brand/settings` page, mirroring creator's.
+- Submission revision-request/reject now takes a required reason (`Submission.reviewNote`, new migration), shown to the creator.
+
+**Dashboard metrics:**
+- Creator and brand dashboards: replaced 3 flat lifetime counters with 4 stats including week-over-week trend and acceptance rate (`lib/utils.ts#compareToLastWeek`).
+- Waitlist admin dashboard: added a 14-day signups chart, top-referrers leaderboard, platform/niche/follower-range breakdown, and converted the submissions list from stacked cards to a sortable table.
+- New `/creator/payouts` page: per-payout status (PENDING/PROCESSING/PAID/FAILED) instead of one lifetime "total earned" figure, so a failed payout is no longer invisible to the creator it happened to.
+
+**Removed:** the $25-per-3-referrals promotional copy (landing page + waitlist form) — not being automated, so the promise came out rather than staying unfulfilled. Referral tracking itself is unchanged.
+
 ## 2026-07-03 — Fix waitlist-launch gating, dashboard bugs, and landing page
 
 **Problem:** the "waitlist launch" hardening pass stacked an admin-only gate on top of every marketplace API and dashboard, which also required a BRAND/CREATOR role. Those two checks are mutually exclusive for a single user, so the marketplace was completely unusable — by anyone, including admins. The onboarding role picker was also unreachable, sign-in ignored role/admin status, and there was no way to create an admin account at all.
