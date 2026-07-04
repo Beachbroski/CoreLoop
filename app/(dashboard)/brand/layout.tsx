@@ -19,6 +19,8 @@ export default async function BrandLayout({ children }: { children: React.ReactN
         navItems={[
           { label: 'Dashboard', href: '/brand' },
           { label: 'New campaign', href: '/brand/campaigns/new' },
+          { label: 'Applications', href: '/brand/applications' },
+          { label: 'Settings', href: '/brand/settings' },
         ]}
       />
       <main className="main-shell">{children}</main>
