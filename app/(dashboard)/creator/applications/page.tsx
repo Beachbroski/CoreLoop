@@ -105,13 +105,20 @@ async function ApplicationsContent() {
                     {app.submissions.map((submission: Submission) => {
                       const subStatus = SUB_STATUS[submission.status] ?? SUB_STATUS.PENDING
                       return (
-                        <div key={submission.id} className="list-row">
-                          <a href={submission.contentUrl} target="_blank" rel="noopener noreferrer" className="apple-link">
-                            View content
-                          </a>
-                          <span className="status-pill" style={{ background: subStatus.bg, color: subStatus.color }}>
-                            {subStatus.label}
-                          </span>
+                        <div key={submission.id} className="glass-card" style={{ boxShadow: 'var(--shadow-sm)', display: 'grid', gap: 8 }}>
+                          <div className="list-row" style={{ padding: 0 }}>
+                            <a href={submission.contentUrl} target="_blank" rel="noopener noreferrer" className="apple-link">
+                              View content
+                            </a>
+                            <span className="status-pill" style={{ background: subStatus.bg, color: subStatus.color }}>
+                              {subStatus.label}
+                            </span>
+                          </div>
+                          {submission.reviewNote && (
+                            <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: '.9rem' }}>
+                              <strong style={{ color: 'var(--text)' }}>Brand feedback:</strong> {submission.reviewNote}
+                            </p>
+                          )}
                         </div>
                       )
                     })}

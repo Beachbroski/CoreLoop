@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { requireAdminApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
+import { sendWaitlistInviteEmail } from '@/lib/email'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 const statusSchema = z.object({
@@ -38,6 +39,12 @@ export async function PATCH(
 
     const { id } = await params
 
+    const existing = await prisma.waitlistSubmission.findUnique({
+      where: { id },
+      select: { status: true },
+    })
+    if (!existing) return Response.json({ error: 'Submission not found' }, { status: 404 })
+
     const updated = await prisma.waitlistSubmission.update({
       where: { id },
       data: { status: parsed.data.status },
@@ -50,6 +57,10 @@ export async function PATCH(
         },
       },
     })
+
+    if (parsed.data.status === 'INVITED' && existing.status !== 'INVITED') {
+      await sendWaitlistInviteEmail(updated.email, { name: updated.name })
+    }
 
     return Response.json({
       success: true,

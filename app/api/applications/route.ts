@@ -59,6 +59,9 @@ export async function POST(req: Request) {
     if (campaign.status !== 'ACTIVE') {
       return Response.json({ error: 'Campaign is not accepting applications' }, { status: 400 })
     }
+    if (campaign.deadline < new Date()) {
+      return Response.json({ error: 'This campaign\'s deadline has passed' }, { status: 400 })
+    }
     if (campaign.brandId === user.id) {
       return Response.json({ error: 'Cannot apply to your own campaign' }, { status: 403 })
     }

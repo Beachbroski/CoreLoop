@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import { requireTesterApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
+import { sendApplicationAcceptedEmail, sendApplicationRejectedEmail } from '@/lib/email'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 import {
   cancelPaymentIntentIfCancelable,
@@ -107,6 +108,15 @@ export async function PATCH(
         if (acceptedCount >= creatorsNeeded) {
           throw new Error('Campaign already has enough accepted creators')
         }
+
+        const acceptedRates = await tx.application.aggregate({
+          where: { campaignId: application.campaignId, status: 'ACCEPTED' },
+          _sum: { proposedRate: true },
+        })
+        const committedSpend = (acceptedRates._sum.proposedRate ?? 0) + application.proposedRate
+        if (committedSpend > application.campaign.budget) {
+          throw new Error('Accepting this application would exceed the campaign budget')
+        }
       }
 
       const nextApplication = await tx.application.update({
@@ -133,9 +143,19 @@ export async function PATCH(
       return nextApplication
     })
 
+    if (parsed.data.status === 'ACCEPTED') {
+      await sendApplicationAcceptedEmail(application.creator.email, { campaignTitle: application.campaign.title })
+    } else {
+      await sendApplicationRejectedEmail(application.creator.email, { campaignTitle: application.campaign.title })
+    }
+
     return Response.json({ success: true, data: updated })
   } catch (err) {
-    if (err instanceof Error && err.message === 'Campaign already has enough accepted creators') {
+    if (
+      err instanceof Error &&
+      (err.message === 'Campaign already has enough accepted creators' ||
+        err.message === 'Accepting this application would exceed the campaign budget')
+    ) {
       return Response.json({ error: err.message }, { status: 409 })
     }
 

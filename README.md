@@ -47,6 +47,8 @@ There is a single sign-in page (`/sign-in`, Clerk). After login everyone lands o
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe Connect payments and webhooks. |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe.js on the client. |
 | `UPLOADTHING_TOKEN` | Creator content uploads. |
+| `RESEND_API_KEY` | Transactional email (application decisions, submission/payout events, waitlist confirmation, referral milestones, invites). Without it, `lib/email.ts` logs a warning and skips sending instead of failing. |
+| `EMAIL_FROM_ADDRESS` | Optional override for the email "from" address (defaults to `CreatorDocks <notifications@creatordocks.com>`). |
 | `TURNSTILE_SECRET_KEY` / `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile bot check on the waitlist form. |
 | `NEXT_PUBLIC_URL` | Canonical site URL (falls back to `VERCEL_URL`). |
 

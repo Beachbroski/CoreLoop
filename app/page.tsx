@@ -4,7 +4,7 @@ import { PublicWaitlistLink } from './PublicWaitlistLink'
 const creatorSignals = [
   { value: 'Free for creators', label: 'Brands pay the platform fee when paid deals happen.' },
   { value: 'Local brand matches', label: 'Cafes, gyms, salons, boutiques, and home services.' },
-  { value: '$25 creator reward', label: 'Refer 3 creators and complete 3 campaigns after launch.' },
+  { value: 'Invite your circle', label: 'Referral links help us open more matches, faster.' },
 ]
 
 const localBrandTypes = ['Cafes', 'Gyms', 'Salons', 'Boutiques', 'Home services']

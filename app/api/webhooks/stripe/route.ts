@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import prisma from '@/lib/prisma'
+import { sendPayoutPaidEmail } from '@/lib/email'
 import { calculatePlatformFee } from '@/lib/utils'
 
 export async function POST(req: Request) {
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
         const submission = await prisma.submission.findUnique({
           where: { id: submissionId },
           include: {
+            creator: true,
             application: { include: { campaign: true } },
           },
         })
@@ -82,6 +84,11 @@ export async function POST(req: Request) {
               data: { status: 'COMPLETE' },
             })
           }
+        })
+
+        await sendPayoutPaidEmail(submission.creator.email, {
+          campaignTitle: submission.application.campaign.title,
+          amountCents: submission.application.proposedRate,
         })
         break
       }

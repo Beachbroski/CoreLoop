@@ -75,9 +75,7 @@ export default async function InternalWaitlistPage() {
           <span className="brand-wordmark">CreatorDocks</span>
         </Link>
         <div className="nav-links">
-          <Link href={adminHref} className="nav-link">Ops</Link>
-          <Link href="/?view=public" className="nav-link">View home</Link>
-          <Link href="/waitlist?view=public" className="nav-link">View waitlist</Link>
+          <Link href="/?preview=admin" className="nav-link">View home</Link>
           <Link href={exportHref} className="apple-btn-ghost">Export CSV</Link>
         </div>
       </nav>
@@ -97,7 +95,7 @@ export default async function InternalWaitlistPage() {
             <div className="page-header-action">
               <div className="admin-user-menu">
                 <span className="pill">Admin: {adminUser.email}</span>
-                <Link href="/waitlist?view=public" className="apple-btn">View as user</Link>
+                <Link href="/waitlist?preview=admin" className="apple-btn">Preview waitlist</Link>
                 <AdminSignOutButton />
                 <UserButton appearance={{ elements: { avatarBox: 'w-10 h-10' } }} />
               </div>

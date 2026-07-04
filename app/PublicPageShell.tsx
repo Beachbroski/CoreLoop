@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AdminPreviewBanner } from './AdminPreviewBanner'
 import { PublicWaitlistLink } from './PublicWaitlistLink'
 
 interface PublicPageShellProps {
@@ -66,6 +67,7 @@ export function PublicPageShell({
 
   return (
     <div>
+      <AdminPreviewBanner />
       <PublicNav variant={variant} />
 
       <main className="apple-shell" style={{ paddingTop: hasIntro ? 28 : 0, paddingBottom: 60 }}>

@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { ConnectStripeButton } from './ConnectStripeButton'
+import { ChangeRoleControl } from '../../ChangeRoleControl'
 
 async function SettingsContent({ onboarded }: { onboarded: boolean }) {
   const { userId } = await auth()
@@ -12,6 +13,12 @@ async function SettingsContent({ onboarded }: { onboarded: boolean }) {
   if (!user) redirect('/onboarding')
 
   const isOnboarded = user.stripeOnboarded || onboarded
+
+  const [campaignCount, applicationCount] = await Promise.all([
+    prisma.campaign.count({ where: { brandId: user.id } }),
+    prisma.application.count({ where: { creatorId: user.id } }),
+  ])
+  const canChangeRole = campaignCount === 0 && applicationCount === 0
 
   return (
     <div className="subtle-grid" style={{ maxWidth: 720 }}>
@@ -69,10 +76,29 @@ async function SettingsContent({ onboarded }: { onboarded: boolean }) {
             <span style={{ fontSize: 15, color: 'var(--text-soft)' }}>Name</span>
             <span style={{ fontSize: 15, color: 'var(--text)' }}>{user.name ?? '—'}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 0',
+              borderBottom: canChangeRole ? '1px solid rgba(15, 23, 42, 0.06)' : undefined,
+            }}
+          >
             <span style={{ fontSize: 15, color: 'var(--text-soft)' }}>Email</span>
             <span style={{ fontSize: 15, color: 'var(--text)' }}>{user.email}</span>
           </div>
+          {canChangeRole && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+              <div>
+                <span style={{ fontSize: 15, color: 'var(--text-soft)', display: 'block' }}>Account type</span>
+                <span style={{ fontSize: '.85rem', color: 'var(--text-faint)' }}>
+                  You can switch until you launch a campaign or submit an application.
+                </span>
+              </div>
+              <ChangeRoleControl currentRole="CREATOR" />
+            </div>
+          )}
         </div>
       </div>
     </div>

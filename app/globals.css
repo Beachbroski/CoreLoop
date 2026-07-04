@@ -1028,6 +1028,26 @@ select {
   border-color: rgba(225, 29, 72, 0.22);
 }
 
+.admin-preview-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 20px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.admin-preview-banner-link {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
 .waitlist-page-grid {
   align-items: start;
   min-height: auto;

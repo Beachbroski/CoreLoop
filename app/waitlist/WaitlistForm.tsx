@@ -261,7 +261,7 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
             <p className="sidebar-label" style={{ margin: 0 }}>Your referral code</p>
             <p className="waitlist-referral-code">{successState.referralCode}</p>
             <p className="page-copy" style={{ margin: 0 }}>
-              Refer 3 creators and complete 3 campaigns after launch to unlock the $25 reward.
+              Share it with other creators — the more who join, the faster we can open new brand matches.
             </p>
           </div>
 
