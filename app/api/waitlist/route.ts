@@ -12,13 +12,18 @@ import {
 const MAX_WAITLIST_BODY_BYTES = 16_384
 
 const waitlistSchema = z.object({
-  step: z.enum(['email', 'profile']).default('profile'),
+  leadType: z.enum(['CREATOR', 'BUSINESS']).default('CREATOR'),
+  step: z.enum(['email', 'profile', 'business']).default('profile'),
   name: z.string().trim().max(100, 'Name is too long.').optional(),
   email: z.string().trim().email('Enter a valid email address.').transform(value => value.toLowerCase()),
   primaryPlatform: z.string().trim().max(40).optional(),
   handle: z.string().trim().max(80).optional(),
   niche: z.string().trim().max(80).optional(),
   followerRange: z.string().trim().max(80).optional(),
+  companyName: z.string().trim().max(120, 'Company name is too long.').optional(),
+  companyType: z.string().trim().max(80).optional(),
+  budgetRange: z.string().trim().max(80).optional(),
+  industry: z.string().trim().max(80).optional(),
   referralCode: z.string().trim().max(40).optional().transform(value => value ? value.toUpperCase() : undefined),
   turnstileToken: z.string().trim().optional(),
 })
@@ -63,9 +68,9 @@ function buildReferralLink(referralCode: string, req: Request) {
   }
 }
 
-async function findWaitlistSubmissionByEmail(email: string) {
+async function findWaitlistSubmissionByEmail(email: string, leadType: 'CREATOR' | 'BUSINESS') {
   return prisma.waitlistSubmission.findUnique({
-    where: { email },
+    where: { email_leadType: { email, leadType } },
     include: {
       referredBy: {
         select: { id: true, name: true, referralCode: true },
@@ -80,12 +85,17 @@ async function findWaitlistSubmissionByEmail(email: string) {
 function waitlistResponseData(submission: WaitlistSubmissionWithMeta, req: Request) {
   return {
     id: submission.id,
+    leadType: submission.leadType,
     name: submission.name,
     email: submission.email,
     primaryPlatform: submission.primaryPlatform,
     handle: submission.handle,
     niche: submission.niche,
     followerRange: submission.followerRange,
+    companyName: submission.companyName,
+    companyType: submission.companyType,
+    budgetRange: submission.budgetRange,
+    industry: submission.industry,
     profileCompletedAt: submission.profileCompletedAt?.toISOString() ?? null,
     referralCode: submission.referralCode,
     referralLink: buildReferralLink(submission.referralCode, req),
@@ -132,6 +142,14 @@ function validateProfileFields(data: z.infer<typeof waitlistSchema>) {
   if (!data.handle || data.handle.length < 2) return 'Handle is required.'
   if (!data.niche || data.niche.length < 2) return 'Choose a niche.'
   if (!data.followerRange || data.followerRange.length < 2) return 'Choose a follower range.'
+  return null
+}
+
+function validateBusinessFields(data: z.infer<typeof waitlistSchema>) {
+  if (!data.companyName || data.companyName.length < 2) return 'Company name is required.'
+  if (!data.companyType || data.companyType.length < 2) return 'Choose a company type.'
+  if (!data.budgetRange || data.budgetRange.length < 2) return 'Choose a monthly creator budget.'
+  if (!data.industry || data.industry.length < 2) return 'Choose an industry.'
   return null
 }
 
@@ -185,12 +203,98 @@ export async function POST(req: Request) {
       return Response.json({ error: parsed.error.issues[0]?.message ?? 'Invalid waitlist form.' }, { status: 400 })
     }
 
-    const { email, referralCode, turnstileToken } = parsed.data
+    const { email, leadType, referralCode, turnstileToken } = parsed.data
     const turnstileError = await ensureTurnstile(req, turnstileToken)
     if (turnstileError) return turnstileError
 
+    if (leadType === 'BUSINESS') {
+      const businessError = validateBusinessFields(parsed.data)
+      if (businessError) {
+        return Response.json({ error: businessError }, { status: 400 })
+      }
+
+      const existing = await findWaitlistSubmissionByEmail(email, 'BUSINESS')
+      const businessData = {
+        leadType: 'BUSINESS' as const,
+        name: parsed.data.name || null,
+        companyName: parsed.data.companyName,
+        companyType: parsed.data.companyType,
+        budgetRange: parsed.data.budgetRange,
+        industry: parsed.data.industry,
+        primaryPlatform: null,
+        handle: null,
+        niche: null,
+        followerRange: null,
+        profileCompletedAt: new Date(),
+      }
+
+      if (existing) {
+        const updated = await prisma.waitlistSubmission.update({
+          where: { id: existing.id },
+          data: businessData,
+          include: {
+            referredBy: {
+              select: { id: true, name: true, referralCode: true },
+            },
+            _count: {
+              select: { referrals: true },
+            },
+          },
+        })
+
+        return Response.json({
+          success: true,
+          existing: true,
+          profileComplete: true,
+          data: waitlistResponseData(updated, req),
+        })
+      }
+
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        try {
+          const created = await prisma.waitlistSubmission.create({
+            data: {
+              email,
+              referralCode: await generateReferralCode(parsed.data.companyName || email),
+              referredById: null,
+              ...businessData,
+            },
+            include: {
+              referredBy: {
+                select: { id: true, name: true, referralCode: true },
+              },
+              _count: {
+                select: { referrals: true },
+              },
+            },
+          })
+
+          return Response.json({
+            success: true,
+            existing: false,
+            profileComplete: true,
+            data: waitlistResponseData(created, req),
+          })
+        } catch (err) {
+          if (!isUniqueConstraintError(err)) throw err
+
+          const duplicate = await findWaitlistSubmissionByEmail(email, 'BUSINESS')
+          if (duplicate) {
+            return Response.json({
+              success: true,
+              existing: true,
+              profileComplete: true,
+              data: waitlistResponseData(duplicate, req),
+            })
+          }
+        }
+      }
+
+      return Response.json({ error: 'Unable to create a unique business lead. Please try again.' }, { status: 409 })
+    }
+
     if (parsed.data.step === 'email') {
-      const existing = await findWaitlistSubmissionByEmail(email)
+      const existing = await findWaitlistSubmissionByEmail(email, 'CREATOR')
       if (existing) {
         return Response.json({
           success: true,
@@ -212,6 +316,7 @@ export async function POST(req: Request) {
           const created = await prisma.waitlistSubmission.create({
             data: {
               email,
+              leadType: 'CREATOR',
               referralCode: await generateReferralCode(email),
               referredById,
             },
@@ -240,7 +345,7 @@ export async function POST(req: Request) {
         } catch (err) {
           if (!isUniqueConstraintError(err)) throw err
 
-          const duplicate = await findWaitlistSubmissionByEmail(email)
+          const duplicate = await findWaitlistSubmissionByEmail(email, 'CREATOR')
           if (duplicate) {
             return Response.json({
               success: true,
@@ -260,13 +365,18 @@ export async function POST(req: Request) {
       return Response.json({ error: profileError }, { status: 400 })
     }
 
-    const existing = await findWaitlistSubmissionByEmail(email)
+    const existing = await findWaitlistSubmissionByEmail(email, 'CREATOR')
     const profileData = {
+      leadType: 'CREATOR' as const,
       name: parsed.data.name || null,
       primaryPlatform: parsed.data.primaryPlatform,
       handle: parsed.data.handle,
       niche: parsed.data.niche,
       followerRange: parsed.data.followerRange,
+      companyName: null,
+      companyType: null,
+      budgetRange: null,
+      industry: null,
       profileCompletedAt: new Date(),
     }
 
@@ -333,7 +443,7 @@ export async function POST(req: Request) {
       } catch (err) {
         if (!isUniqueConstraintError(err)) throw err
 
-        const duplicate = await findWaitlistSubmissionByEmail(email)
+        const duplicate = await findWaitlistSubmissionByEmail(email, 'CREATOR')
         if (duplicate) {
           return Response.json({
             success: true,

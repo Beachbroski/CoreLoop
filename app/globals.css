@@ -1110,6 +1110,37 @@ select {
   font-weight: 700;
 }
 
+.waitlist-mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(241, 245, 249, 0.7);
+}
+
+.waitlist-mode-toggle button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--text-soft);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.waitlist-mode-toggle button:hover {
+  color: var(--text);
+}
+
+.waitlist-mode-toggle .waitlist-mode-active {
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
 .waitlist-field-grid,
 .waitlist-success-grid,
 .waitlist-meta-grid {
@@ -1137,18 +1168,28 @@ select {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.waitlist-success-grid > .dashboard-panel {
+  min-width: 0;
+  overflow: hidden;
+}
+
 .waitlist-meta-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .waitlist-referral-code {
   margin: 0;
+  max-width: 100%;
   font-size: clamp(2rem, 4vw, 2.6rem);
   letter-spacing: -0.08em;
   line-height: 0.95;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .waitlist-link-preview {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   word-break: break-word;
 }
 
@@ -1214,42 +1255,64 @@ select {
 }
 
 .admin-filter-grid {
-  grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(150px, 1fr));
+  grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(150px, 1fr));
   align-items: end;
   margin: 22px 0;
 }
 
 .admin-trend-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 160px;
-  padding-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  min-height: 190px;
+  padding-top: 14px;
 }
 
 .admin-trend-bar-col {
-  flex: 1;
+  display: grid;
+  grid-template-rows: 18px 132px auto;
+  align-items: end;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-trend-count {
+  min-height: 18px;
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-trend-bar-track {
+  position: relative;
+  width: 100%;
+  height: 132px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-  gap: 6px;
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(19, 113, 255, 0.18);
 }
 
 .admin-trend-bar {
   width: 100%;
-  min-height: 4px;
-  border-radius: 6px 6px 2px 2px;
+  min-height: 10px;
+  border-radius: 7px 7px 3px 3px;
   background: var(--accent);
   transition: height 200ms ease;
 }
 
+.admin-trend-bar-empty {
+  min-height: 3px;
+  background: rgba(19, 113, 255, 0.22);
+}
+
 .admin-trend-bar-label {
-  font-size: 0.68rem;
+  max-width: 100%;
   color: var(--text-faint);
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
+  font-size: 0.68rem;
+  line-height: 1;
   white-space: nowrap;
 }
 
@@ -1329,6 +1392,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .admin-filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-trend-chart {
+    grid-template-columns: repeat(14, minmax(42px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 4px;
   }
 
   .bento-card,

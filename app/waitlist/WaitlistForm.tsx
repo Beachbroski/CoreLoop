@@ -7,6 +7,9 @@ import { track } from '@vercel/analytics'
 const platformOptions = ['TikTok', 'Instagram', 'YouTube', 'X', 'Twitch', 'Other']
 const nicheOptions = ['Lifestyle', 'Beauty', 'Fashion', 'Fitness', 'Food', 'Home services', 'Local reviews', 'Comedy', 'Other']
 const followerRanges = ['Under 1k', '1k-5k', '5k-10k', '10k-25k', '25k-50k', '50k-100k', '100k+']
+const companyTypeOptions = ['Local business', 'Regional brand', 'Agency', 'Startup', 'Nonprofit', 'Other']
+const budgetRangeOptions = ['Under $500/mo', '$500-$1k/mo', '$1k-$2.5k/mo', '$2.5k-$5k/mo', '$5k+/mo']
+const industryOptions = ['Food & beverage', 'Fitness & wellness', 'Beauty', 'Retail', 'Home services', 'Events', 'Professional services', 'Other']
 const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
 declare global {
@@ -34,12 +37,17 @@ type WaitlistResponse = {
   profileComplete: boolean
   data: {
     id: string
+    leadType: 'CREATOR' | 'BUSINESS'
     name: string | null
     email: string
     primaryPlatform: string | null
     handle: string | null
     niche: string | null
     followerRange: string | null
+    companyName: string | null
+    companyType: string | null
+    budgetRange: string | null
+    industry: string | null
     profileCompletedAt: string | null
     referralCode: string
     referralLink: string
@@ -65,6 +73,9 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
   const [leadState, setLeadState] = useState<WaitlistResponse['data'] | null>(null)
   const [successState, setSuccessState] = useState<WaitlistResponse['data'] | null>(null)
   const [existingSubmission, setExistingSubmission] = useState(false)
+  const [leadType, setLeadType] = useState<'CREATOR' | 'BUSINESS'>(() => {
+    return searchParams.get('type') === 'business' ? 'BUSINESS' : 'CREATOR'
+  })
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -72,6 +83,10 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
     handle: '',
     niche: 'Lifestyle',
     followerRange: '1k-5k',
+    companyName: '',
+    companyType: 'Local business',
+    budgetRange: '$500-$1k/mo',
+    industry: 'Food & beverage',
     referralCode: '',
   })
 
@@ -83,6 +98,15 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
   const effectiveReferralCode = formData.referralCode || referralFromUrl
   const turnstileEnabled = Boolean(turnstileSiteKey)
   const currentEmail = leadState?.email || formData.email
+  const isBusinessLead = leadType === 'BUSINESS'
+
+  function changeLeadType(nextLeadType: 'CREATOR' | 'BUSINESS') {
+    if (isSubmitting || successState) return
+    setLeadType(nextLeadType)
+    setStep('email')
+    setError('')
+    setCopied(false)
+  }
 
   function resetTurnstile() {
     if (turnstileWidgetIdRef.current && window.turnstile) {
@@ -149,7 +173,7 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
     const res = await fetch('/api/waitlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, turnstileToken }),
+      body: JSON.stringify({ ...payload, leadType, turnstileToken }),
     })
 
     const text = await res.text()
@@ -176,6 +200,28 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
     try {
       if (turnstileEnabled && !turnstileToken) {
         throw new Error('Complete the verification before joining the waitlist.')
+      }
+
+      if (isBusinessLead) {
+        const parsed = await submitWaitlist({
+          step: 'business',
+          email: formData.email,
+          name: formData.name,
+          companyName: formData.companyName,
+          companyType: formData.companyType,
+          budgetRange: formData.budgetRange,
+          industry: formData.industry,
+        })
+
+        resetTurnstile()
+        track('waitlist_business_submitted', {
+          company_type: formData.companyType,
+          budget_range: formData.budgetRange,
+          industry: formData.industry,
+        })
+        setSuccessState(parsed.data)
+        setExistingSubmission(parsed.existing)
+        return
       }
 
       if (step === 'email') {
@@ -244,48 +290,78 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
   }
 
   if (successState) {
+    const successIsBusiness = successState.leadType === 'BUSINESS'
+
     return (
       <div className="dashboard-panel waitlist-success-panel">
         <div className="subtle-grid" style={{ gap: 10 }}>
           <span className="eyebrow">{existingSubmission ? 'Already joined' : 'You are in'}</span>
           <h2 style={{ margin: 0, fontSize: 'clamp(2rem, 5vw, 3rem)', letterSpacing: '-0.06em', lineHeight: 0.98 }}>
-            {existingSubmission ? 'Your CreatorDocks spot is ready.' : 'Your CreatorDocks spot is saved.'}
+            {successIsBusiness
+              ? existingSubmission ? 'Your business lead is ready.' : 'Your business lead is saved.'
+              : existingSubmission ? 'Your CreatorDocks spot is ready.' : 'Your CreatorDocks spot is saved.'}
           </h2>
           <p className="page-copy" style={{ margin: 0 }}>
-            We’ll use your creator details to match you with local brand deals that fit. Share your link while the first cohort opens in rolling waves.
+            {successIsBusiness
+              ? 'We’ll use your company details to prioritize brand access as the first local campaign cohorts open.'
+              : 'We’ll use your creator details to match you with local brand deals that fit. Share your link while the first cohort opens in rolling waves.'}
           </p>
         </div>
 
-        <div className="waitlist-success-grid">
-          <div className="dashboard-panel">
-            <p className="sidebar-label" style={{ margin: 0 }}>Your referral code</p>
-            <p className="waitlist-referral-code">{successState.referralCode}</p>
-            <p className="page-copy" style={{ margin: 0 }}>
-              Share it with other creators — the more who join, the faster we can open new brand matches.
-            </p>
-          </div>
+        {successIsBusiness ? (
+          <div className="waitlist-success-grid">
+            <div className="dashboard-panel">
+              <p className="sidebar-label" style={{ margin: 0 }}>Company</p>
+              <p className="waitlist-referral-code">{successState.companyName}</p>
+              <p className="page-copy" style={{ margin: 0 }}>
+                {successState.companyType} · {successState.industry}
+              </p>
+            </div>
 
-          <div className="dashboard-panel">
-            <p className="sidebar-label" style={{ margin: 0 }}>Your referral link</p>
-            <p className="page-copy waitlist-link-preview">{successState.referralLink}</p>
-            <div className="cta-row">
-              <button type="button" className="apple-btn" onClick={copyReferralLink}>
-                {copied ? 'Copied' : 'Copy link'}
-              </button>
-              <a href={successState.referralLink} className="apple-btn-ghost">
-                Open link
-              </a>
+            <div className="dashboard-panel">
+              <p className="sidebar-label" style={{ margin: 0 }}>Budget signal</p>
+              <p className="page-copy" style={{ margin: 0 }}>
+                {successState.budgetRange}
+              </p>
+              <p className="page-copy" style={{ margin: '10px 0 0' }}>
+                We’ll use this to shape launch inventory and outreach.
+              </p>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="waitlist-success-grid">
+            <div className="dashboard-panel">
+              <p className="sidebar-label" style={{ margin: 0 }}>Your referral code</p>
+              <p className="waitlist-referral-code">{successState.referralCode}</p>
+              <p className="page-copy" style={{ margin: 0 }}>
+                Share it with other creators — the more who join, the faster we can open new brand matches.
+              </p>
+            </div>
 
-        <div className="banner-success">
-          <p style={{ margin: 0, color: 'var(--success)', fontSize: '.96rem' }}>
-            {successState.referredBy
-              ? `Joined through ${successState.referredBy.name ?? 'another creator'}'s referral code.`
-              : 'No referral attached yet. You can still start referring from here.'}
-          </p>
-        </div>
+            <div className="dashboard-panel">
+              <p className="sidebar-label" style={{ margin: 0 }}>Your referral link</p>
+              <p className="page-copy waitlist-link-preview">{successState.referralLink}</p>
+              <div className="cta-row">
+                <button type="button" className="apple-btn" onClick={copyReferralLink}>
+                  {copied ? 'Copied' : 'Copy link'}
+                </button>
+                <a href={successState.referralLink} className="apple-btn-ghost">
+                  Open link
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!successIsBusiness ? (
+          <div className="banner-success">
+            <p style={{ margin: 0, color: 'var(--success)', fontSize: '.96rem' }}>
+              {successState.referredBy
+                ? `Joined through ${successState.referredBy.name ?? 'another creator'}'s referral code.`
+                : 'No referral attached yet. You can still start referring from here.'}
+            </p>
+          </div>
+        ) : null}
       </div>
     )
   }
@@ -293,16 +369,41 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
   return (
     <form className={`dashboard-panel ${compact ? 'waitlist-form-compact' : 'waitlist-form-panel'}`} onSubmit={handleSubmit}>
       <div className="subtle-grid" style={{ gap: 10 }}>
-        <span className="eyebrow">Step {step === 'email' ? '1' : '2'} of 2</span>
+        <span className="eyebrow">
+          {isBusinessLead ? 'Business waitlist' : `Step ${step === 'email' ? '1' : '2'} of 2`}
+        </span>
         <h2 style={{ margin: 0, fontSize: compact ? 'clamp(1.8rem, 5vw, 2.6rem)' : 'clamp(2rem, 5vw, 3rem)', letterSpacing: '-0.06em', lineHeight: 0.98 }}>
-          {step === 'email' ? 'Save your creator spot.' : 'Help us match you better.'}
+          {isBusinessLead
+            ? 'Bring CreatorDocks to your business.'
+            : step === 'email' ? 'Save your creator spot.' : 'Help us match you better.'}
         </h2>
         <p className="page-copy" style={{ margin: 0 }}>
-          {step === 'email'
+          {isBusinessLead
+            ? 'Tell us what kind of brand you run and the monthly creator budget you are considering.'
+            : step === 'email'
             ? 'Drop your email first. Your lead is saved even if you finish the creator details later.'
             : 'Tell us where you create and what local brands should know before we curate the first match list.'}
         </p>
       </div>
+
+      {isBusinessLead ? (
+        <div className="waitlist-mode-toggle" aria-label="Choose waitlist type">
+          <button
+            type="button"
+            className=""
+            onClick={() => changeLeadType('CREATOR')}
+          >
+            Creator
+          </button>
+          <button
+            type="button"
+            className="waitlist-mode-active"
+            onClick={() => changeLeadType('BUSINESS')}
+          >
+            Business
+          </button>
+        </div>
+      ) : null}
 
       {error ? (
         <div className="banner-danger">
@@ -310,7 +411,86 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
         </div>
       ) : null}
 
-      {step === 'email' ? (
+      {isBusinessLead ? (
+        <div className="waitlist-field-grid">
+          <label>
+            <span className="field-label">Company name *</span>
+            <input
+              className="apple-input"
+              type="text"
+              autoComplete="organization"
+              value={formData.companyName}
+              onChange={event => setFormData(current => ({ ...current, companyName: event.target.value }))}
+              placeholder="Main Street Coffee"
+              required
+            />
+          </label>
+
+          <label>
+            <span className="field-label">Work email *</span>
+            <input
+              className="apple-input"
+              type="email"
+              autoComplete="email"
+              value={formData.email}
+              onChange={event => setFormData(current => ({ ...current, email: event.target.value }))}
+              placeholder="you@company.com"
+              required
+            />
+          </label>
+
+          <label>
+            <span className="field-label">Your name (optional)</span>
+            <input
+              className="apple-input"
+              type="text"
+              autoComplete="name"
+              value={formData.name}
+              onChange={event => setFormData(current => ({ ...current, name: event.target.value }))}
+              placeholder="Alex Morgan"
+            />
+          </label>
+
+          <label>
+            <span className="field-label">Company type</span>
+            <select
+              className="apple-select"
+              value={formData.companyType}
+              onChange={event => setFormData(current => ({ ...current, companyType: event.target.value }))}
+            >
+              {companyTypeOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            <span className="field-label">Monthly creator budget</span>
+            <select
+              className="apple-select"
+              value={formData.budgetRange}
+              onChange={event => setFormData(current => ({ ...current, budgetRange: event.target.value }))}
+            >
+              {budgetRangeOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            <span className="field-label">Industry</span>
+            <select
+              className="apple-select"
+              value={formData.industry}
+              onChange={event => setFormData(current => ({ ...current, industry: event.target.value }))}
+            >
+              {industryOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : step === 'email' ? (
         <div className="waitlist-field-grid waitlist-email-grid">
           <label>
             <span className="field-label">Email *</span>
@@ -412,7 +592,9 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
 
       <div className="banner-info">
         <p style={{ margin: 0, color: 'var(--info)', fontSize: '.96rem' }}>
-          CreatorDocks is free for creators. Brands pay the platform fee when paid local deals go through the platform.
+          {isBusinessLead
+            ? 'Business access is being rolled out in cohorts so campaign supply and creator availability stay balanced.'
+            : 'CreatorDocks is free for creators. Brands pay the platform fee when paid local deals go through the platform.'}
         </p>
       </div>
 
@@ -431,7 +613,9 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
         >
           {isSubmitting
             ? 'Saving...'
-            : step === 'email'
+            : isBusinessLead
+              ? 'Join business waitlist'
+              : step === 'email'
               ? 'Save my spot'
               : 'Finish creator profile'}
         </button>

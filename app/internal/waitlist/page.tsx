@@ -52,12 +52,17 @@ export default async function InternalWaitlistPage() {
 
   const dashboardSubmissions: AdminWaitlistSubmission[] = submissions.map(submission => ({
     id: submission.id,
+    leadType: submission.leadType,
     name: submission.name,
     email: submission.email,
     primaryPlatform: submission.primaryPlatform,
     handle: submission.handle,
     niche: submission.niche,
     followerRange: submission.followerRange,
+    companyName: submission.companyName,
+    companyType: submission.companyType,
+    budgetRange: submission.budgetRange,
+    industry: submission.industry,
     referralCode: submission.referralCode,
     referralLink: buildReferralLink(submission.referralCode),
     referralCount: submission._count.referrals,

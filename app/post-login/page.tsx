@@ -5,8 +5,8 @@ import { resolvePostLoginPath } from '@/lib/post-login'
 export const dynamic = 'force-dynamic'
 
 export default async function PostLoginPage() {
-  const { userId, user, email } = await getCurrentAppUser()
+  const { userId, user } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
-  redirect(resolvePostLoginPath(user, email))
+  redirect(resolvePostLoginPath(user))
 }

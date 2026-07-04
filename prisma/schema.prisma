@@ -27,12 +27,17 @@ model User {
 
 model WaitlistSubmission {
   id                 String               @id @default(cuid())
+  leadType           WaitlistLeadType     @default(CREATOR)
   name               String?
-  email              String               @unique
+  email              String
   primaryPlatform    String?
   handle             String?
   niche              String?
   followerRange      String?
+  companyName        String?
+  companyType        String?
+  budgetRange        String?
+  industry           String?
   referralCode       String               @unique
   referredById       String?
   referredBy         WaitlistSubmission?  @relation("WaitlistReferrals", fields: [referredById], references: [id])
@@ -41,6 +46,8 @@ model WaitlistSubmission {
   profileCompletedAt DateTime?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
+
+  @@unique([email, leadType])
 }
 
 enum Role {
@@ -54,6 +61,11 @@ enum WaitlistStatus {
   CONTACTED
   APPROVED
   INVITED
+}
+
+enum WaitlistLeadType {
+  CREATOR
+  BUSINESS
 }
 
 model Campaign {

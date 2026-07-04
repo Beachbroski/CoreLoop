@@ -4,10 +4,10 @@ import { getCurrentAppUser } from '@/lib/current-app-user'
 import { resolvePostLoginPath } from '@/lib/post-login'
 
 export default async function BrandLayout({ children }: { children: React.ReactNode }) {
-  const { userId, user, email } = await getCurrentAppUser()
+  const { userId, user } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
-  if (!user || user.role !== 'BRAND') redirect(resolvePostLoginPath(user, email))
+  if (!user || user.role !== 'BRAND') redirect(resolvePostLoginPath(user))
 
   return (
     <div className="dashboard-layout">

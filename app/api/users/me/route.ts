@@ -28,7 +28,7 @@ export async function GET() {
       hasProfile: Boolean(user),
       role: user?.role ?? null,
       onboardingRequired,
-      redirectTo: resolvePostLoginPath(user, email),
+      redirectTo: resolvePostLoginPath(user),
     })
   } catch (err) {
     console.error('[GET /api/users/me]', err)

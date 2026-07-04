@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import type { Application, Campaign } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
+import { isTesterEmailAllowed } from '@/lib/admin-config'
+import { getCurrentAppUser } from '@/lib/current-app-user'
 import prisma from '@/lib/prisma'
 import { compareToLastWeek, formatCents, type Trend } from '@/lib/utils'
 
@@ -16,12 +17,95 @@ const STATUS: Record<string, { bg: string; color: string; label: string }> = {
 
 type CampaignWithApplications = Campaign & { applications: Application[] }
 
+function LockedBrandDashboard({
+  userName,
+  companyName,
+  budgetRange,
+  industry,
+}: {
+  userName: string
+  companyName: string | null
+  budgetRange: string | null
+  industry: string | null
+}) {
+  return (
+    <div className="subtle-grid" style={{ gap: 26 }}>
+      <div className="page-header">
+        <div className="page-header-copy">
+          <p style={{ margin: '0 0 8px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+            Brand dashboard
+          </p>
+          <h1 className="page-title" style={{ marginBottom: 10 }}>Campaign tools are queued for you, {userName}.</h1>
+          <p className="page-copy" style={{ margin: 0, maxWidth: 720 }}>
+            Business access is locked while CreatorDocks balances early brand demand with creator supply. Your workspace shell is ready for launch access.
+          </p>
+        </div>
+        <Link href="/waitlist?type=business" className="apple-btn page-header-action">Update business lead</Link>
+      </div>
+
+      <div className="banner-warning split-row">
+        <div>
+          <p style={{ margin: '0 0 4px', fontWeight: 600 }}>Brand features unlock after approval</p>
+          <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: '.95rem' }}>
+            Campaign creation, application review, and payout controls are disabled until this account is allowlisted.
+          </p>
+        </div>
+        <span className="pill">Locked</span>
+      </div>
+
+      <div className="subtle-grid three-col">
+        <div className="metric-card">
+          <p className="metric-value">{companyName ?? 'Pending'}</p>
+          <p className="metric-label">Business lead</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-value">{budgetRange ?? 'Not set'}</p>
+          <p className="metric-label">Budget signal</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-value">{industry ?? 'Not set'}</p>
+          <p className="metric-label">Industry</p>
+        </div>
+      </div>
+
+      <section className="dashboard-panel">
+        <div className="section-header">
+          <div className="section-header-copy">
+            <h2 style={{ margin: 0 }}>Campaign queue</h2>
+            <p className="page-copy" style={{ margin: '8px 0 0' }}>
+              Your campaign controls will appear here after approval.
+            </p>
+          </div>
+          <div className="section-header-action">
+            <button type="button" className="apple-btn-ghost" disabled>New campaign</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 async function BrandDashboardContent() {
-  const { userId } = await auth()
+  const { userId, email } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
   const user = await prisma.user.findUnique({ where: { clerkId: userId } })
   if (!user) redirect('/onboarding')
+
+  if (!isTesterEmailAllowed(email)) {
+    const waitlistSubmission = await prisma.waitlistSubmission.findUnique({
+      where: { email_leadType: { email: user.email, leadType: 'BUSINESS' } },
+    })
+
+    return (
+      <LockedBrandDashboard
+        userName={user.name ?? 'Brand'}
+        companyName={waitlistSubmission?.companyName ?? null}
+        budgetRange={waitlistSubmission?.budgetRange ?? null}
+        industry={waitlistSubmission?.industry ?? null}
+      />
+    )
+  }
 
   const campaigns: CampaignWithApplications[] = await prisma.campaign.findMany({
     where: { brandId: user.id },

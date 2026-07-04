@@ -33,12 +33,17 @@ export async function GET() {
   })
 
   const csvHeaders = [
+    'leadType',
     'name',
     'email',
     'primaryPlatform',
     'handle',
     'niche',
     'followerRange',
+    'companyName',
+    'companyType',
+    'budgetRange',
+    'industry',
     'referralCode',
     'referredByName',
     'referredByCode',
@@ -49,12 +54,17 @@ export async function GET() {
   ]
 
   const rows = submissions.map(submission => ([
+    submission.leadType,
     submission.name,
     submission.email,
     submission.primaryPlatform,
     submission.handle,
     submission.niche,
     submission.followerRange,
+    submission.companyName,
+    submission.companyType,
+    submission.budgetRange,
+    submission.industry,
     submission.referralCode,
     submission.referredBy?.name ?? '',
     submission.referredBy?.referralCode ?? '',

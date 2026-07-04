@@ -9,12 +9,17 @@ type WaitlistStatus = 'NEW' | 'CONTACTED' | 'APPROVED' | 'INVITED'
 
 export type AdminWaitlistSubmission = {
   id: string
+  leadType: 'CREATOR' | 'BUSINESS'
   name: string | null
   email: string
   primaryPlatform: string | null
   handle: string | null
   niche: string | null
   followerRange: string | null
+  companyName: string | null
+  companyType: string | null
+  budgetRange: string | null
+  industry: string | null
   referralCode: string
   referralLink: string
   referralCount: number
@@ -48,6 +53,16 @@ const DEFAULT_SORT_DIRECTION: Record<SortKey, SortDirection> = {
 }
 
 function profileSummary(submission: AdminWaitlistSubmission) {
+  if (submission.leadType === 'BUSINESS') {
+    const parts = [
+      submission.companyType,
+      submission.industry,
+      submission.budgetRange,
+    ].filter(Boolean)
+
+    return parts.length > 0 ? parts.join(' · ') : 'Business details pending.'
+  }
+
   const parts = [
     submission.primaryPlatform,
     submission.handle,
@@ -82,6 +97,7 @@ export function AdminWaitlistDashboard({
 }: AdminWaitlistDashboardProps) {
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<'ALL' | WaitlistStatus>('ALL')
+  const [leadTypeFilter, setLeadTypeFilter] = useState<'ALL' | 'CREATOR' | 'BUSINESS'>('ALL')
   const [profileFilter, setProfileFilter] = useState<'ALL' | 'COMPLETE' | 'INCOMPLETE'>('ALL')
   const [referralFilter, setReferralFilter] = useState<'ALL' | 'ONE_PLUS' | 'THREE_PLUS'>('ALL')
   const [copiedId, setCopiedId] = useState('')
@@ -90,12 +106,16 @@ export function AdminWaitlistDashboard({
 
   const metrics = useMemo(() => {
     const complete = submissions.filter(submission => submission.profileCompletedAt).length
+    const creatorLeads = submissions.filter(submission => submission.leadType === 'CREATOR').length
+    const businessLeads = submissions.filter(submission => submission.leadType === 'BUSINESS').length
     const totalReferrals = submissions.reduce((sum, submission) => sum + submission.referralCount, 0)
     const rewardCandidates = submissions.filter(submission => submission.referralCount >= 3).length
 
     return {
       total: submissions.length,
       complete,
+      creatorLeads,
+      businessLeads,
       incomplete: submissions.length - complete,
       totalReferrals,
       rewardCandidates,
@@ -120,10 +140,11 @@ export function AdminWaitlistDashboard({
     }
 
     const max = Math.max(1, ...days.map(day => day.count))
+    const scaleMax = Math.max(4, max)
     const thisWeek = days.slice(7, 14).reduce((sum, day) => sum + day.count, 0)
     const lastWeek = days.slice(0, 7).reduce((sum, day) => sum + day.count, 0)
 
-    return { days, max, thisWeek, lastWeek }
+    return { days, scaleMax, thisWeek, lastWeek }
   }, [submissions])
 
   const topReferrers = useMemo(() => {
@@ -163,6 +184,10 @@ export function AdminWaitlistDashboard({
         submission.handle,
         submission.niche,
         submission.primaryPlatform,
+        submission.companyName,
+        submission.companyType,
+        submission.budgetRange,
+        submission.industry,
         submission.referralCode,
         submission.referredBy?.name,
         submission.referredBy?.referralCode,
@@ -170,6 +195,7 @@ export function AdminWaitlistDashboard({
 
       if (normalizedQuery && !searchableText.includes(normalizedQuery)) return false
       if (status !== 'ALL' && submission.status !== status) return false
+      if (leadTypeFilter !== 'ALL' && submission.leadType !== leadTypeFilter) return false
       if (profileFilter === 'COMPLETE' && !submission.profileCompletedAt) return false
       if (profileFilter === 'INCOMPLETE' && submission.profileCompletedAt) return false
       if (referralFilter === 'ONE_PLUS' && submission.referralCount < 1) return false
@@ -192,7 +218,7 @@ export function AdminWaitlistDashboard({
           return direction * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
       }
     })
-  }, [profileFilter, query, referralFilter, sortDirection, sortKey, status, submissions])
+  }, [leadTypeFilter, profileFilter, query, referralFilter, sortDirection, sortKey, status, submissions])
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -223,7 +249,7 @@ export function AdminWaitlistDashboard({
       <section className="admin-metric-grid">
         <article className="metric-card">
           <p className="metric-value">{metrics.total}</p>
-          <p className="metric-label">Creators on the waitlist</p>
+          <p className="metric-label">Total waitlist leads</p>
           {(() => {
             const trend = compareToLastWeek(signupTrend.thisWeek, signupTrend.lastWeek)
             return (
@@ -234,16 +260,16 @@ export function AdminWaitlistDashboard({
           })()}
         </article>
         <article className="metric-card">
+          <p className="metric-value">{metrics.creatorLeads}</p>
+          <p className="metric-label">Creator leads</p>
+        </article>
+        <article className="metric-card">
+          <p className="metric-value">{metrics.businessLeads}</p>
+          <p className="metric-label">Business leads</p>
+        </article>
+        <article className="metric-card">
           <p className="metric-value">{metrics.complete}</p>
           <p className="metric-label">Completed profiles</p>
-        </article>
-        <article className="metric-card">
-          <p className="metric-value">{metrics.incomplete}</p>
-          <p className="metric-label">Email-only leads</p>
-        </article>
-        <article className="metric-card">
-          <p className="metric-value">{metrics.totalReferrals}</p>
-          <p className="metric-label">Tracked referrals</p>
         </article>
         <article className="metric-card">
           <p className="metric-value">{metrics.rewardCandidates}</p>
@@ -261,16 +287,25 @@ export function AdminWaitlistDashboard({
               </p>
             </div>
           </div>
-          <div className="admin-trend-chart">
-            {signupTrend.days.map(day => (
-              <div key={day.label} className="admin-trend-bar-col" title={`${day.label}: ${day.count}`}>
-                <div
-                  className="admin-trend-bar"
-                  style={{ height: `${Math.max(4, (day.count / signupTrend.max) * 100)}%` }}
-                />
-                <span className="admin-trend-bar-label">{day.label}</span>
-              </div>
-            ))}
+          <div className="admin-trend-chart" aria-label="Waitlist signups for the last 14 days">
+            {signupTrend.days.map(day => {
+              const height = day.count === 0
+                ? 0
+                : Math.max(18, (day.count / signupTrend.scaleMax) * 100)
+
+              return (
+                <div key={day.label} className="admin-trend-bar-col" title={`${day.label}: ${day.count}`}>
+                  <span className="admin-trend-count">{day.count || ''}</span>
+                  <div className="admin-trend-bar-track">
+                    <div
+                      className={`admin-trend-bar ${day.count === 0 ? 'admin-trend-bar-empty' : ''}`}
+                      style={{ height: `${height}%` }}
+                    />
+                  </div>
+                  <span className="admin-trend-bar-label">{day.label}</span>
+                </div>
+              )
+            })}
           </div>
         </section>
 
@@ -349,7 +384,7 @@ export function AdminWaitlistDashboard({
           <div className="section-header-copy">
             <h2 style={{ margin: 0 }}>Newest leads</h2>
             <p className="page-copy" style={{ margin: '8px 0 0' }}>
-              Fast scan of the most recent creator activity.
+              Fast scan of the most recent creator and business activity.
             </p>
           </div>
           <div className="section-header-action">
@@ -365,6 +400,9 @@ export function AdminWaitlistDashboard({
               <article key={submission.id} className="admin-newest-card">
                 <p style={{ margin: 0, fontWeight: 700 }}>{submission.name || submission.email}</p>
                 <p className="page-copy" style={{ margin: '6px 0 0' }}>
+                  {submission.leadType === 'BUSINESS' ? submission.companyName || submission.email : submission.name || submission.email}
+                </p>
+                <p className="page-copy" style={{ margin: '6px 0 0' }}>
                   {submission.profileCompletedAt ? profileSummary(submission) : 'Email saved. Details pending.'}
                 </p>
               </article>
@@ -378,7 +416,7 @@ export function AdminWaitlistDashboard({
           <div className="section-header-copy">
             <h2 style={{ margin: 0 }}>Waitlist submissions</h2>
             <p className="page-copy" style={{ margin: '8px 0 0' }}>
-              Search, filter, sort, copy referral links, export, and move creator leads through the invite pipeline.
+              Search, filter, sort, copy referral links, export, and move creator or business leads through the invite pipeline.
             </p>
           </div>
           <div className="section-header-action">
@@ -407,6 +445,19 @@ export function AdminWaitlistDashboard({
               {statusOptions.map(option => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
+            </select>
+          </label>
+
+          <label>
+            <span className="field-label">Lead type</span>
+            <select
+              className="apple-select"
+              value={leadTypeFilter}
+              onChange={event => setLeadTypeFilter(event.target.value as 'ALL' | 'CREATOR' | 'BUSINESS')}
+            >
+              <option value="ALL">All leads</option>
+              <option value="CREATOR">Creators</option>
+              <option value="BUSINESS">Businesses</option>
             </select>
           </label>
 
@@ -452,7 +503,7 @@ export function AdminWaitlistDashboard({
                 <tr>
                   <th>
                     <button type="button" className="waitlist-table-sort" onClick={() => toggleSort('name')}>
-                      Creator{sortIndicator('name')}
+                      Lead{sortIndicator('name')}
                     </button>
                   </th>
                   <th>Profile</th>
@@ -479,12 +530,18 @@ export function AdminWaitlistDashboard({
                 {filteredSubmissions.map(submission => (
                   <tr key={submission.id}>
                     <td>
-                      <p style={{ margin: 0, fontWeight: 600 }}>{submission.name || 'Creator lead'}</p>
+                      <p style={{ margin: 0, fontWeight: 600 }}>
+                        {submission.leadType === 'BUSINESS'
+                          ? submission.companyName || 'Business lead'
+                          : submission.name || 'Creator lead'}
+                      </p>
                       <p style={{ margin: '2px 0 0', color: 'var(--text-soft)', fontSize: '.85rem' }}>{submission.email}</p>
                     </td>
                     <td style={{ color: 'var(--text-soft)', fontSize: '.9rem' }}>{profileSummary(submission)}</td>
                     <td style={{ color: 'var(--text-soft)', fontSize: '.9rem' }}>
-                      {submission.referredBy
+                      {submission.leadType === 'BUSINESS'
+                        ? 'Business lead'
+                        : submission.referredBy
                         ? `${submission.referredBy.name || 'Creator lead'} (${submission.referredBy.referralCode})`
                         : 'Direct signup'}
                     </td>

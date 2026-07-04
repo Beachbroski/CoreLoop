@@ -1,8 +1,9 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import type { Application } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
+import { isTesterEmailAllowed } from '@/lib/admin-config'
+import { getCurrentAppUser } from '@/lib/current-app-user'
 import prisma from '@/lib/prisma'
 import { compareToLastWeek, formatCents, type Trend } from '@/lib/utils'
 
@@ -16,12 +17,96 @@ type CreatorDashboardApplication = Application & {
   campaign: { title: string }
 }
 
+function LockedCreatorDashboard({
+  userName,
+  referralCode,
+  referralCount,
+}: {
+  userName: string
+  referralCode: string | null
+  referralCount: number
+}) {
+  const referralLink = referralCode ? `/waitlist?ref=${referralCode}` : '/waitlist'
+
+  return (
+    <div className="subtle-grid" style={{ gap: 26 }}>
+      <div className="page-header">
+        <div className="page-header-copy">
+          <p style={{ margin: '0 0 8px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+            Creator dashboard
+          </p>
+          <h1 className="page-title" style={{ marginBottom: 10 }}>You are on the launch list, {userName}.</h1>
+          <p className="page-copy" style={{ margin: 0, maxWidth: 720 }}>
+            Marketplace actions are locked while CreatorDocks opens access in waves. Your navigation stays available so you can see what is coming next.
+          </p>
+        </div>
+        <Link href="/waitlist" className="apple-btn page-header-action">Update waitlist profile</Link>
+      </div>
+
+      <div className="banner-warning split-row">
+        <div>
+          <p style={{ margin: '0 0 4px', fontWeight: 600 }}>Creator features are waiting for your invite</p>
+          <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: '.95rem' }}>
+            Browse, application, upload, and payout tools unlock for approved tester accounts first.
+          </p>
+        </div>
+        <span className="pill">Locked</span>
+      </div>
+
+      <div className="subtle-grid three-col">
+        <div className="metric-card">
+          <p className="metric-value">{referralCount}</p>
+          <p className="metric-label">Tracked referrals</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-value">{Math.max(0, 3 - referralCount)}</p>
+          <p className="metric-label">More referrals to hit 3</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-value">{referralCode ?? 'Join'}</p>
+          <p className="metric-label">Creator referral code</p>
+        </div>
+      </div>
+
+      <section className="dashboard-panel">
+        <div className="section-header">
+          <div className="section-header-copy">
+            <h2 style={{ margin: 0 }}>Referral link</h2>
+            <p className="page-copy" style={{ margin: '8px 0 0' }}>
+              Share your creator waitlist link while access rolls out.
+            </p>
+          </div>
+          <div className="section-header-action">
+            <Link href={referralLink} className="apple-btn-ghost">Open link</Link>
+          </div>
+        </div>
+        <p className="page-copy waitlist-link-preview" style={{ margin: 0 }}>{referralLink}</p>
+      </section>
+    </div>
+  )
+}
+
 async function CreatorDashboardContent() {
-  const { userId } = await auth()
+  const { userId, email } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
   const user = await prisma.user.findUnique({ where: { clerkId: userId } })
   if (!user) redirect('/onboarding')
+
+  if (!isTesterEmailAllowed(email)) {
+    const waitlistSubmission = await prisma.waitlistSubmission.findUnique({
+      where: { email_leadType: { email: user.email, leadType: 'CREATOR' } },
+      include: { _count: { select: { referrals: true } } },
+    })
+
+    return (
+      <LockedCreatorDashboard
+        userName={user.name ?? 'Creator'}
+        referralCode={waitlistSubmission?.referralCode ?? null}
+        referralCount={waitlistSubmission?._count.referrals ?? 0}
+      />
+    )
+  }
 
   const now = new Date()
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
