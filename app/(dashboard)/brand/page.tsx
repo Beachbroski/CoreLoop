@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import type { Application, Campaign } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import prisma from '@/lib/prisma'
 import { compareToLastWeek, formatCents, type Trend } from '@/lib/utils'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../AdminViewBanner'
 
 const STATUS: Record<string, { bg: string; color: string; label: string }> = {
   DRAFT: { bg: 'rgba(15,23,42,0.06)', color: 'var(--text-soft)', label: 'Draft' },
@@ -16,12 +16,8 @@ const STATUS: Record<string, { bg: string; color: string; label: string }> = {
 
 type CampaignWithApplications = Campaign & { applications: Application[] }
 
-async function BrandDashboardContent() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function BrandDashboardContent({ viewAsId }: { viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('BRAND', viewAsId)
 
   const campaigns: CampaignWithApplications[] = await prisma.campaign.findMany({
     where: { brandId: user.id },
@@ -61,6 +57,10 @@ async function BrandDashboardContent() {
 
   return (
     <div className="subtle-grid" style={{ gap: 26 }}>
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
+
       <div className="page-header">
         <div className="page-header-copy">
           <p style={{ margin: '0 0 8px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
@@ -71,7 +71,7 @@ async function BrandDashboardContent() {
             Keep the top of funnel moving, spot strong creator fit early, and manage every live brief in one clean system.
           </p>
         </div>
-        <Link href="/brand/campaigns/new" className="apple-btn page-header-action">New campaign</Link>
+        {!readOnly && <Link href="/brand/campaigns/new" className="apple-btn page-header-action">New campaign</Link>}
       </div>
 
       <div className="subtle-grid four-col">
@@ -106,7 +106,7 @@ async function BrandDashboardContent() {
               <p className="page-copy" style={{ margin: '0 0 18px' }}>
                 Post your first campaign and start attracting creators with briefs that feel clear and premium.
               </p>
-              <Link href="/brand/campaigns/new" className="apple-btn">Post a campaign</Link>
+              {!readOnly && <Link href="/brand/campaigns/new" className="apple-btn">Post a campaign</Link>}
             </div>
           ) : (
             <div>
@@ -180,10 +180,16 @@ function DashboardSkeleton() {
   )
 }
 
-export default function BrandDashboardPage() {
+export default async function BrandDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ viewAs?: string }>
+}) {
+  const { viewAs } = await searchParams
+
   return (
     <Suspense fallback={<DashboardSkeleton />}>
-      <BrandDashboardContent />
+      <BrandDashboardContent viewAsId={viewAs} />
     </Suspense>
   )
 }

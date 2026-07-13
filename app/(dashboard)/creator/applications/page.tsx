@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
 import type { Application, Campaign, Submission } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { formatCents } from '@/lib/utils'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../AdminViewBanner'
 import { SubmitContentModal } from './SubmitContentModal'
 
 const STATUS: Record<string, { bg: string; color: string; label: string }> = {
@@ -25,12 +25,8 @@ type CreatorApplication = Application & {
   submissions: Submission[]
 }
 
-async function ApplicationsContent() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function ApplicationsContent({ viewAsId }: { viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('CREATOR', viewAsId)
 
   const applications: CreatorApplication[] = await prisma.application.findMany({
     where: { creatorId: user.id },
@@ -43,19 +39,27 @@ async function ApplicationsContent() {
 
   if (applications.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon" />
-        <h3 style={{ margin: '0 0 8px' }}>No applications yet</h3>
-        <p className="page-copy" style={{ margin: '0 0 18px' }}>
-          Browse campaigns and submit your first application while the best opportunities are still fresh.
-        </p>
-        <Link href="/creator/campaigns" className="apple-btn">Browse campaigns</Link>
-      </div>
+      <>
+        {isAdminViewing && (
+          <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+        )}
+        <div className="empty-state">
+          <div className="empty-icon" />
+          <h3 style={{ margin: '0 0 8px' }}>No applications yet</h3>
+          <p className="page-copy" style={{ margin: '0 0 18px' }}>
+            Browse campaigns and submit your first application while the best opportunities are still fresh.
+          </p>
+          <Link href="/creator/campaigns" className="apple-btn">Browse campaigns</Link>
+        </div>
+      </>
     )
   }
 
   return (
     <div className="subtle-grid">
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
       {applications.map((app: CreatorApplication) => {
         const status = STATUS[app.status] ?? STATUS.PENDING
         return (
@@ -93,7 +97,7 @@ async function ApplicationsContent() {
                       Keep your approved work tidy and easy for the brand to review.
                     </p>
                   </div>
-                  <SubmitContentModal applicationId={app.id} />
+                  {!readOnly && <SubmitContentModal applicationId={app.id} />}
                 </div>
 
                 {app.submissions.length === 0 ? (
@@ -143,7 +147,13 @@ function Skeleton() {
   )
 }
 
-export default function CreatorApplicationsPage() {
+export default async function CreatorApplicationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ viewAs?: string }>
+}) {
+  const { viewAs } = await searchParams
+
   return (
     <div className="subtle-grid" style={{ gap: 24 }}>
       <div>
@@ -156,7 +166,7 @@ export default function CreatorApplicationsPage() {
         </p>
       </div>
       <Suspense fallback={<Skeleton />}>
-        <ApplicationsContent />
+        <ApplicationsContent viewAsId={viewAs} />
       </Suspense>
     </div>
   )

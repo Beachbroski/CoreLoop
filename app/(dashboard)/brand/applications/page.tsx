@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
 import type { Application, Campaign } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { formatCents } from '@/lib/utils'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../AdminViewBanner'
 
 const APP_STATUS: Record<string, { bg: string; color: string; label: string }> = {
   PENDING: { bg: 'var(--warning-soft)', color: 'var(--warning)', label: 'Pending' },
@@ -17,12 +17,8 @@ type BrandApplication = Application & {
   creator: { name: string | null; avatarUrl: string | null }
 }
 
-async function ApplicationsContent() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function ApplicationsContent({ viewAsId }: { viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('BRAND', viewAsId)
 
   const applications: BrandApplication[] = await prisma.application.findMany({
     where: { campaign: { brandId: user.id } },
@@ -35,19 +31,27 @@ async function ApplicationsContent() {
 
   if (applications.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon" />
-        <h3 style={{ margin: '0 0 8px' }}>No applications yet</h3>
-        <p className="page-copy" style={{ margin: '0 0 18px' }}>
-          Once creators start applying to your campaigns, every pitch will show up here.
-        </p>
-        <Link href="/brand/campaigns/new" className="apple-btn">Post a campaign</Link>
-      </div>
+      <>
+        {isAdminViewing && (
+          <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+        )}
+        <div className="empty-state">
+          <div className="empty-icon" />
+          <h3 style={{ margin: '0 0 8px' }}>No applications yet</h3>
+          <p className="page-copy" style={{ margin: '0 0 18px' }}>
+            Once creators start applying to your campaigns, every pitch will show up here.
+          </p>
+          {!readOnly && <Link href="/brand/campaigns/new" className="apple-btn">Post a campaign</Link>}
+        </div>
+      </>
     )
   }
 
   return (
     <div className="subtle-grid">
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
       {applications.map(application => {
         const status = APP_STATUS[application.status] ?? APP_STATUS.PENDING
         return (
@@ -92,7 +96,13 @@ function Skeleton() {
   )
 }
 
-export default function BrandApplicationsPage() {
+export default async function BrandApplicationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ viewAs?: string }>
+}) {
+  const { viewAs } = await searchParams
+
   return (
     <div className="subtle-grid" style={{ gap: 24 }}>
       <div className="page-header">
@@ -111,7 +121,7 @@ export default function BrandApplicationsPage() {
       </div>
       <div className="dashboard-panel">
         <Suspense fallback={<Skeleton />}>
-          <ApplicationsContent />
+          <ApplicationsContent viewAsId={viewAs} />
         </Suspense>
       </div>
     </div>

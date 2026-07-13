@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import type { Application } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { compareToLastWeek, formatCents, type Trend } from '@/lib/utils'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../AdminViewBanner'
 
 const APP_STATUS: Record<string, { bg: string; color: string; label: string }> = {
   PENDING: { bg: 'var(--warning-soft)', color: 'var(--warning)', label: 'Pending' },
@@ -16,12 +16,8 @@ type CreatorDashboardApplication = Application & {
   campaign: { title: string }
 }
 
-async function CreatorDashboardContent() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function CreatorDashboardContent({ viewAsId }: { viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('CREATOR', viewAsId)
 
   const now = new Date()
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -67,6 +63,10 @@ async function CreatorDashboardContent() {
 
   return (
     <div className="subtle-grid" style={{ gap: 26 }}>
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
+
       <div className="page-header">
         <div className="page-header-copy">
           <p style={{ margin: '0 0 8px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
@@ -88,7 +88,7 @@ async function CreatorDashboardContent() {
               You’ll need a connected payout account before you can apply to live campaigns.
             </p>
           </div>
-          <Link href="/creator/settings" className="apple-btn page-header-action">Set up payments</Link>
+          {!readOnly && <Link href="/creator/settings" className="apple-btn page-header-action">Set up payments</Link>}
         </div>
       )}
 
@@ -188,10 +188,16 @@ function Skeleton() {
   )
 }
 
-export default function CreatorDashboardPage() {
+export default async function CreatorDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ viewAs?: string }>
+}) {
+  const { viewAs } = await searchParams
+
   return (
     <Suspense fallback={<Skeleton />}>
-      <CreatorDashboardContent />
+      <CreatorDashboardContent viewAsId={viewAs} />
     </Suspense>
   )
 }

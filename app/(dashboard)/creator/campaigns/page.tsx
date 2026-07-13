@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
 import type { Campaign } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { formatCents } from '@/lib/utils'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../AdminViewBanner'
 import { ApplyModal } from './ApplyModal'
 
 const NICHES = ['Fashion', 'Beauty', 'Fitness', 'Gaming', 'Food', 'Tech', 'Lifestyle', 'Finance', 'Other']
@@ -19,12 +19,16 @@ function truncateText(value: string | null | undefined, maxLength: number) {
   return value.length > maxLength ? `${value.slice(0, maxLength).trimEnd()}…` : value
 }
 
-async function CampaignFeedContent({ niche, platform }: { niche?: string; platform?: string }) {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function CampaignFeedContent({
+  niche,
+  platform,
+  viewAsId,
+}: {
+  niche?: string
+  platform?: string
+  viewAsId?: string
+}) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('CREATOR', viewAsId)
 
   const campaigns: CampaignFeedItem[] = await prisma.campaign.findMany({
     where: {
@@ -41,16 +45,25 @@ async function CampaignFeedContent({ niche, platform }: { niche?: string; platfo
 
   if (campaigns.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon" />
-        <h3 style={{ margin: '0 0 8px' }}>No campaigns match these filters</h3>
-        <p className="page-copy" style={{ margin: 0 }}>Try broadening the niche or platform and check back for fresh briefs.</p>
-      </div>
+      <>
+        {isAdminViewing && (
+          <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+        )}
+        <div className="empty-state">
+          <div className="empty-icon" />
+          <h3 style={{ margin: '0 0 8px' }}>No campaigns match these filters</h3>
+          <p className="page-copy" style={{ margin: 0 }}>Try broadening the niche or platform and check back for fresh briefs.</p>
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="subtle-grid two-col">
+    <>
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
+      <div className="subtle-grid two-col">
       {campaigns.map((campaign: CampaignFeedItem) => {
         const alreadyApplied = campaign.applications.length > 0
         return (
@@ -183,6 +196,8 @@ async function CampaignFeedContent({ niche, platform }: { niche?: string; platfo
                 <span className="status-pill" style={{ background: 'rgba(15,23,42,0.06)', color: 'var(--text-soft)' }}>
                   Applied
                 </span>
+              ) : readOnly ? (
+                <span className="pill">Read-only admin view</span>
               ) : user.stripeOnboarded ? (
                 <ApplyModal campaignId={campaign.id} campaignTitle={campaign.title} budget={campaign.budget} />
               ) : (
@@ -192,7 +207,8 @@ async function CampaignFeedContent({ niche, platform }: { niche?: string; platfo
           </article>
         )
       })}
-    </div>
+      </div>
+    </>
   )
 }
 
@@ -209,9 +225,10 @@ function Skeleton() {
 export default async function CreatorCampaignsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ niche?: string; platform?: string }>
+  searchParams: Promise<{ niche?: string; platform?: string; viewAs?: string }>
 }) {
-  const { niche, platform } = await searchParams
+  const { niche, platform, viewAs } = await searchParams
+  const viewAsSuffix = viewAs ? `&viewAs=${viewAs}` : ''
 
   return (
     <div className="subtle-grid" style={{ gap: 24 }}>
@@ -226,11 +243,16 @@ export default async function CreatorCampaignsPage({
       </div>
 
       <div className="filter-bar">
-        <a href="/creator/campaigns" className={`filter-chip ${!niche && !platform ? 'filter-chip-active' : ''}`}>All</a>
+        <a
+          href={viewAs ? `/creator/campaigns?viewAs=${viewAs}` : '/creator/campaigns'}
+          className={`filter-chip ${!niche && !platform ? 'filter-chip-active' : ''}`}
+        >
+          All
+        </a>
         {NICHES.map(item => (
           <a
             key={item}
-            href={`/creator/campaigns?niche=${item}`}
+            href={`/creator/campaigns?niche=${item}${viewAsSuffix}`}
             className={`filter-chip ${niche === item ? 'filter-chip-active' : ''}`}
           >
             {item}
@@ -239,7 +261,7 @@ export default async function CreatorCampaignsPage({
         {PLATFORMS.map(item => (
           <a
             key={item}
-            href={`/creator/campaigns?platform=${item}`}
+            href={`/creator/campaigns?platform=${item}${viewAsSuffix}`}
             className={`filter-chip ${platform === item ? 'filter-chip-active' : ''}`}
           >
             {item}
@@ -248,7 +270,7 @@ export default async function CreatorCampaignsPage({
       </div>
 
       <Suspense fallback={<Skeleton />}>
-        <CampaignFeedContent niche={niche} platform={platform} />
+        <CampaignFeedContent niche={niche} platform={platform} viewAsId={viewAs} />
       </Suspense>
     </div>
   )

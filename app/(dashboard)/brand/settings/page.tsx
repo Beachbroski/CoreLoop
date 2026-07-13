@@ -1,24 +1,23 @@
 import { Suspense } from 'react'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../AdminViewBanner'
 import { ChangeRoleControl } from '../../ChangeRoleControl'
 
-async function SettingsContent() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function SettingsContent({ viewAsId }: { viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('BRAND', viewAsId)
 
   const [campaignCount, applicationCount] = await Promise.all([
     prisma.campaign.count({ where: { brandId: user.id } }),
     prisma.application.count({ where: { creatorId: user.id } }),
   ])
-  const canChangeRole = campaignCount === 0 && applicationCount === 0
+  const canChangeRole = !readOnly && campaignCount === 0 && applicationCount === 0
 
   return (
     <div className="subtle-grid" style={{ maxWidth: 720 }}>
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
       <div className="dashboard-panel">
         <p style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)', margin: 0 }}>Account</p>
         <div>
@@ -71,7 +70,13 @@ function Skeleton() {
   )
 }
 
-export default function BrandSettingsPage() {
+export default async function BrandSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ viewAs?: string }>
+}) {
+  const { viewAs } = await searchParams
+
   return (
     <div>
       <p style={{ margin: '0 0 8px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
@@ -82,7 +87,7 @@ export default function BrandSettingsPage() {
         Manage your account settings.
       </p>
       <Suspense fallback={<Skeleton />}>
-        <SettingsContent />
+        <SettingsContent viewAsId={viewAs} />
       </Suspense>
     </div>
   )

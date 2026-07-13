@@ -1,8 +1,8 @@
 import { Suspense } from 'react'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { formatCents } from '@/lib/utils'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../AdminViewBanner'
 
 const PAYOUT_STATUS: Record<string, { bg: string; color: string; label: string }> = {
   PENDING: { bg: 'var(--warning-soft)', color: 'var(--warning)', label: 'Pending' },
@@ -15,12 +15,8 @@ function formatDate(value: Date) {
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(value)
 }
 
-async function PayoutsContent() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function PayoutsContent({ viewAsId }: { viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, viewAsNotFound } = await resolveDashboardViewer('CREATOR', viewAsId)
 
   const payouts = await prisma.payout.findMany({
     where: { creatorId: user.id },
@@ -46,6 +42,9 @@ async function PayoutsContent() {
 
   return (
     <div className="subtle-grid" style={{ gap: 24 }}>
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
       <div>
         <p style={{ margin: '0 0 8px', color: 'var(--text-faint)', fontSize: '.82rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
           Payouts
@@ -141,10 +140,16 @@ function Skeleton() {
   )
 }
 
-export default function PayoutsPage() {
+export default async function PayoutsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ viewAs?: string }>
+}) {
+  const { viewAs } = await searchParams
+
   return (
     <Suspense fallback={<Skeleton />}>
-      <PayoutsContent />
+      <PayoutsContent viewAsId={viewAs} />
     </Suspense>
   )
 }

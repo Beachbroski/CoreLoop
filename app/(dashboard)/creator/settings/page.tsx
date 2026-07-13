@@ -1,16 +1,12 @@
 import { Suspense } from 'react'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../AdminViewBanner'
 import { ConnectStripeButton } from './ConnectStripeButton'
 import { ChangeRoleControl } from '../../ChangeRoleControl'
 
-async function SettingsContent({ onboarded }: { onboarded: boolean }) {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function SettingsContent({ onboarded, viewAsId }: { onboarded: boolean; viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('CREATOR', viewAsId)
 
   const isOnboarded = user.stripeOnboarded || onboarded
 
@@ -18,10 +14,13 @@ async function SettingsContent({ onboarded }: { onboarded: boolean }) {
     prisma.campaign.count({ where: { brandId: user.id } }),
     prisma.application.count({ where: { creatorId: user.id } }),
   ])
-  const canChangeRole = campaignCount === 0 && applicationCount === 0
+  const canChangeRole = !readOnly && campaignCount === 0 && applicationCount === 0
 
   return (
     <div className="subtle-grid" style={{ maxWidth: 720 }}>
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
       <div className="dashboard-panel">
         <div className="split-row">
           <div>
@@ -47,6 +46,8 @@ async function SettingsContent({ onboarded }: { onboarded: boolean }) {
               <span style={{ width: 8, height: 8, background: 'var(--success)', borderRadius: '50%', display: 'block' }} />
               <span style={{ fontSize: 15, color: 'var(--success)', fontWeight: 500 }}>Connected</span>
             </div>
+          ) : readOnly ? (
+            <span className="pill">Read-only admin view</span>
           ) : (
             <ConnectStripeButton />
           )}
@@ -117,9 +118,9 @@ function Skeleton() {
 export default async function CreatorSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ onboarded?: string }>
+  searchParams: Promise<{ onboarded?: string; viewAs?: string }>
 }) {
-  const { onboarded } = await searchParams
+  const { onboarded, viewAs } = await searchParams
 
   return (
     <div>
@@ -131,7 +132,7 @@ export default async function CreatorSettingsPage({
         Manage your account and payment settings.
       </p>
       <Suspense fallback={<Skeleton />}>
-        <SettingsContent onboarded={onboarded === 'true'} />
+        <SettingsContent onboarded={onboarded === 'true'} viewAsId={viewAs} />
       </Suspense>
     </div>
   )
