@@ -1,8 +1,21 @@
 import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import prisma from '@/lib/prisma'
-import { sendPayoutPaidEmail } from '@/lib/email'
+import { sendPayoutPaidEmail, sendPaymentAlertEmail } from '@/lib/email'
 import { calculatePlatformFee } from '@/lib/utils'
+import { getAllowedAdminEmails } from '@/lib/admin-config'
+
+async function alertAdmins(params: Parameters<typeof sendPaymentAlertEmail>[1]) {
+  const adminEmails = getAllowedAdminEmails()
+  await Promise.all(adminEmails.map(email => sendPaymentAlertEmail(email, params)))
+}
+
+async function findApplicationByPaymentIntent(paymentIntentId: string) {
+  return prisma.application.findFirst({
+    where: { paymentIntentId },
+    include: { creator: true, campaign: true },
+  })
+}
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
@@ -121,6 +134,63 @@ export async function POST(req: Request) {
               pi.application_fee_amount ?? calculatePlatformFee(submission.application.proposedRate),
             status: 'FAILED',
           },
+        })
+        break
+      }
+
+      case 'charge.dispute.created': {
+        const dispute = event.data.object
+        const paymentIntentId =
+          typeof dispute.payment_intent === 'string' ? dispute.payment_intent : dispute.payment_intent?.id
+        if (!paymentIntentId) break
+
+        const application = await findApplicationByPaymentIntent(paymentIntentId)
+        if (!application) break
+
+        await alertAdmins({
+          kind: 'dispute_opened',
+          campaignTitle: application.campaign.title,
+          creatorName: application.creator.name ?? application.creator.email,
+          amountCents: dispute.amount,
+          detail: `Reason: ${dispute.reason}. Stripe dispute status: ${dispute.status}.`,
+        })
+        break
+      }
+
+      case 'charge.dispute.closed': {
+        const dispute = event.data.object
+        const paymentIntentId =
+          typeof dispute.payment_intent === 'string' ? dispute.payment_intent : dispute.payment_intent?.id
+        if (!paymentIntentId) break
+
+        const application = await findApplicationByPaymentIntent(paymentIntentId)
+        if (!application) break
+
+        await alertAdmins({
+          kind: 'dispute_closed',
+          campaignTitle: application.campaign.title,
+          creatorName: application.creator.name ?? application.creator.email,
+          amountCents: dispute.amount,
+          detail: `Outcome: ${dispute.status}.`,
+        })
+        break
+      }
+
+      case 'charge.refunded': {
+        const charge = event.data.object
+        const paymentIntentId =
+          typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id
+        if (!paymentIntentId) break
+
+        const application = await findApplicationByPaymentIntent(paymentIntentId)
+        if (!application) break
+
+        await alertAdmins({
+          kind: 'charge_refunded',
+          campaignTitle: application.campaign.title,
+          creatorName: application.creator.name ?? application.creator.email,
+          amountCents: charge.amount_refunded,
+          detail: charge.refunded ? 'The charge was refunded in full.' : 'The charge was partially refunded.',
         })
         break
       }

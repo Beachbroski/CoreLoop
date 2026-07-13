@@ -139,6 +139,38 @@ export async function sendReferralMilestoneEmail(to: string, params: { name?: st
   )
 }
 
+export async function sendPaymentAlertEmail(
+  to: string,
+  params: {
+    kind: 'dispute_opened' | 'dispute_closed' | 'charge_refunded'
+    campaignTitle: string
+    creatorName: string
+    amountCents: number
+    detail: string
+  },
+) {
+  const campaignTitle = escapeHtml(params.campaignTitle)
+  const creatorName = escapeHtml(params.creatorName)
+  const detail = escapeHtml(params.detail)
+  const heading =
+    params.kind === 'dispute_opened'
+      ? 'A payment dispute was opened'
+      : params.kind === 'dispute_closed'
+        ? 'A payment dispute was closed'
+        : 'A charge was refunded'
+
+  await sendEmail(
+    to,
+    `[Ops alert] ${heading}: "${params.campaignTitle}"`,
+    emailShell(
+      heading,
+      `<p>Campaign <strong>${campaignTitle}</strong> · creator <strong>${creatorName}</strong> · ${formatCents(params.amountCents)}</p>
+       <p>${detail}</p>
+       <p>This requires manual follow-up in the Stripe dashboard — there is no automated resolution flow for disputes/refunds yet.</p>`,
+    ),
+  )
+}
+
 export async function sendWaitlistInviteEmail(to: string, params: { name?: string | null }) {
   const name = params.name ? escapeHtml(params.name) : null
   await sendEmail(

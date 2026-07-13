@@ -1,13 +1,14 @@
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { INTERNAL_ADMIN_PATH, isAllowedAdminUser } from '@/lib/admin-config'
 import { getCurrentAppUser } from '@/lib/current-app-user'
+import { resolvePostLoginPath } from '@/lib/post-login'
 import prisma from '@/lib/prisma'
 
 export default async function InternalUsersPage() {
-  const { userId, user } = await getCurrentAppUser()
+  const { userId, user, email } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
-  if (!user || !isAllowedAdminUser(user)) notFound()
+  if (!user || !isAllowedAdminUser(user)) redirect(resolvePostLoginPath(user, email))
 
   const users = await prisma.user.findMany({
     where: { role: { in: ['BRAND', 'CREATOR'] } },
