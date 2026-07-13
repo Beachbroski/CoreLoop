@@ -5,6 +5,15 @@ import { formatCents } from './utils'
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS ?? 'CreatorDocks <notifications@creatordocks.com>'
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function absoluteUrl(path: string) {
   const siteUrl = getSiteUrl()
   if (!siteUrl) return path
@@ -49,12 +58,13 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 export async function sendApplicationAcceptedEmail(to: string, params: { campaignTitle: string }) {
+  const campaignTitle = escapeHtml(params.campaignTitle)
   await sendEmail(
     to,
     `You're in: "${params.campaignTitle}"`,
     emailShell(
       'Your application was accepted.',
-      `<p>Good news — the brand behind <strong>${params.campaignTitle}</strong> accepted your application. Head over to your applications to see next steps and submit your content.</p>`,
+      `<p>Good news — the brand behind <strong>${campaignTitle}</strong> accepted your application. Head over to your applications to see next steps and submit your content.</p>`,
       absoluteUrl('/creator/applications'),
       'View application',
     ),
@@ -62,12 +72,13 @@ export async function sendApplicationAcceptedEmail(to: string, params: { campaig
 }
 
 export async function sendApplicationRejectedEmail(to: string, params: { campaignTitle: string }) {
+  const campaignTitle = escapeHtml(params.campaignTitle)
   await sendEmail(
     to,
     `Update on "${params.campaignTitle}"`,
     emailShell(
       'This application wasn\'t accepted.',
-      `<p>The brand behind <strong>${params.campaignTitle}</strong> passed on your application this time. Keep browsing — new campaigns open regularly.</p>`,
+      `<p>The brand behind <strong>${campaignTitle}</strong> passed on your application this time. Keep browsing — new campaigns open regularly.</p>`,
       absoluteUrl('/creator/campaigns'),
       'Browse campaigns',
     ),
@@ -75,12 +86,13 @@ export async function sendApplicationRejectedEmail(to: string, params: { campaig
 }
 
 export async function sendSubmissionApprovedEmail(to: string, params: { campaignTitle: string }) {
+  const campaignTitle = escapeHtml(params.campaignTitle)
   await sendEmail(
     to,
     `Approved: "${params.campaignTitle}"`,
     emailShell(
       'Your content was approved.',
-      `<p>Your submission for <strong>${params.campaignTitle}</strong> was approved. Payout is on its way to your connected Stripe account.</p>`,
+      `<p>Your submission for <strong>${campaignTitle}</strong> was approved. Payout is on its way to your connected Stripe account.</p>`,
       absoluteUrl('/creator/applications'),
       'View details',
     ),
@@ -88,12 +100,13 @@ export async function sendSubmissionApprovedEmail(to: string, params: { campaign
 }
 
 export async function sendPayoutPaidEmail(to: string, params: { campaignTitle: string; amountCents: number }) {
+  const campaignTitle = escapeHtml(params.campaignTitle)
   await sendEmail(
     to,
     `You've been paid for "${params.campaignTitle}"`,
     emailShell(
       `${formatCents(params.amountCents)} is on its way.`,
-      `<p>Your payout for <strong>${params.campaignTitle}</strong> has been sent to your connected Stripe account.</p>`,
+      `<p>Your payout for <strong>${campaignTitle}</strong> has been sent to your connected Stripe account.</p>`,
       absoluteUrl('/creator/settings'),
       'View payouts',
     ),
@@ -101,34 +114,38 @@ export async function sendPayoutPaidEmail(to: string, params: { campaignTitle: s
 }
 
 export async function sendWaitlistConfirmationEmail(to: string, params: { name?: string | null; referralLink: string }) {
+  const name = params.name ? escapeHtml(params.name) : null
+  const referralLink = escapeHtml(params.referralLink)
   await sendEmail(
     to,
     'You\'re on the CreatorDocks waitlist',
     emailShell(
-      `${params.name ? `Thanks, ${params.name}.` : 'You\'re in.'} Your spot is saved.`,
+      `${name ? `Thanks, ${name}.` : 'You\'re in.'} Your spot is saved.`,
       `<p>We'll use your creator details to match you with local brand deals that fit. Want to speed things up? Share your referral link with other creators:</p>
-       <p style="word-break: break-all; background: #f4f6fb; padding: 10px 14px; border-radius: 10px; font-size: 13px;">${params.referralLink}</p>`,
+       <p style="word-break: break-all; background: #f4f6fb; padding: 10px 14px; border-radius: 10px; font-size: 13px;">${referralLink}</p>`,
     ),
   )
 }
 
 export async function sendReferralMilestoneEmail(to: string, params: { name?: string | null }) {
+  const name = params.name ? escapeHtml(params.name) : null
   await sendEmail(
     to,
     'You just referred 3 creators',
     emailShell(
-      `${params.name ? `Nice work, ${params.name}.` : 'Nice work.'}`,
+      `${name ? `Nice work, ${name}.` : 'Nice work.'}`,
       '<p>You\'ve referred 3 creators to CreatorDocks — that helps us open more brand matches, faster. Thanks for spreading the word.</p>',
     ),
   )
 }
 
 export async function sendWaitlistInviteEmail(to: string, params: { name?: string | null }) {
+  const name = params.name ? escapeHtml(params.name) : null
   await sendEmail(
     to,
     'You\'re invited to CreatorDocks',
     emailShell(
-      `${params.name ? `${params.name}, you're` : 'You\'re'} invited off the waitlist.`,
+      `${name ? `${name}, you're` : 'You\'re'} invited off the waitlist.`,
       '<p>A spot just opened up. Create your account to start browsing local brand campaigns and applying to the ones that fit.</p>',
       absoluteUrl('/sign-up'),
       'Create your account',
