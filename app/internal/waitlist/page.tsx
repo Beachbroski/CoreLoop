@@ -76,6 +76,7 @@ export default async function InternalWaitlistPage() {
         </Link>
         <div className="nav-links">
           <Link href="/?preview=admin" className="nav-link">View home</Link>
+          <Link href="/internal/users" className="nav-link">View as user</Link>
           <Link href={exportHref} className="apple-btn-ghost">Export CSV</Link>
         </div>
       </nav>

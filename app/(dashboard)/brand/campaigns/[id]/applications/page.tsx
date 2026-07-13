@@ -1,9 +1,10 @@
 import { Suspense } from 'react'
-import { auth } from '@clerk/nextjs/server'
-import { redirect, notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { formatCents } from '@/lib/utils'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../../../AdminViewBanner'
 import { SubmissionReview } from './SubmissionReview'
 
 const APP_STATUS: Record<string, { bg: string; color: string; label: string }> = {
@@ -19,12 +20,8 @@ const SUBMISSION_STATUS: Record<string, { bg: string; color: string; label: stri
   REJECTED: { bg: 'var(--danger-soft)', color: 'var(--danger)', label: 'Rejected' },
 }
 
-async function ApplicationsContent({ id }: { id: string }) {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function ApplicationsContent({ id, viewAsId }: { id: string; viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('BRAND', viewAsId)
 
   const campaign = await prisma.campaign.findUnique({
     where: { id },
@@ -46,6 +43,10 @@ async function ApplicationsContent({ id }: { id: string }) {
 
   return (
     <div className="subtle-grid spacing-xl">
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
+
       <div>
         <Link href={`/brand/campaigns/${id}`} className="apple-link">
           Back to campaign
@@ -126,7 +127,7 @@ async function ApplicationsContent({ id }: { id: string }) {
                           {submission.notes && (
                             <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: '.9rem' }}>{submission.notes}</p>
                           )}
-                          {submission.status === 'PENDING' && (
+                          {submission.status === 'PENDING' && !readOnly && (
                             <SubmissionReview submissionId={submission.id} />
                           )}
                         </div>
@@ -160,13 +161,16 @@ function Skeleton() {
 
 export default async function CampaignApplicationsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ viewAs?: string }>
 }) {
   const { id } = await params
+  const { viewAs } = await searchParams
   return (
     <Suspense fallback={<Skeleton />}>
-      <ApplicationsContent id={id} />
+      <ApplicationsContent id={id} viewAsId={viewAs} />
     </Suspense>
   )
 }

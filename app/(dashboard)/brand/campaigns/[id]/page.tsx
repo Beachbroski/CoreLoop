@@ -1,8 +1,9 @@
 import { Suspense } from 'react'
-import { auth } from '@clerk/nextjs/server'
 import { redirect, notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { formatCents } from '@/lib/utils'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../../AdminViewBanner'
 import { ApplicationActions } from './ApplicationActions'
 import { CampaignEditControls } from './CampaignEditControls'
 
@@ -29,12 +30,8 @@ const BRIEF_SECTIONS = [
   { key: 'usageRights', label: 'Usage rights' },
 ] as const
 
-async function CampaignDetailContent({ id }: { id: string }) {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function CampaignDetailContent({ id, viewAsId }: { id: string; viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('BRAND', viewAsId)
 
   const campaign = await prisma.campaign.findUnique({
     where: { id },
@@ -54,6 +51,10 @@ async function CampaignDetailContent({ id }: { id: string }) {
 
   return (
     <div className="subtle-grid" style={{ gap: 24 }}>
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
+
       <section className="dashboard-panel">
         <div className="page-header" style={{ marginBottom: 0 }}>
           <div>
@@ -82,20 +83,22 @@ async function CampaignDetailContent({ id }: { id: string }) {
           ) : null}
         </div>
 
-        <CampaignEditControls
-          campaign={{
-            id: campaign.id,
-            status: campaign.status,
-            title: campaign.title,
-            description: campaign.description,
-            objective: campaign.objective,
-            deliverables: campaign.deliverables,
-            targetAudience: campaign.targetAudience,
-            callToAction: campaign.callToAction,
-            creatorRequirements: campaign.creatorRequirements,
-            usageRights: campaign.usageRights,
-          }}
-        />
+        {!readOnly && (
+          <CampaignEditControls
+            campaign={{
+              id: campaign.id,
+              status: campaign.status,
+              title: campaign.title,
+              description: campaign.description,
+              objective: campaign.objective,
+              deliverables: campaign.deliverables,
+              targetAudience: campaign.targetAudience,
+              callToAction: campaign.callToAction,
+              creatorRequirements: campaign.creatorRequirements,
+              usageRights: campaign.usageRights,
+            }}
+          />
+        )}
       </section>
 
       <section className="dashboard-panel">
@@ -194,7 +197,7 @@ async function CampaignDetailContent({ id }: { id: string }) {
 
                   <p className="page-copy" style={{ margin: 0 }}>{application.pitch}</p>
 
-                  {application.status === 'PENDING' && (
+                  {application.status === 'PENDING' && !readOnly && (
                     <ApplicationActions
                       applicationId={application.id}
                       proposedRate={application.proposedRate}
@@ -225,14 +228,17 @@ function Skeleton() {
 
 export default async function CampaignDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ viewAs?: string }>
 }) {
   const { id } = await params
+  const { viewAs } = await searchParams
 
   return (
     <Suspense fallback={<Skeleton />}>
-      <CampaignDetailContent id={id} />
+      <CampaignDetailContent id={id} viewAsId={viewAs} />
     </Suspense>
   )
 }

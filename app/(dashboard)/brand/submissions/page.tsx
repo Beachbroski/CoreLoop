@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
 import type { Application, Campaign, Submission } from '@prisma/client'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
+import { resolveDashboardViewer } from '@/lib/view-as'
+import { AdminViewBanner } from '../../AdminViewBanner'
 
 const SUBMISSION_STATUS: Record<string, { bg: string; color: string; label: string }> = {
   PENDING: { bg: 'var(--warning-soft)', color: 'var(--warning)', label: 'Pending review' },
@@ -17,12 +17,8 @@ type BrandSubmission = Submission & {
   creator: { name: string | null; avatarUrl: string | null }
 }
 
-async function SubmissionsContent() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (!user) redirect('/onboarding')
+async function SubmissionsContent({ viewAsId }: { viewAsId?: string }) {
+  const { viewer: user, isAdminViewing, viewAsNotFound } = await resolveDashboardViewer('BRAND', viewAsId)
 
   const submissions: BrandSubmission[] = await prisma.submission.findMany({
     where: { application: { campaign: { brandId: user.id } } },
@@ -39,19 +35,27 @@ async function SubmissionsContent() {
 
   if (submissions.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon" />
-        <h3 style={{ margin: '0 0 8px' }}>No submissions yet</h3>
-        <p className="page-copy" style={{ margin: '0 0 18px' }}>
-          Once creators submit content for approved applications, it will show up here for review.
-        </p>
-        <Link href="/brand/applications" className="apple-btn">View applications</Link>
-      </div>
+      <>
+        {isAdminViewing && (
+          <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+        )}
+        <div className="empty-state">
+          <div className="empty-icon" />
+          <h3 style={{ margin: '0 0 8px' }}>No submissions yet</h3>
+          <p className="page-copy" style={{ margin: '0 0 18px' }}>
+            Once creators submit content for approved applications, it will show up here for review.
+          </p>
+          <Link href="/brand/applications" className="apple-btn">View applications</Link>
+        </div>
+      </>
     )
   }
 
   return (
     <div className="subtle-grid">
+      {isAdminViewing && (
+        <AdminViewBanner viewingAsName={user.name} viewingAsEmail={user.email} notFound={viewAsNotFound} />
+      )}
       {submissions.map(submission => {
         const status = SUBMISSION_STATUS[submission.status] ?? SUBMISSION_STATUS.PENDING
         return (
@@ -99,7 +103,13 @@ function Skeleton() {
   )
 }
 
-export default function BrandSubmissionsPage() {
+export default async function BrandSubmissionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ viewAs?: string }>
+}) {
+  const { viewAs } = await searchParams
+
   return (
     <div className="subtle-grid" style={{ gap: 24 }}>
       <div className="page-header">
@@ -118,7 +128,7 @@ export default function BrandSubmissionsPage() {
       </div>
       <div className="dashboard-panel">
         <Suspense fallback={<Skeleton />}>
-          <SubmissionsContent />
+          <SubmissionsContent viewAsId={viewAs} />
         </Suspense>
       </div>
     </div>
