@@ -47,7 +47,7 @@ export default async function InternalUsersPage() {
             </div>
           </header>
 
-          <section className="dashboard-panel">
+          <section id="brands" className="dashboard-panel" style={{ scrollMarginTop: 24 }}>
             <h2 style={{ margin: '0 0 8px' }}>Brands ({brands.length})</h2>
             {brands.length === 0 ? (
               <p className="page-copy" style={{ margin: 0 }}>No brand accounts yet.</p>
@@ -68,7 +68,7 @@ export default async function InternalUsersPage() {
             )}
           </section>
 
-          <section className="dashboard-panel">
+          <section id="creators" className="dashboard-panel" style={{ scrollMarginTop: 24 }}>
             <h2 style={{ margin: '0 0 8px' }}>Creators ({creators.length})</h2>
             {creators.length === 0 ? (
               <p className="page-copy" style={{ margin: 0 }}>No creator accounts yet.</p>
