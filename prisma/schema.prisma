@@ -41,6 +41,9 @@ model WaitlistSubmission {
   profileCompletedAt DateTime?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
+
+  @@index([referredById])
+  @@index([status])
 }
 
 enum Role {
@@ -78,6 +81,9 @@ model Campaign {
   updatedAt           DateTime       @updatedAt
 
   applications Application[]
+
+  @@index([brandId])
+  @@index([status])
 }
 
 enum CampaignStatus {
@@ -104,6 +110,8 @@ model Application {
   submissions Submission[]
 
   @@unique([campaignId, creatorId])
+  @@index([creatorId])
+  @@index([status])
 }
 
 enum ApplicationStatus {
@@ -127,6 +135,10 @@ model Submission {
   updatedAt     DateTime         @updatedAt
 
   payout Payout?
+
+  @@index([applicationId])
+  @@index([creatorId])
+  @@index([status])
 }
 
 enum SubmissionStatus {
@@ -148,6 +160,8 @@ model Payout {
   status           PayoutStatus @default(PENDING)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+
+  @@index([creatorId])
 }
 
 enum PayoutStatus {
