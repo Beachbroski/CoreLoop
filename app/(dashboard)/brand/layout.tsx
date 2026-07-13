@@ -7,7 +7,7 @@ export default async function BrandLayout({ children }: { children: React.ReactN
   const { userId, user, email } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
-  if (!user || user.role !== 'BRAND') redirect(resolvePostLoginPath(user, email))
+  if (!user || (user.role !== 'BRAND' && user.role !== 'ADMIN')) redirect(resolvePostLoginPath(user, email))
 
   return (
     <div className="dashboard-layout">
@@ -15,7 +15,7 @@ export default async function BrandLayout({ children }: { children: React.ReactN
         homeHref="/brand"
         homeLabel="Brand workspace"
         userName={user.name ?? user.email}
-        userLabel="Brand account"
+        userLabel={user.role === 'ADMIN' ? 'Brand account (admin view)' : 'Brand account'}
         navItems={[
           { label: 'Dashboard', href: '/brand' },
           { label: 'New campaign', href: '/brand/campaigns/new' },

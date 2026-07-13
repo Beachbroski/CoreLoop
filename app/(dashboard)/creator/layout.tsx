@@ -7,7 +7,7 @@ export default async function CreatorLayout({ children }: { children: React.Reac
   const { userId, user, email } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
 
-  if (!user || user.role !== 'CREATOR') redirect(resolvePostLoginPath(user, email))
+  if (!user || (user.role !== 'CREATOR' && user.role !== 'ADMIN')) redirect(resolvePostLoginPath(user, email))
 
   return (
     <div className="dashboard-layout">
@@ -15,7 +15,7 @@ export default async function CreatorLayout({ children }: { children: React.Reac
         homeHref="/creator"
         homeLabel="Creator workspace"
         userName={user.name ?? user.email}
-        userLabel="Creator account"
+        userLabel={user.role === 'ADMIN' ? 'Creator account (admin view)' : 'Creator account'}
         navItems={[
           { label: 'Dashboard', href: '/creator' },
           { label: 'Browse campaigns', href: '/creator/campaigns' },
