@@ -3,6 +3,7 @@ import { Link, Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
+import { Logo } from '@/components/logo';
 import { OAuthButtons } from '@/components/oauth-buttons';
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
@@ -49,6 +50,7 @@ export default function SignInScreen() {
     <Screen edges={['top', 'bottom']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Logo size={44} />
           <ThemedText type="title" style={styles.title}>
             Sign in
           </ThemedText>

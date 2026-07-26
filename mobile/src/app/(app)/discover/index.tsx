@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { FlatList, Platform, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -48,7 +49,7 @@ export default function DiscoverScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <ThemedText type="title">Discover</ThemedText>
+        <ScreenHeader title="Discover" />
       </View>
 
       {isLoading && (

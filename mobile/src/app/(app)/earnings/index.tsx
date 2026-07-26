@@ -3,6 +3,7 @@ import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -95,7 +96,7 @@ export default function EarningsScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <ThemedText type="title">Earnings</ThemedText>
+        <ScreenHeader title="Earnings" />
         <ThemedText themeColor="textSecondary" type="small">
           Lifetime paid out
         </ThemedText>

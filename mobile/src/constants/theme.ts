@@ -47,6 +47,17 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+// The logo mark's color (app/globals.css .brand-mark: #ff503d) — fixed
+// regardless of light/dark mode, same as the web app treats it. Distinct
+// from `accent`: coral is the brand identity/logo color, accent is the
+// functional interactive color (buttons, links). Web keeps these separate
+// too — the mark is coral, everything else interactive is blue.
+export const Brand = {
+  coral: '#ff503d',
+  coralStrong: '#e63f2d',
+  coralSoft: 'rgba(255, 80, 61, 0.12)',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

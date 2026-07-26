@@ -2,6 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -16,7 +17,7 @@ export default function ProfileScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <ThemedText type="title">Profile</ThemedText>
+        <ScreenHeader title="Profile" />
       </View>
 
       <View style={styles.content}>
