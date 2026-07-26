@@ -1211,6 +1211,8 @@ select {
   border: 1px solid var(--border);
   border-radius: 20px;
   background: rgba(241, 245, 249, 0.56);
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .admin-filter-grid {

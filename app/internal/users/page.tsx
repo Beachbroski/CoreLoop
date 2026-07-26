@@ -1,13 +1,14 @@
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { INTERNAL_ADMIN_PATH, isAllowedAdminUser } from '@/lib/admin-config'
 import { getCurrentAppUser } from '@/lib/current-app-user'
+import { resolvePostLoginPath } from '@/lib/post-login'
 import prisma from '@/lib/prisma'
 
 export default async function InternalUsersPage() {
-  const { userId, user } = await getCurrentAppUser()
+  const { userId, user, email } = await getCurrentAppUser()
   if (!userId) redirect('/sign-in')
-  if (!user || !isAllowedAdminUser(user)) notFound()
+  if (!user || !isAllowedAdminUser(user)) redirect(resolvePostLoginPath(user, email))
 
   const users = await prisma.user.findMany({
     where: { role: { in: ['BRAND', 'CREATOR'] } },
@@ -46,7 +47,7 @@ export default async function InternalUsersPage() {
             </div>
           </header>
 
-          <section className="dashboard-panel">
+          <section id="brands" className="dashboard-panel" style={{ scrollMarginTop: 24 }}>
             <h2 style={{ margin: '0 0 8px' }}>Brands ({brands.length})</h2>
             {brands.length === 0 ? (
               <p className="page-copy" style={{ margin: 0 }}>No brand accounts yet.</p>
@@ -67,7 +68,7 @@ export default async function InternalUsersPage() {
             )}
           </section>
 
-          <section className="dashboard-panel">
+          <section id="creators" className="dashboard-panel" style={{ scrollMarginTop: 24 }}>
             <h2 style={{ margin: '0 0 8px' }}>Creators ({creators.length})</h2>
             {creators.length === 0 ? (
               <p className="page-copy" style={{ margin: 0 }}>No creator accounts yet.</p>
