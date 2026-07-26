@@ -1,8 +1,9 @@
 import { useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Link, Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { OAuthButtons } from '@/components/oauth-buttons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -46,6 +47,10 @@ export default function SignInScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title">Sign in</ThemedText>
+
+      <OAuthButtons onError={setError} />
+
+      <View style={[styles.divider, { backgroundColor: theme.backgroundElement }]} />
 
       <TextInput
         value={email}
@@ -104,5 +109,8 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
     paddingVertical: Spacing.three,
     alignItems: 'center',
+  },
+  divider: {
+    height: 1,
   },
 });
