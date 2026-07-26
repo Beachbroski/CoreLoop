@@ -1,4 +1,4 @@
-import { formatCents } from './format-money';
+import { formatCents, formatCentsCompact } from './format-money';
 
 describe('formatCents', () => {
   it('formats whole dollar amounts', () => {
@@ -11,5 +11,19 @@ describe('formatCents', () => {
 
   it('formats zero', () => {
     expect(formatCents(0)).toBe('$0.00');
+  });
+});
+
+describe('formatCentsCompact', () => {
+  it('drops trailing .00 on whole dollar amounts', () => {
+    expect(formatCentsCompact(500000)).toBe('$5,000');
+  });
+
+  it('drops trailing .00 on zero', () => {
+    expect(formatCentsCompact(0)).toBe('$0');
+  });
+
+  it('keeps cents when the amount is not a whole dollar', () => {
+    expect(formatCentsCompact(4550)).toBe('$45.50');
   });
 });

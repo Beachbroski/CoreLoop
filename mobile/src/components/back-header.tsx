@@ -11,7 +11,7 @@ export function BackHeader({ title }: { title?: string }) {
   const theme = useTheme();
 
   return (
-    <Pressable onPress={() => router.back()} style={styles.container} hitSlop={Spacing.two}>
+    <Pressable onPress={() => router.back()} style={styles.container} hitSlop={Spacing.three}>
       <SymbolView
         name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
         size={20}
@@ -30,5 +30,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
     paddingBottom: Spacing.three,
+    minHeight: 44,
   },
 });

@@ -1,39 +1,84 @@
+import * as Haptics from 'expo-haptics';
 import type { PropsWithChildren } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import Animated, {
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ThemedText } from './themed-text';
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 type PrimaryButtonProps = PropsWithChildren<{
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
-  loadingLabel?: string;
 }>;
 
 /** The one accent-filled button style used everywhere (apply, submit, sign in, connect payout, …). */
-export function PrimaryButton({ onPress, disabled, loading, loadingLabel, children }: PrimaryButtonProps) {
+export function PrimaryButton({ onPress, disabled, loading, children }: PrimaryButtonProps) {
   const theme = useTheme();
   const isDisabled = disabled || loading;
+  const pressed = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: interpolate(pressed.value, [0, 1], [1, 0.97]) }],
+    backgroundColor: interpolateColor(pressed.value, [0, 1], [theme.accent, theme.accentStrong]),
+  }));
+
+  function onPressIn() {
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutated by design
+    pressed.value = withTiming(1, { duration: 120 });
+  }
+
+  function onPressOut() {
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutated by design
+    pressed.value = withTiming(0, { duration: 120 });
+  }
+
+  function handlePress() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  }
 
   return (
-    <Pressable
-      onPress={onPress}
+    <AnimatedPressable
+      onPress={handlePress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       disabled={isDisabled}
-      style={[styles.button, { backgroundColor: theme.accent, opacity: isDisabled ? 0.6 : 1 }]}>
-      <ThemedText type="smallBold" style={styles.text}>
-        {loading ? (loadingLabel ?? 'Please wait…') : children}
-      </ThemedText>
-    </Pressable>
+      style={[styles.button, animatedStyle, isDisabled && styles.disabled]}>
+      <View style={styles.content}>
+        {loading && <ActivityIndicator color="#ffffff" />}
+        <ThemedText type="smallBold" style={styles.text}>
+          {children}
+        </ThemedText>
+      </View>
+    </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: Spacing.two,
+    borderRadius: 999,
+    minHeight: 52,
     paddingVertical: Spacing.three,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabled: {
+    opacity: 0.6,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
   },
   text: {
     color: '#ffffff',

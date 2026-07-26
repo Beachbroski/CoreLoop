@@ -78,7 +78,7 @@ export default function NewSubmissionScreen() {
 
           {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-          <PrimaryButton onPress={onSubmit} loading={isPending} loadingLabel="Submitting…">
+          <PrimaryButton onPress={onSubmit} loading={isPending}>
             Submit
           </PrimaryButton>
         </ScrollView>

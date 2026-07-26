@@ -85,9 +85,9 @@ export default function SignUpScreen() {
               style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
             />
 
-            {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
+            {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
 
-            <PrimaryButton onPress={onVerify} loading={submitting} loadingLabel="Verifying…">
+            <PrimaryButton onPress={onVerify} loading={submitting}>
               Verify
             </PrimaryButton>
           </ScrollView>
@@ -108,11 +108,11 @@ export default function SignUpScreen() {
           <OAuthButtons onError={setError} />
 
           <View style={styles.dividerRow}>
-            <View style={[styles.divider, { backgroundColor: theme.backgroundElement }]} />
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
             <ThemedText themeColor="textSecondary" type="small">
               or
             </ThemedText>
-            <View style={[styles.divider, { backgroundColor: theme.backgroundElement }]} />
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
           </View>
 
           <TextInput
@@ -135,9 +135,9 @@ export default function SignUpScreen() {
             style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
           />
 
-          {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
+          {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
 
-          <PrimaryButton onPress={onCreateAccount} loading={submitting} loadingLabel="Creating account…">
+          <PrimaryButton onPress={onCreateAccount} loading={submitting}>
             Sign up
           </PrimaryButton>
 

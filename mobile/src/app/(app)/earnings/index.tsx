@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { loadErrorMessage } from '@/lib/api-error-message';
-import { formatCents } from '@/lib/format-money';
+import { formatCents, formatCentsCompact } from '@/lib/format-money';
 import { usePayouts } from '@/lib/queries/use-payouts';
 import { useStripeOnboard } from '@/lib/queries/use-stripe-onboard';
 import { useStripeStatus } from '@/lib/queries/use-stripe-status';
@@ -21,7 +21,7 @@ function PayoutRow({ payout }: { payout: Payout }) {
   const softKey = statusSoftColor(payout.status);
   return (
     <View style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
-      <ThemedText type="smallBold">{formatCents(payout.amount)}</ThemedText>
+      <ThemedText type="money">{formatCents(payout.amount)}</ThemedText>
       <View style={[styles.statusPill, { backgroundColor: softKey ? theme[softKey] : theme.backgroundSelected }]}>
         <ThemedText themeColor={statusTextColor(payout.status)} type="small">
           {formatStatus(payout.status)}
@@ -51,7 +51,7 @@ function OnboardingPrompt() {
         <ThemedText themeColor="textSecondary" style={styles.centeredText}>
           Connect a payout account to start earning from accepted campaigns.
         </ThemedText>
-        <PrimaryButton onPress={onConnect} loading={isPending} loadingLabel="Connecting…">
+        <PrimaryButton onPress={onConnect} loading={isPending}>
           Connect payout account
         </PrimaryButton>
       </View>
@@ -100,8 +100,8 @@ export default function EarningsScreen() {
         <ThemedText themeColor="textSecondary" type="small">
           Lifetime paid out
         </ThemedText>
-        <ThemedText type="title" themeColor="accent" style={styles.total}>
-          {formatCents(lifetimeEarnings)}
+        <ThemedText type="money" themeColor="accent" style={styles.total}>
+          {formatCentsCompact(lifetimeEarnings)}
         </ThemedText>
       </View>
 

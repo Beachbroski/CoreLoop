@@ -72,9 +72,9 @@ export default function ApplyScreen() {
           style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
         />
 
-        {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
+        {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
 
-        <PrimaryButton onPress={onSubmit} loading={isPending} loadingLabel="Submitting…">
+        <PrimaryButton onPress={onSubmit} loading={isPending}>
           Submit application
         </PrimaryButton>
       </KeyboardAvoidingView>

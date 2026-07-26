@@ -1,5 +1,7 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { FlatList, Platform, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
@@ -7,21 +9,42 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { formatCents } from '@/lib/format-money';
+import { formatCentsCompact } from '@/lib/format-money';
 import { useCampaigns } from '@/lib/queries/use-campaigns';
 import type { CampaignListItem } from '@creatordocks/shared';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 function CampaignCard({ campaign }: { campaign: CampaignListItem }) {
   const theme = useTheme();
   const router = useRouter();
+  const pressed = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: interpolate(pressed.value, [0, 1], [1, 0.97]) }],
+  }));
+
+  function onPressIn() {
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutated by design
+    pressed.value = withTiming(1, { duration: 120 });
+  }
+
+  function onPressOut() {
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutated by design
+    pressed.value = withTiming(0, { duration: 120 });
+  }
+
+  function onPress() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push(`/discover/${campaign.id}`);
+  }
 
   return (
-    <Pressable
-      onPress={() => router.push(`/discover/${campaign.id}`)}
-      style={({ pressed }) => [
-        styles.card,
-        { backgroundColor: theme.backgroundElement, opacity: pressed ? 0.7 : 1 },
-      ]}>
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      style={[styles.card, { backgroundColor: theme.backgroundElement }, animatedStyle]}>
       <View style={styles.cardHeader}>
         <ThemedText type="smallBold" numberOfLines={1} style={styles.cardTitle}>
           {campaign.title}
@@ -35,10 +58,10 @@ function CampaignCard({ campaign }: { campaign: CampaignListItem }) {
       <ThemedText themeColor="textSecondary" type="small">
         {campaign.brand.name ?? 'A brand'}
       </ThemedText>
-      <ThemedText type="title" themeColor="accent" style={styles.cardBudget}>
-        {formatCents(campaign.budget)}
+      <ThemedText type="money" themeColor="accent" style={styles.cardBudget}>
+        {formatCentsCompact(campaign.budget)}
       </ThemedText>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

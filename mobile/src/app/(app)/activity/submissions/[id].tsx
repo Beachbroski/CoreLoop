@@ -109,7 +109,7 @@ export default function SubmissionDetailScreen() {
 
               {resubmitError ? <ThemedText themeColor="textSecondary">{resubmitError}</ThemedText> : null}
 
-              <PrimaryButton onPress={onResubmit} loading={isPending} loadingLabel="Resubmitting…">
+              <PrimaryButton onPress={onResubmit} loading={isPending}>
                 Resubmit
               </PrimaryButton>
             </View>

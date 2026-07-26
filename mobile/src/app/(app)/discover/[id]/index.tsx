@@ -7,7 +7,7 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { formatCents } from '@/lib/format-money';
+import { formatCentsCompact } from '@/lib/format-money';
 import { useCampaign } from '@/lib/queries/use-campaign';
 
 export default function CampaignDetailScreen() {
@@ -50,8 +50,8 @@ export default function CampaignDetailScreen() {
             <ThemedText type="small" themeColor="textSecondary">
               Budget
             </ThemedText>
-            <ThemedText type="smallBold" themeColor="accent">
-              {formatCents(campaign.budget)}
+            <ThemedText type="money" themeColor="accent">
+              {formatCentsCompact(campaign.budget)}
             </ThemedText>
           </View>
           <View>

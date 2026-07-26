@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two - 4,
     paddingVertical: Spacing.two,
     alignItems: 'center',
+    minHeight: 44,
   },
   listContent: {
     paddingHorizontal: Spacing.four,
