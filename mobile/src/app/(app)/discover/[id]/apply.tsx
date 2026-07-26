@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
 
+import { BackHeader } from '@/components/back-header';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ApiError } from '@/lib/api-client';
@@ -44,39 +45,44 @@ export default function ApplyScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">Apply</ThemedText>
+    <Screen edges={['top', 'bottom']}>
+      <BackHeader />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.container}>
+        <ThemedText type="title">Apply</ThemedText>
 
-      <TextInput
-        value={pitch}
-        onChangeText={setPitch}
-        placeholder="Tell the brand why you're a fit…"
-        placeholderTextColor={theme.textSecondary}
-        multiline
-        numberOfLines={6}
-        style={[styles.textArea, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-      />
+        <TextInput
+          value={pitch}
+          onChangeText={setPitch}
+          placeholder="Tell the brand why you're a fit…"
+          placeholderTextColor={theme.textSecondary}
+          multiline
+          numberOfLines={6}
+          style={[styles.textArea, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+        />
 
-      <TextInput
-        value={proposedRate}
-        onChangeText={setProposedRate}
-        placeholder="Your rate (USD)"
-        placeholderTextColor={theme.textSecondary}
-        keyboardType="decimal-pad"
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-      />
+        <TextInput
+          value={proposedRate}
+          onChangeText={setProposedRate}
+          placeholder="Your rate (USD)"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="decimal-pad"
+          style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+        />
 
-      {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
+        {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-      <Pressable
-        onPress={onSubmit}
-        disabled={isPending}
-        style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
-        <ThemedText themeColor="background" type="smallBold">
-          {isPending ? 'Submitting…' : 'Submit application'}
-        </ThemedText>
-      </Pressable>
-    </ThemedView>
+        <Pressable
+          onPress={onSubmit}
+          disabled={isPending}
+          style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
+          <ThemedText themeColor="background" type="smallBold">
+            {isPending ? 'Submitting…' : 'Submit application'}
+          </ThemedText>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
@@ -84,7 +90,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: Spacing.three,
-    padding: Spacing.four,
+    paddingHorizontal: Spacing.four,
   },
   input: {
     borderRadius: Spacing.two,

@@ -1,8 +1,8 @@
 import { useAuth } from '@clerk/clerk-expo';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatRoleLabel } from '@/lib/format-role';
@@ -14,38 +14,76 @@ export default function ProfileScreen() {
   const { data: me, isLoading, error } = useMe();
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">Profile</ThemedText>
+    <Screen>
+      <View style={styles.header}>
+        <ThemedText type="title">Profile</ThemedText>
+      </View>
 
-      {isLoading && <ThemedText themeColor="textSecondary">Loading…</ThemedText>}
-      {error && <ThemedText themeColor="textSecondary">Couldn&apos;t load your profile.</ThemedText>}
-      {me && (
-        <ThemedText themeColor="textSecondary">
-          {me.name ?? me.email} · {formatRoleLabel(me.role)}
-        </ThemedText>
-      )}
+      <View style={styles.content}>
+        {isLoading && <ThemedText themeColor="textSecondary">Loading…</ThemedText>}
+        {error && <ThemedText themeColor="textSecondary">Couldn&apos;t load your profile.</ThemedText>}
 
-      <Pressable
-        onPress={() => signOut()}
-        style={[styles.button, { backgroundColor: theme.backgroundElement }]}>
-        <ThemedText type="smallBold">Sign out</ThemedText>
-      </Pressable>
-    </ThemedView>
+        {me && (
+          <View style={styles.identity}>
+            <View style={[styles.avatar, { backgroundColor: theme.backgroundElement }]}>
+              <ThemedText type="title" style={styles.avatarInitial}>
+                {(me.name ?? me.email).charAt(0).toUpperCase()}
+              </ThemedText>
+            </View>
+            <View>
+              <ThemedText type="smallBold">{me.name ?? me.email}</ThemedText>
+              <ThemedText themeColor="textSecondary" type="small">
+                {formatRoleLabel(me.role)}
+              </ThemedText>
+            </View>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.footer}>
+        <Pressable
+          onPress={() => signOut()}
+          style={[styles.button, { backgroundColor: theme.backgroundElement }]}>
+          <ThemedText type="smallBold">Sign out</ThemedText>
+        </Pressable>
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  header: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.three,
+  },
+  content: {
     flex: 1,
+    paddingHorizontal: Spacing.four,
+  },
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: Spacing.two,
-    padding: Spacing.four,
+  },
+  avatarInitial: {
+    fontSize: 22,
+    lineHeight: 26,
+  },
+  footer: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.four,
   },
   button: {
-    marginTop: Spacing.four,
     borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
+    alignItems: 'center',
   },
 });

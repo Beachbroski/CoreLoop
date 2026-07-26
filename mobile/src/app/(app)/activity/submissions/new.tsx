@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
+import { BackHeader } from '@/components/back-header';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ApiError } from '@/lib/api-client';
@@ -43,53 +44,58 @@ export default function NewSubmissionScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">Submit content</ThemedText>
+    <Screen edges={['top', 'bottom']}>
+      <BackHeader />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <ThemedText type="title">Submit content</ThemedText>
 
-      <TextInput
-        value={contentUrl}
-        onChangeText={setContentUrl}
-        placeholder="Content link"
-        placeholderTextColor={theme.textSecondary}
-        autoCapitalize="none"
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-      />
-      <TextInput
-        value={caption}
-        onChangeText={setCaption}
-        placeholder="Caption (optional)"
-        placeholderTextColor={theme.textSecondary}
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-      />
-      <TextInput
-        value={notes}
-        onChangeText={setNotes}
-        placeholder="Notes for the brand (optional)"
-        placeholderTextColor={theme.textSecondary}
-        multiline
-        numberOfLines={4}
-        style={[styles.textArea, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-      />
+          <TextInput
+            value={contentUrl}
+            onChangeText={setContentUrl}
+            placeholder="Content link"
+            placeholderTextColor={theme.textSecondary}
+            autoCapitalize="none"
+            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+          />
+          <TextInput
+            value={caption}
+            onChangeText={setCaption}
+            placeholder="Caption (optional)"
+            placeholderTextColor={theme.textSecondary}
+            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+          />
+          <TextInput
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Notes for the brand (optional)"
+            placeholderTextColor={theme.textSecondary}
+            multiline
+            numberOfLines={4}
+            style={[styles.textArea, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+          />
 
-      {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
+          {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-      <Pressable
-        onPress={onSubmit}
-        disabled={isPending}
-        style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
-        <ThemedText themeColor="background" type="smallBold">
-          {isPending ? 'Submitting…' : 'Submit'}
-        </ThemedText>
-      </Pressable>
-    </ThemedView>
+          <Pressable
+            onPress={onSubmit}
+            disabled={isPending}
+            style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
+            <ThemedText themeColor="background" type="smallBold">
+              {isPending ? 'Submitting…' : 'Submit'}
+            </ThemedText>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  content: {
+    paddingHorizontal: Spacing.four,
     gap: Spacing.three,
-    padding: Spacing.four,
+    paddingBottom: Spacing.four,
   },
   input: {
     borderRadius: Spacing.two,

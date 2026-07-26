@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Platform, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -16,63 +17,82 @@ function CampaignCard({ campaign }: { campaign: CampaignListItem }) {
   return (
     <Pressable
       onPress={() => router.push(`/discover/${campaign.id}`)}
-      style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-      <ThemedText type="smallBold">{campaign.title}</ThemedText>
-      <ThemedText themeColor="textSecondary">{campaign.brand.name ?? 'A brand'}</ThemedText>
-      <View style={styles.cardRow}>
-        <ThemedText type="small">{formatCents(campaign.budget)}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {campaign.niche}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: theme.backgroundElement, opacity: pressed ? 0.7 : 1 },
+      ]}>
+      <View style={styles.cardHeader}>
+        <ThemedText type="smallBold" numberOfLines={1} style={styles.cardTitle}>
+          {campaign.title}
         </ThemedText>
+        <View style={[styles.badge, { backgroundColor: theme.backgroundSelected }]}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {campaign.niche}
+          </ThemedText>
+        </View>
       </View>
+      <ThemedText themeColor="textSecondary" type="small">
+        {campaign.brand.name ?? 'A brand'}
+      </ThemedText>
+      <ThemedText type="title" style={styles.cardBudget}>
+        {formatCents(campaign.budget)}
+      </ThemedText>
     </Pressable>
   );
 }
 
 export default function DiscoverScreen() {
   const { data, isLoading, isRefetching, error, refetch } = useCampaigns();
-
-  if (isLoading) {
-    return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">Loading campaigns…</ThemedText>
-      </ThemedView>
-    );
-  }
-
-  if (error) {
-    return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">Couldn&apos;t load campaigns. Pull to retry.</ThemedText>
-      </ThemedView>
-    );
-  }
+  const theme = useTheme();
 
   return (
-    <ThemedView style={styles.container}>
-      <FlatList
-        data={data?.data ?? []}
-        keyExtractor={(campaign) => campaign.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        renderItem={({ item }) => <CampaignCard campaign={item} />}
-        ItemSeparatorComponent={() => <View style={{ height: Spacing.two }} />}
-        ListEmptyComponent={
-          <ThemedView style={styles.centered}>
-            <ThemedText themeColor="textSecondary">No active campaigns right now.</ThemedText>
-          </ThemedView>
-        }
-      />
-    </ThemedView>
+    <Screen>
+      <View style={styles.header}>
+        <ThemedText type="title">Discover</ThemedText>
+      </View>
+
+      {isLoading && (
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">Loading campaigns…</ThemedText>
+        </View>
+      )}
+
+      {error && (
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">Couldn&apos;t load campaigns. Pull to retry.</ThemedText>
+        </View>
+      )}
+
+      {!isLoading && !error && (
+        <FlatList
+          data={data?.data ?? []}
+          keyExtractor={(campaign) => campaign.id}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.textSecondary} />
+          }
+          renderItem={({ item }) => <CampaignCard campaign={item} />}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.three }} />}
+          ListEmptyComponent={
+            <ThemedView style={styles.centered}>
+              <ThemedText themeColor="textSecondary">No active campaigns right now.</ThemedText>
+            </ThemedView>
+          }
+        />
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  header: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.three,
   },
   listContent: {
-    padding: Spacing.four,
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.five,
     flexGrow: 1,
   },
   centered: {
@@ -82,13 +102,36 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
   },
   card: {
-    borderRadius: Spacing.three,
+    borderRadius: Spacing.four,
     padding: Spacing.four,
     gap: Spacing.one,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: { elevation: 2 },
+    }),
   },
-  cardRow: {
+  cardHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: Spacing.two,
+    gap: Spacing.two,
+  },
+  cardTitle: {
+    flex: 1,
+  },
+  cardBudget: {
+    fontSize: 22,
+    lineHeight: 28,
+    marginTop: Spacing.one,
+  },
+  badge: {
+    borderRadius: 999,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 4,
   },
 });

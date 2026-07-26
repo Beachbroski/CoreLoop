@@ -1,7 +1,7 @@
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 // Clerk's SSO flow completes inside the useSSO() promise (see
 // components/oauth-buttons.tsx) — expo-web-browser intercepts the redirect
@@ -9,9 +9,11 @@ import { StyleSheet } from 'react-native';
 // spot in case that interception doesn't happen for some reason.
 export default function SSOCallbackScreen() {
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText themeColor="textSecondary">Finishing sign in…</ThemedText>
-    </ThemedView>
+    <Screen edges={['top', 'bottom']}>
+      <View style={styles.container}>
+        <ThemedText themeColor="textSecondary">Finishing sign in…</ThemedText>
+      </View>
+    </Screen>
   );
 }
 

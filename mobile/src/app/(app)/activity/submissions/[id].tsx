@@ -1,9 +1,10 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
+import { BackHeader } from '@/components/back-header';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ApiError } from '@/lib/api-client';
@@ -24,17 +25,23 @@ export default function SubmissionDetailScreen() {
 
   if (isLoading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-      </ThemedView>
+      <Screen edges={['top', 'bottom']}>
+        <BackHeader />
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        </View>
+      </Screen>
     );
   }
 
   if (error || !submission) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">This submission is no longer available.</ThemedText>
-      </ThemedView>
+      <Screen edges={['top', 'bottom']}>
+        <BackHeader />
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">This submission is no longer available.</ThemedText>
+        </View>
+      </Screen>
     );
   }
 
@@ -58,58 +65,77 @@ export default function SubmissionDetailScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">{submission.application.campaign.title}</ThemedText>
-      <ThemedText themeColor="textSecondary">{submission.status}</ThemedText>
-      <ThemedText>{submission.contentUrl}</ThemedText>
+    <Screen edges={['top', 'bottom']}>
+      <BackHeader />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <ThemedText type="title">{submission.application.campaign.title}</ThemedText>
 
-      {submission.reviewNote && (
-        <ThemedView style={[styles.noteBox, { backgroundColor: theme.backgroundElement }]}>
-          <ThemedText type="smallBold">Feedback</ThemedText>
-          <ThemedText themeColor="textSecondary">{submission.reviewNote}</ThemedText>
-        </ThemedView>
-      )}
+          <View style={[styles.statusRow, { backgroundColor: theme.backgroundElement }]}>
+            <ThemedText type="smallBold">{submission.status.replace('_', ' ')}</ThemedText>
+          </View>
 
-      {resubmitted && <ThemedText themeColor="textSecondary">Resubmitted for review.</ThemedText>}
+          <View style={styles.section}>
+            <ThemedText type="smallBold">Content</ThemedText>
+            <ThemedText themeColor="textSecondary">{submission.contentUrl}</ThemedText>
+          </View>
 
-      {!resubmitted && RESUBMITTABLE_STATUSES.has(submission.status) && (
-        <>
-          <TextInput
-            value={contentUrl}
-            onChangeText={setContentUrl}
-            placeholder="Updated content link"
-            placeholderTextColor={theme.textSecondary}
-            autoCapitalize="none"
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-          />
+          {submission.reviewNote && (
+            <View style={[styles.noteBox, { backgroundColor: theme.backgroundElement }]}>
+              <ThemedText type="smallBold">Feedback</ThemedText>
+              <ThemedText themeColor="textSecondary">{submission.reviewNote}</ThemedText>
+            </View>
+          )}
 
-          {resubmitError ? <ThemedText themeColor="textSecondary">{resubmitError}</ThemedText> : null}
+          {resubmitted && <ThemedText themeColor="textSecondary">Resubmitted for review.</ThemedText>}
 
-          <Pressable
-            onPress={onResubmit}
-            disabled={isPending}
-            style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
-            <ThemedText themeColor="background" type="smallBold">
-              {isPending ? 'Resubmitting…' : 'Resubmit'}
-            </ThemedText>
-          </Pressable>
-        </>
-      )}
-    </ThemedView>
+          {!resubmitted && RESUBMITTABLE_STATUSES.has(submission.status) && (
+            <View style={styles.section}>
+              <TextInput
+                value={contentUrl}
+                onChangeText={setContentUrl}
+                placeholder="Updated content link"
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+                style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+              />
+
+              {resubmitError ? <ThemedText themeColor="textSecondary">{resubmitError}</ThemedText> : null}
+
+              <Pressable
+                onPress={onResubmit}
+                disabled={isPending}
+                style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
+                <ThemedText themeColor="background" type="smallBold">
+                  {isPending ? 'Resubmitting…' : 'Resubmit'}
+                </ThemedText>
+              </Pressable>
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  content: {
+    paddingHorizontal: Spacing.four,
     gap: Spacing.three,
-    padding: Spacing.four,
+    paddingBottom: Spacing.four,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.four,
+  },
+  statusRow: {
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+  },
+  section: {
+    gap: Spacing.two,
   },
   noteBox: {
     borderRadius: Spacing.three,

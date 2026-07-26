@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { BackHeader } from '@/components/back-header';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatCents } from '@/lib/format-money';
@@ -16,68 +17,83 @@ export default function CampaignDetailScreen() {
 
   if (isLoading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-      </ThemedView>
+      <Screen edges={['top', 'bottom']}>
+        <BackHeader />
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        </View>
+      </Screen>
     );
   }
 
   if (error || !campaign) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">This campaign is no longer available.</ThemedText>
-      </ThemedView>
+      <Screen edges={['top', 'bottom']}>
+        <BackHeader />
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">This campaign is no longer available.</ThemedText>
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen edges={['top', 'bottom']}>
+      <BackHeader />
       <ScrollView contentContainerStyle={styles.content}>
         <ThemedText type="title">{campaign.title}</ThemedText>
         <ThemedText themeColor="textSecondary">{campaign.brand.name ?? 'A brand'}</ThemedText>
 
-        <View style={styles.row}>
-          <ThemedText type="smallBold">{formatCents(campaign.budget)}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {campaign.niche}
-          </ThemedText>
+        <View style={[styles.statsRow, { backgroundColor: theme.backgroundElement }]}>
+          <View>
+            <ThemedText type="small" themeColor="textSecondary">
+              Budget
+            </ThemedText>
+            <ThemedText type="smallBold">{formatCents(campaign.budget)}</ThemedText>
+          </View>
+          <View>
+            <ThemedText type="small" themeColor="textSecondary">
+              Niche
+            </ThemedText>
+            <ThemedText type="smallBold">{campaign.niche}</ThemedText>
+          </View>
         </View>
 
         <ThemedText>{campaign.description}</ThemedText>
 
         {campaign.deliverables && (
-          <View>
+          <View style={styles.section}>
             <ThemedText type="smallBold">Deliverables</ThemedText>
             <ThemedText themeColor="textSecondary">{campaign.deliverables}</ThemedText>
           </View>
         )}
 
         {campaign.creatorRequirements && (
-          <View>
+          <View style={styles.section}>
             <ThemedText type="smallBold">Creator requirements</ThemedText>
             <ThemedText themeColor="textSecondary">{campaign.creatorRequirements}</ThemedText>
           </View>
         )}
       </ScrollView>
 
-      <Pressable
-        onPress={() => router.push(`/discover/${campaign.id}/apply`)}
-        style={[styles.applyButton, { backgroundColor: theme.text }]}>
-        <ThemedText themeColor="background" type="smallBold">
-          Apply
-        </ThemedText>
-      </Pressable>
-    </ThemedView>
+      <View style={styles.footer}>
+        <Pressable
+          onPress={() => router.push(`/discover/${campaign.id}/apply`)}
+          style={[styles.applyButton, { backgroundColor: theme.text }]}>
+          <ThemedText themeColor="background" type="smallBold">
+            Apply
+          </ThemedText>
+        </Pressable>
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   content: {
-    padding: Spacing.four,
+    paddingHorizontal: Spacing.four,
     gap: Spacing.three,
+    paddingBottom: Spacing.four,
   },
   centered: {
     flex: 1,
@@ -85,12 +101,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.four,
   },
-  row: {
+  statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+  },
+  section: {
+    gap: Spacing.half,
+  },
+  footer: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
   },
   applyButton: {
-    margin: Spacing.four,
     borderRadius: Spacing.two,
     paddingVertical: Spacing.three,
     alignItems: 'center',

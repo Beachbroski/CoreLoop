@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { BackHeader } from '@/components/back-header';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatCents } from '@/lib/format-money';
@@ -20,67 +21,99 @@ export default function ApplicationDetailScreen() {
 
   if (isLoading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-      </ThemedView>
+      <Screen edges={['top', 'bottom']}>
+        <BackHeader />
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        </View>
+      </Screen>
     );
   }
 
   if (error || !application) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">This application is no longer available.</ThemedText>
-      </ThemedView>
+      <Screen edges={['top', 'bottom']}>
+        <BackHeader />
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">This application is no longer available.</ThemedText>
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">{application.campaign.title}</ThemedText>
-      <ThemedText themeColor="textSecondary">{application.status}</ThemedText>
-      <ThemedText type="smallBold">{formatCents(application.proposedRate)}</ThemedText>
-      <ThemedText>{application.pitch}</ThemedText>
+    <Screen edges={['top', 'bottom']}>
+      <BackHeader />
+      <ScrollView contentContainerStyle={styles.content}>
+        <ThemedText type="title">{application.campaign.title}</ThemedText>
 
-      {withdrawError ? <ThemedText themeColor="textSecondary">{withdrawError}</ThemedText> : null}
+        <View style={[styles.statusRow, { backgroundColor: theme.backgroundElement }]}>
+          <ThemedText type="smallBold">{application.status.replace('_', ' ')}</ThemedText>
+          <ThemedText type="smallBold">{formatCents(application.proposedRate)}</ThemedText>
+        </View>
 
-      {application.status === 'PENDING' && (
-        <Pressable
-          onPress={() =>
-            withdraw(application.id, {
-              onSuccess: () => router.back(),
-              onError: () => setWithdrawError('Unable to withdraw. Please try again.'),
-            })
-          }
-          disabled={withdrawing}
-          style={[styles.button, { backgroundColor: theme.backgroundElement, opacity: withdrawing ? 0.6 : 1 }]}>
-          <ThemedText type="smallBold">{withdrawing ? 'Withdrawing…' : 'Withdraw application'}</ThemedText>
-        </Pressable>
-      )}
+        <View style={styles.section}>
+          <ThemedText type="smallBold">Your pitch</ThemedText>
+          <ThemedText themeColor="textSecondary">{application.pitch}</ThemedText>
+        </View>
 
-      {application.status === 'ACCEPTED' && (
-        <Pressable
-          onPress={() => router.push(`/activity/submissions/new?applicationId=${application.id}`)}
-          style={[styles.button, { backgroundColor: theme.text }]}>
-          <ThemedText themeColor="background" type="smallBold">
-            Submit content
-          </ThemedText>
-        </Pressable>
-      )}
-    </ThemedView>
+        {withdrawError ? <ThemedText themeColor="textSecondary">{withdrawError}</ThemedText> : null}
+      </ScrollView>
+
+      <View style={styles.footer}>
+        {application.status === 'PENDING' && (
+          <Pressable
+            onPress={() =>
+              withdraw(application.id, {
+                onSuccess: () => router.back(),
+                onError: () => setWithdrawError('Unable to withdraw. Please try again.'),
+              })
+            }
+            disabled={withdrawing}
+            style={[styles.button, { backgroundColor: theme.backgroundElement, opacity: withdrawing ? 0.6 : 1 }]}>
+            <ThemedText type="smallBold">{withdrawing ? 'Withdrawing…' : 'Withdraw application'}</ThemedText>
+          </Pressable>
+        )}
+
+        {application.status === 'ACCEPTED' && (
+          <Pressable
+            onPress={() => router.push(`/activity/submissions/new?applicationId=${application.id}`)}
+            style={[styles.button, { backgroundColor: theme.text }]}>
+            <ThemedText themeColor="background" type="smallBold">
+              Submit content
+            </ThemedText>
+          </Pressable>
+        )}
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  content: {
+    paddingHorizontal: Spacing.four,
     gap: Spacing.three,
-    padding: Spacing.four,
+    paddingBottom: Spacing.four,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.four,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+  },
+  section: {
+    gap: Spacing.one,
+  },
+  footer: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    gap: Spacing.two,
   },
   button: {
     borderRadius: Spacing.two,

@@ -69,6 +69,13 @@ export default function AppTabsLayout() {
           ),
         }}
       />
+
+      {/* Nested detail/form screens — reachable via router.push(), not tabs. */}
+      <Tabs.Screen name="discover/[id]/index" options={{ href: null }} />
+      <Tabs.Screen name="discover/[id]/apply" options={{ href: null }} />
+      <Tabs.Screen name="activity/applications/[id]" options={{ href: null }} />
+      <Tabs.Screen name="activity/submissions/[id]" options={{ href: null }} />
+      <Tabs.Screen name="activity/submissions/new" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -1,11 +1,11 @@
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { Link, Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { OAuthButtons } from '@/components/oauth-buttons';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -65,87 +65,117 @@ export default function SignUpScreen() {
 
   if (pendingVerification) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText type="title">Check your email</ThemedText>
-        <ThemedText themeColor="textSecondary">Enter the code we sent to {email}.</ThemedText>
+      <Screen edges={['top', 'bottom']}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+            <ThemedText type="title" style={styles.title}>
+              Check your email
+            </ThemedText>
+            <ThemedText themeColor="textSecondary">Enter the code we sent to {email}.</ThemedText>
 
-        <TextInput
-          value={code}
-          onChangeText={setCode}
-          placeholder="Verification code"
-          placeholderTextColor={theme.textSecondary}
-          keyboardType="number-pad"
-          style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-        />
+            <TextInput
+              value={code}
+              onChangeText={setCode}
+              placeholder="Verification code"
+              placeholderTextColor={theme.textSecondary}
+              keyboardType="number-pad"
+              style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            />
 
-        {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
+            {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-        <Pressable
-          onPress={onVerify}
-          disabled={submitting}
-          style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
-          <ThemedText themeColor="background" type="smallBold">
-            {submitting ? 'Verifying…' : 'Verify'}
-          </ThemedText>
-        </Pressable>
-      </ThemedView>
+            <Pressable
+              onPress={onVerify}
+              disabled={submitting}
+              style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
+              <ThemedText themeColor="background" type="smallBold">
+                {submitting ? 'Verifying…' : 'Verify'}
+              </ThemedText>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Screen>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">Create account</ThemedText>
+    <Screen edges={['top', 'bottom']}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <ThemedText type="title" style={styles.title}>
+            Create account
+          </ThemedText>
 
-      <OAuthButtons onError={setError} />
+          <OAuthButtons onError={setError} />
 
-      <View style={[styles.divider, { backgroundColor: theme.backgroundElement }]} />
+          <View style={styles.dividerRow}>
+            <View style={[styles.divider, { backgroundColor: theme.backgroundElement }]} />
+            <ThemedText themeColor="textSecondary" type="small">
+              or
+            </ThemedText>
+            <View style={[styles.divider, { backgroundColor: theme.backgroundElement }]} />
+          </View>
 
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Email"
-        placeholderTextColor={theme.textSecondary}
-        autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-      />
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        placeholderTextColor={theme.textSecondary}
-        secureTextEntry
-        autoComplete="password-new"
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-      />
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            placeholderTextColor={theme.textSecondary}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+          />
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            placeholderTextColor={theme.textSecondary}
+            secureTextEntry
+            autoComplete="password-new"
+            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+          />
 
-      {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
+          {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-      <Pressable
-        onPress={onCreateAccount}
-        disabled={submitting}
-        style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
-        <ThemedText themeColor="background" type="smallBold">
-          {submitting ? 'Creating account…' : 'Sign up'}
-        </ThemedText>
-      </Pressable>
+          <Pressable
+            onPress={onCreateAccount}
+            disabled={submitting}
+            style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
+            <ThemedText themeColor="background" type="smallBold">
+              {submitting ? 'Creating account…' : 'Sign up'}
+            </ThemedText>
+          </Pressable>
 
-      <Link href="/sign-in">
-        <ThemedText type="link" themeColor="textSecondary">
-          Already have an account? Sign in
-        </ThemedText>
-      </Link>
-    </ThemedView>
+          <Link href="/sign-in" style={styles.link}>
+            <ThemedText type="link" themeColor="textSecondary">
+              Already have an account? Sign in
+            </ThemedText>
+          </Link>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     gap: Spacing.three,
     padding: Spacing.four,
+  },
+  title: {
+    marginBottom: Spacing.two,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
   },
   input: {
     borderRadius: Spacing.two,
@@ -158,7 +188,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
-  divider: {
-    height: 1,
+  link: {
+    alignSelf: 'center',
+    marginTop: Spacing.two,
   },
 });

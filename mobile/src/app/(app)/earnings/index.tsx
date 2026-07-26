@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -16,9 +17,11 @@ function PayoutRow({ payout }: { payout: Payout }) {
   return (
     <View style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
       <ThemedText type="smallBold">{formatCents(payout.amount)}</ThemedText>
-      <ThemedText themeColor="textSecondary" type="small">
-        {payout.status}
-      </ThemedText>
+      <View style={[styles.statusPill, { backgroundColor: theme.backgroundSelected }]}>
+        <ThemedText themeColor="textSecondary" type="small">
+          {payout.status}
+        </ThemedText>
+      </View>
     </View>
   );
 }
@@ -38,20 +41,22 @@ function OnboardingPrompt() {
   }
 
   return (
-    <ThemedView style={styles.centered}>
-      <ThemedText type="title">Get paid</ThemedText>
-      <ThemedText themeColor="textSecondary">
-        Connect a payout account to start earning from accepted campaigns.
-      </ThemedText>
-      <Pressable
-        onPress={onConnect}
-        disabled={isPending}
-        style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
-        <ThemedText themeColor="background" type="smallBold">
-          {isPending ? 'Connecting…' : 'Connect payout account'}
+    <Screen>
+      <View style={styles.centered}>
+        <ThemedText type="title">Get paid</ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.centeredText}>
+          Connect a payout account to start earning from accepted campaigns.
         </ThemedText>
-      </Pressable>
-    </ThemedView>
+        <Pressable
+          onPress={onConnect}
+          disabled={isPending}
+          style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
+          <ThemedText themeColor="background" type="smallBold">
+            {isPending ? 'Connecting…' : 'Connect payout account'}
+          </ThemedText>
+        </Pressable>
+      </View>
+    </Screen>
   );
 }
 
@@ -61,9 +66,11 @@ export default function EarningsScreen() {
 
   if (statusLoading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-      </ThemedView>
+      <Screen>
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        </View>
+      </Screen>
     );
   }
 
@@ -76,10 +83,15 @@ export default function EarningsScreen() {
     .reduce((sum, payout) => sum + payout.amount, 0);
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen>
       <View style={styles.header}>
         <ThemedText type="title">Earnings</ThemedText>
-        <ThemedText themeColor="textSecondary">{formatCents(lifetimeEarnings)} paid out</ThemedText>
+        <ThemedText themeColor="textSecondary" type="small">
+          Lifetime paid out
+        </ThemedText>
+        <ThemedText type="title" style={styles.total}>
+          {formatCents(lifetimeEarnings)}
+        </ThemedText>
       </View>
 
       <FlatList
@@ -95,17 +107,19 @@ export default function EarningsScreen() {
           </ThemedView>
         }
       />
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   header: {
-    padding: Spacing.four,
-    gap: Spacing.one,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.four,
+  },
+  total: {
+    fontSize: 40,
+    lineHeight: 44,
   },
   listContent: {
     paddingHorizontal: Spacing.four,
@@ -119,12 +133,20 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     padding: Spacing.four,
   },
+  centeredText: {
+    textAlign: 'center',
+  },
   row: {
     borderRadius: Spacing.three,
     padding: Spacing.four,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  statusPill: {
+    borderRadius: 999,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 4,
   },
   button: {
     marginTop: Spacing.three,
