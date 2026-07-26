@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ApiError, apiFetch } from './api-client';
+import { ApiError, apiFetch, apiFetchList } from './api-client';
 
 const dataSchema = z.object({ id: z.string() });
 
@@ -71,5 +71,36 @@ describe('apiFetch', () => {
     delete process.env.EXPO_PUBLIC_API_URL;
 
     await expect(apiFetch('/api/v1/me', dataSchema)).rejects.toThrow('EXPO_PUBLIC_API_URL');
+  });
+});
+
+describe('apiFetchList', () => {
+  beforeEach(() => {
+    process.env.EXPO_PUBLIC_API_URL = 'https://api.example.com';
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('returns items and pagination meta', async () => {
+    mockFetchOnce({
+      success: true,
+      data: [{ id: 'a' }, { id: 'b' }],
+      meta: { total: 2, page: 1, limit: 20 },
+    });
+
+    const result = await apiFetchList('/api/v1/campaigns', dataSchema);
+
+    expect(result.data).toEqual([{ id: 'a' }, { id: 'b' }]);
+    expect(result.meta).toEqual({ total: 2, page: 1, limit: 20 });
+  });
+
+  it('falls back to a derived meta when the server omits it', async () => {
+    mockFetchOnce({ success: true, data: [{ id: 'a' }] });
+
+    const result = await apiFetchList('/api/v1/campaigns', dataSchema);
+
+    expect(result.meta).toEqual({ total: 1, page: 1, limit: 1 });
   });
 });

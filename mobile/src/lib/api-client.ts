@@ -1,5 +1,5 @@
-import { apiResponseSchema } from '@creatordocks/shared';
-import type { z } from 'zod';
+import { apiResponseSchema, type PaginationMeta } from '@creatordocks/shared';
+import { z } from 'zod';
 
 export class ApiError extends Error {
   status: number;
@@ -16,17 +16,11 @@ type RequestOptions = {
   token?: string | null;
 };
 
-/**
- * Fetches from the mobile API and validates the response at runtime against
- * the shared schema — never trust the network, even our own API (see
- * docs/platform-split/03-ios-app.md). Token attachment is the caller's job
- * (via Clerk's getToken()) so this module stays testable without Clerk.
- */
-export async function apiFetch<T>(
+async function apiRequest<T>(
   path: string,
-  responseSchema: z.ZodType<T>,
-  options: RequestOptions = {},
-): Promise<T> {
+  dataSchema: z.ZodType<T>,
+  options: RequestOptions,
+): Promise<{ data: T; meta?: PaginationMeta }> {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   if (!apiUrl) throw new Error('EXPO_PUBLIC_API_URL is not set');
 
@@ -40,7 +34,7 @@ export async function apiFetch<T>(
   });
 
   const json: unknown = await res.json();
-  const parsed = apiResponseSchema(responseSchema).safeParse(json);
+  const parsed = apiResponseSchema(dataSchema).safeParse(json);
 
   if (!parsed.success) {
     throw new ApiError('Unexpected response from server', res.status);
@@ -50,5 +44,30 @@ export async function apiFetch<T>(
     throw new ApiError(parsed.data.error, res.status);
   }
 
-  return parsed.data.data;
+  return { data: parsed.data.data, meta: parsed.data.meta };
+}
+
+/**
+ * Fetches from the mobile API and validates the response at runtime against
+ * the shared schema — never trust the network, even our own API (see
+ * docs/platform-split/03-ios-app.md). Token attachment is the caller's job
+ * (via Clerk's getToken()) so this module stays testable without Clerk.
+ */
+export async function apiFetch<T>(
+  path: string,
+  responseSchema: z.ZodType<T>,
+  options: RequestOptions = {},
+): Promise<T> {
+  const { data } = await apiRequest(path, responseSchema, options);
+  return data;
+}
+
+/** Like apiFetch, but for paginated list endpoints — keeps the meta (total/page/limit). */
+export async function apiFetchList<T>(
+  path: string,
+  itemSchema: z.ZodType<T>,
+  options: RequestOptions = {},
+): Promise<{ data: T[]; meta: PaginationMeta }> {
+  const { data, meta } = await apiRequest(path, z.array(itemSchema), options);
+  return { data, meta: meta ?? { total: data.length, page: 1, limit: Math.max(data.length, 1) } };
 }
