@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   '/opengraph-image',
   '/api/waitlist',
   '/api/webhooks/(.*)',
+  '/api/v1/meta',
 ])
 
 export default clerkMiddleware(async (auth, req) => {
