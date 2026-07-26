@@ -47,11 +47,11 @@ export function withPublicMobileApi(
  * since /api/v1 skips the origin-check CSRF defense that cookie-auth routes
  * rely on (see docs/platform-split/02-mobile-api.md, decision 3).
  */
-export function withMobileApi(
+export function withMobileApi<RouteContext = unknown>(
   options: { rateLimit: RateLimitConfig; role?: Role },
-  handler: (ctx: { req: Request; user: MobileAuthedUser }) => Promise<Response>,
+  handler: (ctx: { req: Request; user: MobileAuthedUser; context: RouteContext }) => Promise<Response>,
 ) {
-  return async (req: Request): Promise<Response> => {
+  return async (req: Request, routeContext?: RouteContext): Promise<Response> => {
     try {
       const authHeader = req.headers.get('authorization')
       if (!authHeader?.startsWith('Bearer ')) {
@@ -75,7 +75,7 @@ export function withMobileApi(
         return jsonError('Forbidden', 403)
       }
 
-      return await handler({ req, user })
+      return await handler({ req, user, context: routeContext as RouteContext })
     } catch (err) {
       console.error('[mobile-api-guard]', err)
       return jsonError('Internal server error', 500)
