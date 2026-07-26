@@ -7,27 +7,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { ApiError } from '@/lib/api-client';
+import { loadErrorMessage } from '@/lib/api-error-message';
 import { useApplications } from '@/lib/queries/use-applications';
 import { useSubmissions } from '@/lib/queries/use-submissions';
+import { formatStatus, statusSoftColor, statusTextColor } from '@/lib/status-presentation';
 import type { Application, Submission } from '@creatordocks/shared';
 
 type Segment = 'applications' | 'submissions';
-
-const STATUS_COLORS: Record<string, 'text' | 'textSecondary'> = {
-  PENDING: 'textSecondary',
-  ACCEPTED: 'text',
-  APPROVED: 'text',
-  REJECTED: 'textSecondary',
-  REVISION_REQUESTED: 'textSecondary',
-};
-
-function loadErrorMessage(error: unknown): string {
-  if (error instanceof ApiError && error.status === 403) {
-    return 'This account isn’t a creator account, so there’s nothing to show here.';
-  }
-  return "Couldn't load. Pull to retry.";
-}
 
 function SegmentTabs({ segment, onChange }: { segment: Segment; onChange: (segment: Segment) => void }) {
   const theme = useTheme();
@@ -39,7 +25,9 @@ function SegmentTabs({ segment, onChange }: { segment: Segment; onChange: (segme
           key={value}
           onPress={() => onChange(value)}
           style={[styles.segmentButton, segment === value && { backgroundColor: theme.background }]}>
-          <ThemedText type="smallBold">{value === 'applications' ? 'Applications' : 'Submissions'}</ThemedText>
+          <ThemedText type="smallBold" themeColor={segment === value ? 'accent' : 'text'}>
+            {value === 'applications' ? 'Applications' : 'Submissions'}
+          </ThemedText>
         </Pressable>
       ))}
     </View>
@@ -48,10 +36,11 @@ function SegmentTabs({ segment, onChange }: { segment: Segment; onChange: (segme
 
 function StatusPill({ status }: { status: string }) {
   const theme = useTheme();
+  const softKey = statusSoftColor(status);
   return (
-    <View style={[styles.statusPill, { backgroundColor: theme.backgroundSelected }]}>
-      <ThemedText type="small" themeColor={STATUS_COLORS[status] ?? 'textSecondary'}>
-        {status.replace('_', ' ')}
+    <View style={[styles.statusPill, { backgroundColor: softKey ? theme[softKey] : theme.backgroundSelected }]}>
+      <ThemedText type="small" themeColor={statusTextColor(status)}>
+        {formatStatus(status)}
       </ThemedText>
     </View>
   );

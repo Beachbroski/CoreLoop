@@ -1,25 +1,29 @@
 import * as WebBrowser from 'expo-web-browser';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
+import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { loadErrorMessage } from '@/lib/api-error-message';
 import { formatCents } from '@/lib/format-money';
 import { usePayouts } from '@/lib/queries/use-payouts';
 import { useStripeOnboard } from '@/lib/queries/use-stripe-onboard';
 import { useStripeStatus } from '@/lib/queries/use-stripe-status';
+import { formatStatus, statusSoftColor, statusTextColor } from '@/lib/status-presentation';
 import type { Payout } from '@creatordocks/shared';
 
 function PayoutRow({ payout }: { payout: Payout }) {
   const theme = useTheme();
+  const softKey = statusSoftColor(payout.status);
   return (
     <View style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
       <ThemedText type="smallBold">{formatCents(payout.amount)}</ThemedText>
-      <View style={[styles.statusPill, { backgroundColor: theme.backgroundSelected }]}>
-        <ThemedText themeColor="textSecondary" type="small">
-          {payout.status}
+      <View style={[styles.statusPill, { backgroundColor: softKey ? theme[softKey] : theme.backgroundSelected }]}>
+        <ThemedText themeColor={statusTextColor(payout.status)} type="small">
+          {formatStatus(payout.status)}
         </ThemedText>
       </View>
     </View>
@@ -27,7 +31,6 @@ function PayoutRow({ payout }: { payout: Payout }) {
 }
 
 function OnboardingPrompt() {
-  const theme = useTheme();
   const { mutate: onboard, isPending } = useStripeOnboard();
   const { refetch: refetchStatus } = useStripeStatus();
 
@@ -47,21 +50,16 @@ function OnboardingPrompt() {
         <ThemedText themeColor="textSecondary" style={styles.centeredText}>
           Connect a payout account to start earning from accepted campaigns.
         </ThemedText>
-        <Pressable
-          onPress={onConnect}
-          disabled={isPending}
-          style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
-          <ThemedText themeColor="background" type="smallBold">
-            {isPending ? 'Connecting…' : 'Connect payout account'}
-          </ThemedText>
-        </Pressable>
+        <PrimaryButton onPress={onConnect} loading={isPending} loadingLabel="Connecting…">
+          Connect payout account
+        </PrimaryButton>
       </View>
     </Screen>
   );
 }
 
 export default function EarningsScreen() {
-  const { data: status, isLoading: statusLoading } = useStripeStatus();
+  const { data: status, isLoading: statusLoading, error: statusError } = useStripeStatus();
   const payouts = usePayouts();
 
   if (statusLoading) {
@@ -69,6 +67,18 @@ export default function EarningsScreen() {
       <Screen>
         <View style={styles.centered}>
           <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (statusError) {
+    return (
+      <Screen>
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary" style={styles.centeredText}>
+            {loadErrorMessage(statusError)}
+          </ThemedText>
         </View>
       </Screen>
     );
@@ -89,24 +99,32 @@ export default function EarningsScreen() {
         <ThemedText themeColor="textSecondary" type="small">
           Lifetime paid out
         </ThemedText>
-        <ThemedText type="title" style={styles.total}>
+        <ThemedText type="title" themeColor="accent" style={styles.total}>
           {formatCents(lifetimeEarnings)}
         </ThemedText>
       </View>
 
-      <FlatList
-        data={payouts.data?.data ?? []}
-        keyExtractor={(payout) => payout.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={payouts.isRefetching} onRefresh={payouts.refetch} />}
-        ItemSeparatorComponent={() => <View style={{ height: Spacing.two }} />}
-        renderItem={({ item }) => <PayoutRow payout={item} />}
-        ListEmptyComponent={
-          <ThemedView style={styles.centered}>
-            <ThemedText themeColor="textSecondary">No payouts yet.</ThemedText>
-          </ThemedView>
-        }
-      />
+      {payouts.error ? (
+        <View style={styles.centered}>
+          <ThemedText themeColor="textSecondary" style={styles.centeredText}>
+            {loadErrorMessage(payouts.error)}
+          </ThemedText>
+        </View>
+      ) : (
+        <FlatList
+          data={payouts.data?.data ?? []}
+          keyExtractor={(payout) => payout.id}
+          contentContainerStyle={styles.listContent}
+          refreshControl={<RefreshControl refreshing={payouts.isRefetching} onRefresh={payouts.refetch} />}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.two }} />}
+          renderItem={({ item }) => <PayoutRow payout={item} />}
+          ListEmptyComponent={
+            <ThemedView style={styles.centered}>
+              <ThemedText themeColor="textSecondary">No payouts yet.</ThemedText>
+            </ThemedView>
+          }
+        />
+      )}
     </Screen>
   );
 }
@@ -147,11 +165,5 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: Spacing.two,
     paddingVertical: 4,
-  },
-  button: {
-    marginTop: Spacing.three,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
   },
 });

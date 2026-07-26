@@ -1,12 +1,13 @@
 import { ClerkProvider } from '@clerk/clerk-expo';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useColorScheme } from 'react-native';
 
 import { VersionGate } from '@/components/version-gate';
+import { createQueryClient } from '@/lib/query-client';
 import { secureTokenCache } from '@/lib/token-cache';
 
-const queryClient = new QueryClient();
+const queryClient = createQueryClient();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

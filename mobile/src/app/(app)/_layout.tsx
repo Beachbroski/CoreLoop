@@ -23,9 +23,9 @@ export default function AppTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.text,
+        tabBarActiveTintColor: theme.accent,
         tabBarInactiveTintColor: theme.textSecondary,
-        tabBarStyle: { backgroundColor: theme.background },
+        tabBarStyle: { backgroundColor: theme.backgroundElement, borderTopColor: theme.border },
       }}>
       <Tabs.Screen
         name="discover/index"

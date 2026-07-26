@@ -25,8 +25,8 @@ function CampaignCard({ campaign }: { campaign: CampaignListItem }) {
         <ThemedText type="smallBold" numberOfLines={1} style={styles.cardTitle}>
           {campaign.title}
         </ThemedText>
-        <View style={[styles.badge, { backgroundColor: theme.backgroundSelected }]}>
-          <ThemedText type="small" themeColor="textSecondary">
+        <View style={[styles.badge, { backgroundColor: theme.accentSoft }]}>
+          <ThemedText type="small" themeColor="accent">
             {campaign.niche}
           </ThemedText>
         </View>
@@ -34,7 +34,7 @@ function CampaignCard({ campaign }: { campaign: CampaignListItem }) {
       <ThemedText themeColor="textSecondary" type="small">
         {campaign.brand.name ?? 'A brand'}
       </ThemedText>
-      <ThemedText type="title" style={styles.cardBudget}>
+      <ThemedText type="title" themeColor="accent" style={styles.cardBudget}>
         {formatCents(campaign.budget)}
       </ThemedText>
     </Pressable>
@@ -69,7 +69,7 @@ export default function DiscoverScreen() {
           keyExtractor={(campaign) => campaign.id}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.textSecondary} />
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.accent} />
           }
           renderItem={({ item }) => <CampaignCard campaign={item} />}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.three }} />}

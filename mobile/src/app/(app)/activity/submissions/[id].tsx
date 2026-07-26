@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
+import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -81,8 +82,14 @@ export default function SubmissionDetailScreen() {
           </View>
 
           {submission.reviewNote && (
-            <View style={[styles.noteBox, { backgroundColor: theme.backgroundElement }]}>
-              <ThemedText type="smallBold">Feedback</ThemedText>
+            <View
+              style={[
+                styles.noteBox,
+                { backgroundColor: submission.status === 'REJECTED' ? theme.dangerSoft : theme.warningSoft },
+              ]}>
+              <ThemedText type="smallBold" themeColor={submission.status === 'REJECTED' ? 'danger' : 'warning'}>
+                Feedback
+              </ThemedText>
               <ThemedText themeColor="textSecondary">{submission.reviewNote}</ThemedText>
             </View>
           )}
@@ -102,14 +109,9 @@ export default function SubmissionDetailScreen() {
 
               {resubmitError ? <ThemedText themeColor="textSecondary">{resubmitError}</ThemedText> : null}
 
-              <Pressable
-                onPress={onResubmit}
-                disabled={isPending}
-                style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
-                <ThemedText themeColor="background" type="smallBold">
-                  {isPending ? 'Resubmitting…' : 'Resubmit'}
-                </ThemedText>
-              </Pressable>
+              <PrimaryButton onPress={onResubmit} loading={isPending} loadingLabel="Resubmitting…">
+                Resubmit
+              </PrimaryButton>
             </View>
           )}
         </ScrollView>
@@ -147,10 +149,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,
-  },
-  button: {
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
   },
 });

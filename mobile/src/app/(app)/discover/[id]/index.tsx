@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
+import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -49,7 +50,9 @@ export default function CampaignDetailScreen() {
             <ThemedText type="small" themeColor="textSecondary">
               Budget
             </ThemedText>
-            <ThemedText type="smallBold">{formatCents(campaign.budget)}</ThemedText>
+            <ThemedText type="smallBold" themeColor="accent">
+              {formatCents(campaign.budget)}
+            </ThemedText>
           </View>
           <View>
             <ThemedText type="small" themeColor="textSecondary">
@@ -77,13 +80,7 @@ export default function CampaignDetailScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable
-          onPress={() => router.push(`/discover/${campaign.id}/apply`)}
-          style={[styles.applyButton, { backgroundColor: theme.text }]}>
-          <ThemedText themeColor="background" type="smallBold">
-            Apply
-          </ThemedText>
-        </Pressable>
+        <PrimaryButton onPress={() => router.push(`/discover/${campaign.id}/apply`)}>Apply</PrimaryButton>
       </View>
     </Screen>
   );
@@ -113,10 +110,5 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
-  },
-  applyButton: {
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
   },
 });

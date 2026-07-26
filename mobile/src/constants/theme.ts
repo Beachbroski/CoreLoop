@@ -7,20 +7,41 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+// Matches app/globals.css on web — same brand, one design language across
+// both surfaces. Web has no dark mode today; the dark palette here is a
+// deliberate extension of the same accent/semantic colors, not a guess.
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#101828',
+    textSecondary: '#667085',
+    background: '#f5f7fb',
+    backgroundElement: '#ffffff',
+    backgroundSelected: '#eef2f8',
+    border: 'rgba(15, 23, 42, 0.08)',
+    accent: '#1371ff',
+    accentSoft: 'rgba(19, 113, 255, 0.1)',
+    success: '#0d9f6e',
+    successSoft: 'rgba(13, 159, 110, 0.1)',
+    warning: '#c8811a',
+    warningSoft: 'rgba(200, 129, 26, 0.12)',
+    danger: '#e11d48',
+    dangerSoft: 'rgba(225, 29, 72, 0.1)',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#f5f7fb',
+    textSecondary: '#98a2b3',
+    background: '#0b0e14',
+    backgroundElement: '#161a23',
+    backgroundSelected: '#1f2430',
+    border: 'rgba(255, 255, 255, 0.08)',
+    accent: '#3b82f6',
+    accentSoft: 'rgba(59, 130, 246, 0.16)',
+    success: '#2dd4a8',
+    successSoft: 'rgba(45, 212, 168, 0.14)',
+    warning: '#f0a93a',
+    warningSoft: 'rgba(240, 169, 58, 0.16)',
+    danger: '#f4436c',
+    dangerSoft: 'rgba(244, 67, 108, 0.14)',
   },
 } as const;
 

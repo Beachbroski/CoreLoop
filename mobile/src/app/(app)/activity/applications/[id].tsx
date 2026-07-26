@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
+import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -49,7 +50,9 @@ export default function ApplicationDetailScreen() {
 
         <View style={[styles.statusRow, { backgroundColor: theme.backgroundElement }]}>
           <ThemedText type="smallBold">{application.status.replace('_', ' ')}</ThemedText>
-          <ThemedText type="smallBold">{formatCents(application.proposedRate)}</ThemedText>
+          <ThemedText type="smallBold" themeColor="accent">
+            {formatCents(application.proposedRate)}
+          </ThemedText>
         </View>
 
         <View style={styles.section}>
@@ -76,13 +79,9 @@ export default function ApplicationDetailScreen() {
         )}
 
         {application.status === 'ACCEPTED' && (
-          <Pressable
-            onPress={() => router.push(`/activity/submissions/new?applicationId=${application.id}`)}
-            style={[styles.button, { backgroundColor: theme.text }]}>
-            <ThemedText themeColor="background" type="smallBold">
-              Submit content
-            </ThemedText>
-          </Pressable>
+          <PrimaryButton onPress={() => router.push(`/activity/submissions/new?applicationId=${application.id}`)}>
+            Submit content
+          </PrimaryButton>
         )}
       </View>
     </Screen>

@@ -1,9 +1,10 @@
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { Link, Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { OAuthButtons } from '@/components/oauth-buttons';
+import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -84,14 +85,9 @@ export default function SignUpScreen() {
 
             {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-            <Pressable
-              onPress={onVerify}
-              disabled={submitting}
-              style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
-              <ThemedText themeColor="background" type="smallBold">
-                {submitting ? 'Verifying…' : 'Verify'}
-              </ThemedText>
-            </Pressable>
+            <PrimaryButton onPress={onVerify} loading={submitting} loadingLabel="Verifying…">
+              Verify
+            </PrimaryButton>
           </ScrollView>
         </KeyboardAvoidingView>
       </Screen>
@@ -138,14 +134,9 @@ export default function SignUpScreen() {
 
           {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-          <Pressable
-            onPress={onCreateAccount}
-            disabled={submitting}
-            style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
-            <ThemedText themeColor="background" type="smallBold">
-              {submitting ? 'Creating account…' : 'Sign up'}
-            </ThemedText>
-          </Pressable>
+          <PrimaryButton onPress={onCreateAccount} loading={submitting} loadingLabel="Creating account…">
+            Sign up
+          </PrimaryButton>
 
           <Link href="/sign-in" style={styles.link}>
             <ThemedText type="link" themeColor="textSecondary">
@@ -182,11 +173,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,
-  },
-  button: {
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
   },
   link: {
     alignSelf: 'center',

@@ -1,9 +1,10 @@
 import { useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Link, Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { OAuthButtons } from '@/components/oauth-buttons';
+import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -84,14 +85,9 @@ export default function SignInScreen() {
 
           {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-          <Pressable
-            onPress={onSubmit}
-            disabled={submitting}
-            style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
-            <ThemedText themeColor="background" type="smallBold">
-              {submitting ? 'Signing in…' : 'Sign in'}
-            </ThemedText>
-          </Pressable>
+          <PrimaryButton onPress={onSubmit} loading={submitting} loadingLabel="Signing in…">
+            Sign in
+          </PrimaryButton>
 
           <Link href="/sign-up" style={styles.link}>
             <ThemedText type="link" themeColor="textSecondary">
@@ -128,11 +124,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,
-  },
-  button: {
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
   },
   link: {
     alignSelf: 'center',

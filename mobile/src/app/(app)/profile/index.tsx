@@ -25,8 +25,8 @@ export default function ProfileScreen() {
 
         {me && (
           <View style={styles.identity}>
-            <View style={[styles.avatar, { backgroundColor: theme.backgroundElement }]}>
-              <ThemedText type="title" style={styles.avatarInitial}>
+            <View style={[styles.avatar, { backgroundColor: theme.accentSoft }]}>
+              <ThemedText type="title" themeColor="accent" style={styles.avatarInitial}>
                 {(me.name ?? me.email).charAt(0).toUpperCase()}
               </ThemedText>
             </View>

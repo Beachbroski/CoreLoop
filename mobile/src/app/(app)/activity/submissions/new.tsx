@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
+import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -77,14 +78,9 @@ export default function NewSubmissionScreen() {
 
           {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
 
-          <Pressable
-            onPress={onSubmit}
-            disabled={isPending}
-            style={[styles.button, { backgroundColor: theme.text, opacity: isPending ? 0.6 : 1 }]}>
-            <ThemedText themeColor="background" type="smallBold">
-              {isPending ? 'Submitting…' : 'Submit'}
-            </ThemedText>
-          </Pressable>
+          <PrimaryButton onPress={onSubmit} loading={isPending} loadingLabel="Submitting…">
+            Submit
+          </PrimaryButton>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
@@ -109,10 +105,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 100,
     textAlignVertical: 'top',
-  },
-  button: {
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
   },
 });
