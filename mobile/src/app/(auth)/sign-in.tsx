@@ -1,0 +1,108 @@
+import { useAuth, useSignIn } from '@clerk/clerk-expo';
+import { Link, Redirect, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, TextInput } from 'react-native';
+
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+
+export default function SignInScreen() {
+  const { isLoaded: authLoaded, isSignedIn } = useAuth();
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const router = useRouter();
+  const theme = useTheme();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  if (authLoaded && isSignedIn) return <Redirect href="/discover" />;
+
+  async function onSubmit() {
+    if (!isLoaded || submitting) return;
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const attempt = await signIn.create({ strategy: 'password', identifier: email, password });
+
+      if (attempt.status === 'complete') {
+        await setActive({ session: attempt.createdSessionId });
+        router.replace('/discover');
+      } else {
+        setError('Additional verification is required. Please continue on the web.');
+      }
+    } catch (err) {
+      const clerkError = err as { errors?: { message: string }[] };
+      setError(clerkError.errors?.[0]?.message ?? 'Unable to sign in. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedText type="title">Sign in</ThemedText>
+
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Email"
+        placeholderTextColor={theme.textSecondary}
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+      />
+      <TextInput
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Password"
+        placeholderTextColor={theme.textSecondary}
+        secureTextEntry
+        autoComplete="password"
+        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+      />
+
+      {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
+
+      <Pressable
+        onPress={onSubmit}
+        disabled={submitting}
+        style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
+        <ThemedText themeColor="background" type="smallBold">
+          {submitting ? 'Signing in…' : 'Sign in'}
+        </ThemedText>
+      </Pressable>
+
+      <Link href="/sign-up">
+        <ThemedText type="link" themeColor="textSecondary">
+          Don&apos;t have an account? Sign up
+        </ThemedText>
+      </Link>
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: Spacing.three,
+    padding: Spacing.four,
+  },
+  input: {
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    fontSize: 16,
+  },
+  button: {
+    borderRadius: Spacing.two,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+  },
+});

@@ -1,5 +1,6 @@
+import { useAuth } from '@clerk/clerk-expo';
 import { SymbolView } from 'expo-symbols';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -12,6 +13,11 @@ function TabIcon({ name, color }: { name: SymbolName; color: ColorValue }) {
 
 export default function AppTabsLayout() {
   const theme = useTheme();
+  const { isLoaded, isSignedIn } = useAuth();
+
+  // Defense in depth: a deep link could land here directly, bypassing the
+  // root index redirect.
+  if (isLoaded && !isSignedIn) return <Redirect href="/sign-in" />;
 
   return (
     <Tabs
