@@ -48,4 +48,4 @@ export const authClerkAppearance = {
     formResendCodeLink: 'font-semibold text-[#0071e3]',
     otpCodeFieldInput: 'rounded-[18px] border border-transparent bg-[#f5f5f7]',
   },
-}
+} as const
