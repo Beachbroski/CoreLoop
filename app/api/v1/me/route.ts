@@ -1,3 +1,4 @@
+import { clerkClient } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
 import { withMobileApi } from '@/lib/mobile-api-guard'
 import { meResponseSchema, updateMeRequestSchema } from '@creatordocks/shared'
@@ -36,4 +37,34 @@ export const PATCH = withMobileApi({ rateLimit: { limit: 20, windowMs: 60_000 } 
   })
 
   return Response.json({ success: true, data: meResponseSchema.parse(updated) })
+})
+
+// Apple guideline 5.1.1(v) requires in-app account deletion. Anonymizes
+// rather than hard-deletes: Application/Submission/Payout rows stay intact
+// (financial audit trail) but the User row's own identifying fields are
+// scrubbed and the underlying Clerk identity is removed, revoking all
+// sessions. See docs/platform-split/02-mobile-api.md (W2-10).
+export const DELETE = withMobileApi({ rateLimit: { limit: 5, windowMs: 60_000 } }, async ({ user }) => {
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { clerkId: true } })
+  if (!dbUser) return Response.json({ success: false, error: 'Not found' }, { status: 404 })
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      name: null,
+      avatarUrl: null,
+      bio: null,
+      email: `deleted-${user.id}@deleted.creatordocks.invalid`,
+      clerkId: `deleted-${user.id}`,
+    },
+  })
+
+  try {
+    const clerk = await clerkClient()
+    await clerk.users.deleteUser(dbUser.clerkId)
+  } catch (err) {
+    console.error('[DELETE /api/v1/me] failed to delete Clerk user', err)
+  }
+
+  return Response.json({ success: true, data: null })
 })

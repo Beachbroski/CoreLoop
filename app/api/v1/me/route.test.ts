@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { findUniqueMock, updateMock } = vi.hoisted(() => ({
+const { findUniqueMock, updateMock, deleteUserMock } = vi.hoisted(() => ({
   findUniqueMock: vi.fn(),
   updateMock: vi.fn(),
+  deleteUserMock: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
   default: { user: { findUnique: findUniqueMock, update: updateMock } },
+}))
+
+vi.mock('@clerk/nextjs/server', () => ({
+  clerkClient: async () => ({ users: { deleteUser: deleteUserMock } }),
 }))
 
 // The guard itself is covered by lib/mobile-api-guard.test.ts. Here we bypass
@@ -15,7 +20,7 @@ vi.mock('@/lib/mobile-api-guard', () => ({
   withMobileApi: (_opts: unknown, handler: (ctx: unknown) => Promise<Response>) => handler,
 }))
 
-const { GET, PATCH } = await import('./route')
+const { GET, PATCH, DELETE } = await import('./route')
 
 const dbUser = {
   id: 'user_1',
@@ -93,6 +98,55 @@ describe('PATCH /api/v1/me', () => {
     const res = await PATCH({ req: patchRequest({ bio: 'a'.repeat(501) }), user: dbUser } as never)
 
     expect(res.status).toBe(400)
+    expect(updateMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('DELETE /api/v1/me', () => {
+  beforeEach(() => {
+    findUniqueMock.mockReset()
+    updateMock.mockReset()
+    deleteUserMock.mockReset()
+  })
+
+  it('anonymizes the profile and deletes the Clerk identity', async () => {
+    findUniqueMock.mockResolvedValue({ clerkId: 'clerk_real_id' })
+    updateMock.mockResolvedValue({})
+    deleteUserMock.mockResolvedValue({})
+
+    const res = await DELETE({ user: dbUser } as never)
+
+    expect(res.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith({
+      where: { id: 'user_1' },
+      data: expect.objectContaining({
+        name: null,
+        avatarUrl: null,
+        bio: null,
+        email: 'deleted-user_1@deleted.creatordocks.invalid',
+        clerkId: 'deleted-user_1',
+      }),
+    })
+    expect(deleteUserMock).toHaveBeenCalledWith('clerk_real_id')
+  })
+
+  it('still anonymizes the DB row even if Clerk deletion fails', async () => {
+    findUniqueMock.mockResolvedValue({ clerkId: 'clerk_real_id' })
+    updateMock.mockResolvedValue({})
+    deleteUserMock.mockRejectedValue(new Error('Clerk API down'))
+
+    const res = await DELETE({ user: dbUser } as never)
+
+    expect(res.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledOnce()
+  })
+
+  it('returns 404 if the profile no longer exists', async () => {
+    findUniqueMock.mockResolvedValue(null)
+
+    const res = await DELETE({ user: dbUser } as never)
+
+    expect(res.status).toBe(404)
     expect(updateMock).not.toHaveBeenCalled()
   })
 })
