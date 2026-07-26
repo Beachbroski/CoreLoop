@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@creatordocks/shared'],
   async headers() {
     const contentSecurityPolicy = [
       "default-src 'self'",
