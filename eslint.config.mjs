@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // mobile/ has its own independent lint pipeline (`expo lint`) — a
+    // React Native project needs different rules/parser settings than the
+    // Next.js app, so it isn't linted from here.
+    "mobile/**",
   ]),
   {
     // packages/shared ships inside the mobile app bundle — it must never pull
