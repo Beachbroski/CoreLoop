@@ -9,6 +9,7 @@ import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } f
 
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { isUserCancellation, isUserCancelledError } from '@/lib/sso-cancellation';
 import { ThemedText } from './themed-text';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -73,7 +74,7 @@ export function OAuthButtons({ onError }: { onError: (message: string) => void }
   async function onPress(strategy: OAuthStrategy) {
     setPendingStrategy(strategy);
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
+      const { createdSessionId, setActive, authSessionResult } = await startSSOFlow({
         strategy,
         redirectUrl: Linking.createURL('/sso-callback', { scheme: 'creatordocks' }),
       });
@@ -81,9 +82,15 @@ export function OAuthButtons({ onError }: { onError: (message: string) => void }
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
         router.replace('/discover');
+      } else if (!isUserCancellation(authSessionResult)) {
+        // Flow ended without a session for a reason other than the user
+        // backing out (e.g. additional verification required).
+        onError('Sign-in did not complete. Please try again.');
       }
-    } catch {
-      onError('Unable to continue. Please try again.');
+    } catch (err) {
+      if (!isUserCancelledError(err)) {
+        onError('Unable to continue. Please try again.');
+      }
     } finally {
       setPendingStrategy(null);
     }

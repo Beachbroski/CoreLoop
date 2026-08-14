@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
@@ -10,8 +11,13 @@ export function BackHeader({ title }: { title?: string }) {
   const router = useRouter();
   const theme = useTheme();
 
+  function onPress() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.back();
+  }
+
   return (
-    <Pressable onPress={() => router.back()} style={styles.container} hitSlop={Spacing.three}>
+    <Pressable onPress={onPress} style={styles.container} hitSlop={Spacing.three}>
       <SymbolView
         name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
         size={20}

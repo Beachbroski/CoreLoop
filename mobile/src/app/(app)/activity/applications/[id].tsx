@@ -1,10 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
+import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -49,7 +50,7 @@ export default function ApplicationDetailScreen() {
         <ThemedText type="title">{application.campaign.title}</ThemedText>
 
         <View style={[styles.statusRow, { backgroundColor: theme.backgroundElement }]}>
-          <ThemedText type="smallBold">{application.status.replace('_', ' ')}</ThemedText>
+          <StatusPill status={application.status} />
           <ThemedText type="smallBold" themeColor="accent">
             {formatCents(application.proposedRate)}
           </ThemedText>
@@ -60,17 +61,29 @@ export default function ApplicationDetailScreen() {
           <ThemedText themeColor="textSecondary">{application.pitch}</ThemedText>
         </View>
 
-        {withdrawError ? <ThemedText themeColor="textSecondary">{withdrawError}</ThemedText> : null}
+        {withdrawError ? <ThemedText themeColor="danger">{withdrawError}</ThemedText> : null}
       </ScrollView>
 
       <View style={styles.footer}>
         {application.status === 'PENDING' && (
           <Pressable
             onPress={() =>
-              withdraw(application.id, {
-                onSuccess: () => router.back(),
-                onError: () => setWithdrawError('Unable to withdraw. Please try again.'),
-              })
+              Alert.alert(
+                'Withdraw application?',
+                `Your application to “${application.campaign.title}” will be withdrawn. This can't be undone.`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Withdraw',
+                    style: 'destructive',
+                    onPress: () =>
+                      withdraw(application.id, {
+                        onSuccess: () => router.back(),
+                        onError: () => setWithdrawError('Unable to withdraw. Please try again.'),
+                      }),
+                  },
+                ],
+              )
             }
             disabled={withdrawing}
             style={[styles.button, { backgroundColor: theme.backgroundElement, opacity: withdrawing ? 0.6 : 1 }]}>

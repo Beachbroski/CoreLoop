@@ -1,10 +1,13 @@
+import * as Linking from 'expo-linking';
 import { useLocalSearchParams } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
+import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -73,12 +76,27 @@ export default function SubmissionDetailScreen() {
           <ThemedText type="title">{submission.application.campaign.title}</ThemedText>
 
           <View style={[styles.statusRow, { backgroundColor: theme.backgroundElement }]}>
-            <ThemedText type="smallBold">{submission.status.replace('_', ' ')}</ThemedText>
+            <StatusPill status={submission.status} />
           </View>
 
           <View style={styles.section}>
             <ThemedText type="smallBold">Content</ThemedText>
-            <ThemedText themeColor="textSecondary">{submission.contentUrl}</ThemedText>
+            <Pressable
+              onPress={() =>
+                Linking.openURL(submission.contentUrl).catch(() =>
+                  setResubmitError("Couldn't open that link."),
+                )
+              }
+              style={styles.contentLink}>
+              <ThemedText themeColor="accent" numberOfLines={1} style={styles.contentLinkText}>
+                {submission.contentUrl}
+              </ThemedText>
+              <SymbolView
+                name={{ ios: 'arrow.up.right', android: 'open_in_new', web: 'open_in_new' }}
+                size={14}
+                tintColor={theme.accent}
+              />
+            </Pressable>
           </View>
 
           {submission.reviewNote && (
@@ -94,6 +112,8 @@ export default function SubmissionDetailScreen() {
             </View>
           )}
 
+          {resubmitError ? <ThemedText themeColor="danger">{resubmitError}</ThemedText> : null}
+
           {resubmitted && <ThemedText themeColor="textSecondary">Resubmitted for review.</ThemedText>}
 
           {!resubmitted && RESUBMITTABLE_STATUSES.has(submission.status) && (
@@ -106,8 +126,6 @@ export default function SubmissionDetailScreen() {
                 autoCapitalize="none"
                 style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
               />
-
-              {resubmitError ? <ThemedText themeColor="textSecondary">{resubmitError}</ThemedText> : null}
 
               <PrimaryButton onPress={onResubmit} loading={isPending}>
                 Resubmit
@@ -149,5 +167,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,
+  },
+  contentLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  contentLinkText: {
+    flexShrink: 1,
   },
 });
