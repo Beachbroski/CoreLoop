@@ -35,11 +35,16 @@ describe('statusSoftColor', () => {
 });
 
 describe('formatStatus', () => {
-  it('replaces underscores with spaces', () => {
-    expect(formatStatus('REVISION_REQUESTED')).toBe('REVISION REQUESTED');
+  it('title-cases multi-word statuses', () => {
+    expect(formatStatus('REVISION_REQUESTED')).toBe('Revision Requested');
   });
 
-  it('leaves single-word statuses unchanged', () => {
-    expect(formatStatus('PAID')).toBe('PAID');
+  it('title-cases single-word statuses', () => {
+    expect(formatStatus('PAID')).toBe('Paid');
+    expect(formatStatus('PENDING')).toBe('Pending');
+  });
+
+  it('handles statuses with more than one underscore', () => {
+    expect(formatStatus('A_B_C')).toBe('A B C');
   });
 });
