@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
 import { PrimaryButton } from '@/components/primary-button';
@@ -11,6 +11,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { ApiError } from '@/lib/api-client';
 import { useCreateApplication } from '@/lib/queries/use-create-application';
 
+const PITCH_MIN_LENGTH = 20;
+
 export default function ApplyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
@@ -19,7 +21,11 @@ export default function ApplyScreen() {
 
   const [pitch, setPitch] = useState('');
   const [proposedRate, setProposedRate] = useState('');
+  const [focusedField, setFocusedField] = useState<'pitch' | 'rate' | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const pitchLength = pitch.trim().length;
+  const pitchLongEnough = pitchLength >= PITCH_MIN_LENGTH;
 
   function onSubmit() {
     setError(null);
@@ -29,7 +35,7 @@ export default function ApplyScreen() {
       setError('Enter a valid rate.');
       return;
     }
-    if (pitch.trim().length < 20) {
+    if (!pitchLongEnough) {
       setError('Your pitch needs to be at least 20 characters.');
       return;
     }
@@ -45,6 +51,10 @@ export default function ApplyScreen() {
     );
   }
 
+  function inputBorder(field: 'pitch' | 'rate') {
+    return { borderColor: focusedField === field ? theme.accent : theme.border };
+  }
+
   return (
     <Screen edges={['top', 'bottom']}>
       <BackHeader />
@@ -53,24 +63,47 @@ export default function ApplyScreen() {
         style={styles.container}>
         <ThemedText type="title">Apply</ThemedText>
 
-        <TextInput
-          value={pitch}
-          onChangeText={setPitch}
-          placeholder="Tell the brand why you're a fit…"
-          placeholderTextColor={theme.textSecondary}
-          multiline
-          numberOfLines={6}
-          style={[styles.textArea, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-        />
+        <View style={styles.field}>
+          <TextInput
+            value={pitch}
+            onChangeText={setPitch}
+            onFocus={() => setFocusedField('pitch')}
+            onBlur={() => setFocusedField(null)}
+            placeholder="Tell the brand why you're a fit…"
+            placeholderTextColor={theme.textSecondary}
+            multiline
+            numberOfLines={6}
+            style={[
+              styles.textArea,
+              { color: theme.text, backgroundColor: theme.backgroundElement },
+              inputBorder('pitch'),
+            ]}
+          />
+          <ThemedText type="small" themeColor={pitchLongEnough ? 'success' : 'textSecondary'}>
+            {pitchLength} / {PITCH_MIN_LENGTH} min
+          </ThemedText>
+        </View>
 
-        <TextInput
-          value={proposedRate}
-          onChangeText={setProposedRate}
-          placeholder="Your rate (USD)"
-          placeholderTextColor={theme.textSecondary}
-          keyboardType="decimal-pad"
-          style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-        />
+        <View
+          style={[
+            styles.rateRow,
+            { backgroundColor: theme.backgroundElement },
+            inputBorder('rate'),
+          ]}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            $
+          </ThemedText>
+          <TextInput
+            value={proposedRate}
+            onChangeText={setProposedRate}
+            onFocus={() => setFocusedField('rate')}
+            onBlur={() => setFocusedField(null)}
+            placeholder="Your rate (USD)"
+            placeholderTextColor={theme.textSecondary}
+            keyboardType="decimal-pad"
+            style={[styles.rateInput, { color: theme.text }]}
+          />
+        </View>
 
         {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
 
@@ -88,17 +121,28 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingHorizontal: Spacing.four,
   },
-  input: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
+  field: {
+    gap: Spacing.one,
   },
   textArea: {
     borderRadius: Spacing.two,
+    borderWidth: 1,
     padding: Spacing.three,
     fontSize: 16,
     minHeight: 120,
     textAlignVertical: 'top',
+  },
+  rateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    borderRadius: Spacing.two,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.three,
+  },
+  rateInput: {
+    flex: 1,
+    paddingVertical: Spacing.three,
+    fontSize: 16,
   },
 });

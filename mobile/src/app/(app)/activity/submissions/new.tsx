@@ -11,6 +11,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { ApiError } from '@/lib/api-client';
 import { useCreateSubmission } from '@/lib/queries/use-create-submission';
 
+type Field = 'contentUrl' | 'caption' | 'notes';
+
 export default function NewSubmissionScreen() {
   const { applicationId } = useLocalSearchParams<{ applicationId: string }>();
   const theme = useTheme();
@@ -20,6 +22,7 @@ export default function NewSubmissionScreen() {
   const [contentUrl, setContentUrl] = useState('');
   const [caption, setCaption] = useState('');
   const [notes, setNotes] = useState('');
+  const [focusedField, setFocusedField] = useState<Field | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function onSubmit() {
@@ -44,36 +47,51 @@ export default function NewSubmissionScreen() {
     );
   }
 
+  function fieldStyle(field: Field) {
+    return {
+      color: theme.text,
+      backgroundColor: theme.backgroundElement,
+      borderColor: focusedField === field ? theme.accent : theme.border,
+    };
+  }
+
   return (
     <Screen edges={['top', 'bottom']}>
       <BackHeader />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <ThemedText type="title">Submit content</ThemedText>
 
           <TextInput
             value={contentUrl}
             onChangeText={setContentUrl}
+            onFocus={() => setFocusedField('contentUrl')}
+            onBlur={() => setFocusedField(null)}
             placeholder="Content link"
             placeholderTextColor={theme.textSecondary}
             autoCapitalize="none"
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            keyboardType="url"
+            style={[styles.input, fieldStyle('contentUrl')]}
           />
           <TextInput
             value={caption}
             onChangeText={setCaption}
+            onFocus={() => setFocusedField('caption')}
+            onBlur={() => setFocusedField(null)}
             placeholder="Caption (optional)"
             placeholderTextColor={theme.textSecondary}
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            style={[styles.input, fieldStyle('caption')]}
           />
           <TextInput
             value={notes}
             onChangeText={setNotes}
+            onFocus={() => setFocusedField('notes')}
+            onBlur={() => setFocusedField(null)}
             placeholder="Notes for the brand (optional)"
             placeholderTextColor={theme.textSecondary}
             multiline
             numberOfLines={4}
-            style={[styles.textArea, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            style={[styles.textArea, fieldStyle('notes')]}
           />
 
           {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
@@ -95,12 +113,14 @@ const styles = StyleSheet.create({
   },
   input: {
     borderRadius: Spacing.two,
+    borderWidth: 1,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,
   },
   textArea: {
     borderRadius: Spacing.two,
+    borderWidth: 1,
     padding: Spacing.three,
     fontSize: 16,
     minHeight: 100,

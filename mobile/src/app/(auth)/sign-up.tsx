@@ -1,4 +1,5 @@
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -8,8 +9,10 @@ import { OAuthButtons } from '@/components/oauth-buttons';
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Gradients, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+
+type Field = 'email' | 'password' | 'code';
 
 export default function SignUpScreen() {
   const { isLoaded: authLoaded, isSignedIn } = useAuth();
@@ -20,6 +23,7 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
+  const [focusedField, setFocusedField] = useState<Field | null>(null);
   const [pendingVerification, setPendingVerification] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -65,12 +69,34 @@ export default function SignUpScreen() {
     }
   }
 
+  function inputStyle(field: Field) {
+    return [
+      styles.input,
+      {
+        color: theme.text,
+        backgroundColor: theme.backgroundElement,
+        borderColor: focusedField === field ? theme.accent : theme.border,
+      },
+    ];
+  }
+
+  const glow = (
+    <LinearGradient
+      colors={[Gradients.coralGlow[0], Gradients.coralGlow[1]]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={styles.glow}
+      pointerEvents="none"
+    />
+  );
+
   if (pendingVerification) {
     return (
       <Screen edges={['top', 'bottom']}>
+        {glow}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-            <Logo size={44} />
+            <Logo size={56} />
             <ThemedText type="title" style={styles.title}>
               Check your email
             </ThemedText>
@@ -79,10 +105,12 @@ export default function SignUpScreen() {
             <TextInput
               value={code}
               onChangeText={setCode}
+              onFocus={() => setFocusedField('code')}
+              onBlur={() => setFocusedField(null)}
               placeholder="Verification code"
               placeholderTextColor={theme.textSecondary}
               keyboardType="number-pad"
-              style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+              style={inputStyle('code')}
             />
 
             {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
@@ -98,9 +126,10 @@ export default function SignUpScreen() {
 
   return (
     <Screen edges={['top', 'bottom']}>
+      {glow}
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <Logo size={44} />
+          <Logo size={56} />
           <ThemedText type="title" style={styles.title}>
             Create account
           </ThemedText>
@@ -118,21 +147,25 @@ export default function SignUpScreen() {
           <TextInput
             value={email}
             onChangeText={setEmail}
+            onFocus={() => setFocusedField('email')}
+            onBlur={() => setFocusedField(null)}
             placeholder="Email"
             placeholderTextColor={theme.textSecondary}
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            style={inputStyle('email')}
           />
           <TextInput
             value={password}
             onChangeText={setPassword}
+            onFocus={() => setFocusedField('password')}
+            onBlur={() => setFocusedField(null)}
             placeholder="Password"
             placeholderTextColor={theme.textSecondary}
             secureTextEntry
             autoComplete="password-new"
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            style={inputStyle('password')}
           />
 
           {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
@@ -153,6 +186,13 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
+  glow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 320,
+  },
   container: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -173,6 +213,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderRadius: Spacing.two,
+    borderWidth: 1,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,

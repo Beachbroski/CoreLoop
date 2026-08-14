@@ -1,21 +1,56 @@
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { FlatList, Platform, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
+import { CoverArt } from '@/components/cover-art';
+import { EmptyState } from '@/components/empty-state';
+import { ErrorState } from '@/components/error-state';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
+import { SkeletonCard } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { formatDeadline } from '@/lib/format-date';
 import { formatCentsCompact } from '@/lib/format-money';
 import { useCampaigns } from '@/lib/queries/use-campaigns';
 import type { CampaignListItem } from '@creatordocks/shared';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const ENTRANCE_STAGGER_MS = 60;
+const ENTRANCE_STAGGER_CAP = 8;
 
-function CampaignCard({ campaign }: { campaign: CampaignListItem }) {
+function BrandRow({ brand }: { brand: CampaignListItem['brand'] }) {
+  const theme = useTheme();
+  const name = brand.name ?? 'A brand';
+
+  return (
+    <View style={styles.brandRow}>
+      {brand.avatarUrl ? (
+        <Image source={{ uri: brand.avatarUrl }} style={styles.brandAvatar} contentFit="cover" />
+      ) : (
+        <View style={[styles.brandAvatar, { backgroundColor: theme.secondarySoft }]}>
+          <ThemedText type="small" themeColor="secondary" style={styles.brandInitial}>
+            {name.charAt(0).toUpperCase()}
+          </ThemedText>
+        </View>
+      )}
+      <ThemedText type="small" themeColor="textSecondary" numberOfLines={1} style={styles.brandName}>
+        {name}
+      </ThemedText>
+    </View>
+  );
+}
+
+function CampaignCard({ campaign, index }: { campaign: CampaignListItem; index: number }) {
   const theme = useTheme();
   const router = useRouter();
   const pressed = useSharedValue(0);
@@ -39,29 +74,46 @@ function CampaignCard({ campaign }: { campaign: CampaignListItem }) {
     router.push(`/discover/${campaign.id}`);
   }
 
+  const meta = [formatDeadline(campaign.deadline), ...campaign.platforms.slice(0, 2)];
+  if (campaign.creatorsNeeded) {
+    meta.push(`${campaign.creatorsNeeded} creator${campaign.creatorsNeeded === 1 ? '' : 's'}`);
+  }
+
   return (
-    <AnimatedPressable
-      onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      style={[styles.card, { backgroundColor: theme.backgroundElement }, animatedStyle]}>
-      <View style={styles.cardHeader}>
-        <ThemedText type="smallBold" numberOfLines={1} style={styles.cardTitle}>
-          {campaign.title}
-        </ThemedText>
-        <View style={[styles.badge, { backgroundColor: theme.accentSoft }]}>
-          <ThemedText type="small" themeColor="accent">
-            {campaign.niche}
+    <Animated.View
+      entering={FadeInDown.duration(320).delay(Math.min(index, ENTRANCE_STAGGER_CAP) * ENTRANCE_STAGGER_MS)}>
+      <AnimatedPressable
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        style={[
+          styles.card,
+          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+          animatedStyle,
+        ]}>
+        <CoverArt seed={campaign.id} niche={campaign.niche}>
+          <View style={styles.nicheChip}>
+            <ThemedText type="small" style={styles.nicheChipText}>
+              {campaign.niche}
+            </ThemedText>
+          </View>
+        </CoverArt>
+        <View style={styles.cardBody}>
+          <BrandRow brand={campaign.brand} />
+          <ThemedText numberOfLines={2} style={styles.cardTitle}>
+            {campaign.title}
           </ThemedText>
+          <View style={styles.cardFooter}>
+            <ThemedText type="money" themeColor="accent" style={styles.cardBudget}>
+              {formatCentsCompact(campaign.budget)}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" numberOfLines={1} style={styles.cardMeta}>
+              {meta.join(' · ')}
+            </ThemedText>
+          </View>
         </View>
-      </View>
-      <ThemedText themeColor="textSecondary" type="small">
-        {campaign.brand.name ?? 'A brand'}
-      </ThemedText>
-      <ThemedText type="money" themeColor="accent" style={styles.cardBudget}>
-        {formatCentsCompact(campaign.budget)}
-      </ThemedText>
-    </AnimatedPressable>
+      </AnimatedPressable>
+    </Animated.View>
   );
 }
 
@@ -76,16 +128,14 @@ export default function DiscoverScreen() {
       </View>
 
       {isLoading && (
-        <View style={styles.centered}>
-          <ThemedText themeColor="textSecondary">Loading campaigns…</ThemedText>
+        <View style={styles.skeletons}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
       )}
 
-      {error && (
-        <View style={styles.centered}>
-          <ThemedText themeColor="textSecondary">Couldn&apos;t load campaigns. Pull to retry.</ThemedText>
-        </View>
-      )}
+      {error && <ErrorState message="Couldn't load campaigns." onRetry={refetch} />}
 
       {!isLoading && !error && (
         <FlatList
@@ -95,12 +145,14 @@ export default function DiscoverScreen() {
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.accent} />
           }
-          renderItem={({ item }) => <CampaignCard campaign={item} />}
+          renderItem={({ item, index }) => <CampaignCard campaign={item} index={index} />}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.three }} />}
           ListEmptyComponent={
-            <ThemedView style={styles.centered}>
-              <ThemedText themeColor="textSecondary">No active campaigns right now.</ThemedText>
-            </ThemedView>
+            <EmptyState
+              symbol={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }}
+              title="No campaigns right now"
+              message="New campaigns drop all the time — check back soon."
+            />
           }
         />
       )}
@@ -114,48 +166,80 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.two,
     paddingBottom: Spacing.three,
   },
+  skeletons: {
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.three,
+  },
   listContent: {
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.five,
     flexGrow: 1,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.four,
-  },
   card: {
     borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.one,
+    borderWidth: 1,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.06,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.18,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 8 },
       },
-      android: { elevation: 2 },
+      android: { elevation: 3 },
     }),
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  cardBody: {
+    padding: Spacing.four,
     gap: Spacing.two,
   },
   cardTitle: {
-    flex: 1,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: '700',
   },
-  cardBudget: {
-    fontSize: 22,
-    lineHeight: 28,
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
     marginTop: Spacing.one,
   },
-  badge: {
+  cardBudget: {
+    fontSize: 26,
+    lineHeight: 30,
+  },
+  cardMeta: {
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  brandAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  brandInitial: {
+    fontSize: 11,
+    lineHeight: 13,
+  },
+  brandName: {
+    flexShrink: 1,
+  },
+  nicheChip: {
+    backgroundColor: 'rgba(7, 8, 11, 0.55)',
     borderRadius: 999,
-    paddingHorizontal: Spacing.two,
+    paddingHorizontal: Spacing.two + 2,
     paddingVertical: 4,
+  },
+  nicheChipText: {
+    color: '#ffffff',
   },
 });

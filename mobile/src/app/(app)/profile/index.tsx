@@ -1,18 +1,57 @@
 import { useAuth } from '@clerk/clerk-expo';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
+import Constants from 'expo-constants';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
+import { ErrorState } from '@/components/error-state';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
+import { SettingsRow } from '@/components/settings-row';
+import { Skeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Gradients, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatRoleLabel } from '@/lib/format-role';
+import { useDeleteAccount } from '@/lib/queries/use-delete-account';
 import { useMe } from '@/lib/queries/use-me';
 
 export default function ProfileScreen() {
   const theme = useTheme();
   const { signOut } = useAuth();
-  const { data: me, isLoading, error } = useMe();
+  const queryClient = useQueryClient();
+  const { data: me, isLoading, error, refetch } = useMe();
+  const { mutate: deleteAccount, isPending: deleting } = useDeleteAccount();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  function confirmDelete() {
+    Alert.alert('Delete your account?', "Your profile, applications, and submissions will be permanently deleted. This can't be undone.", [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Continue',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('Are you absolutely sure?', 'This is permanent. There is no way to recover a deleted account.', [
+            { text: 'Keep my account', style: 'cancel' },
+            {
+              text: 'Delete forever',
+              style: 'destructive',
+              onPress: () => {
+                setDeleteError(null);
+                deleteAccount(undefined, {
+                  onSuccess: async () => {
+                    queryClient.clear();
+                    await signOut();
+                  },
+                  onError: () => setDeleteError("Couldn't delete your account. Please try again."),
+                });
+              },
+            },
+          ]),
+      },
+    ]);
+  }
 
   return (
     <Screen>
@@ -21,32 +60,52 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.content}>
-        {isLoading && <ThemedText themeColor="textSecondary">Loading…</ThemedText>}
-        {error && <ThemedText themeColor="textSecondary">Couldn&apos;t load your profile.</ThemedText>}
-
-        {me && (
-          <View style={styles.identity}>
-            <View style={[styles.avatar, { backgroundColor: theme.accentSoft }]}>
-              <ThemedText type="title" themeColor="accent" style={styles.avatarInitial}>
-                {(me.name ?? me.email).charAt(0).toUpperCase()}
-              </ThemedText>
-            </View>
-            <View>
-              <ThemedText type="smallBold">{me.name ?? me.email}</ThemedText>
-              <ThemedText themeColor="textSecondary" type="small">
-                {formatRoleLabel(me.role)}
-              </ThemedText>
+        {isLoading && (
+          <View style={styles.identityCard}>
+            <Skeleton height={64} width={64} borderRadius={32} />
+            <View style={styles.identitySkeleton}>
+              <Skeleton height={16} width="55%" />
+              <Skeleton height={12} width="30%" />
             </View>
           </View>
         )}
-      </View>
 
-      <View style={styles.footer}>
-        <Pressable
-          onPress={() => signOut()}
-          style={[styles.button, { backgroundColor: theme.backgroundElement }]}>
-          <ThemedText type="smallBold">Sign out</ThemedText>
-        </Pressable>
+        {error && <ErrorState message="Couldn't load your profile." onRetry={refetch} />}
+
+        {me && (
+          <>
+            <View
+              style={[styles.identityCard, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+              <View style={styles.avatar}>
+                <LinearGradient
+                  colors={[Gradients.coralHero[0], Gradients.coralHero[1]]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <ThemedText type="subtitle" style={styles.avatarInitial}>
+                  {(me.name ?? me.email).charAt(0).toUpperCase()}
+                </ThemedText>
+              </View>
+              <View style={styles.identityBody}>
+                <ThemedText type="smallBold" numberOfLines={1} style={styles.identityName}>
+                  {me.name ?? me.email}
+                </ThemedText>
+                <ThemedText themeColor="textSecondary" type="small">
+                  {formatRoleLabel(me.role)}
+                </ThemedText>
+              </View>
+            </View>
+
+            <View style={styles.settings}>
+              <SettingsRow label="App version" trailing={Constants.expoConfig?.version ?? '—'} />
+              <SettingsRow label="Sign out" onPress={() => signOut()} />
+              <SettingsRow label="Delete account" destructive onPress={confirmDelete} disabled={deleting} />
+            </View>
+
+            {deleteError ? <ThemedText themeColor="danger">{deleteError}</ThemedText> : null}
+          </>
+        )}
       </View>
     </Screen>
   );
@@ -61,30 +120,40 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: Spacing.four,
+    gap: Spacing.three,
   },
-  identity: {
+  identityCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
+    borderRadius: Spacing.four,
+    borderWidth: 1,
+    padding: Spacing.four,
+  },
+  identitySkeleton: {
+    flex: 1,
+    gap: Spacing.two,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   avatarInitial: {
-    fontSize: 22,
-    lineHeight: 26,
+    color: '#ffffff',
   },
-  footer: {
-    paddingHorizontal: Spacing.four,
-    paddingBottom: Spacing.four,
+  identityBody: {
+    flex: 1,
+    gap: 2,
   },
-  button: {
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
+  identityName: {
+    fontSize: 17,
+    lineHeight: 22,
+  },
+  settings: {
+    gap: Spacing.two,
   },
 });

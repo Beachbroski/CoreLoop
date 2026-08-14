@@ -1,73 +1,101 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
+import { CoverArt } from '@/components/cover-art';
+import { EmptyState } from '@/components/empty-state';
+import { ErrorState } from '@/components/error-state';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
+import { SegmentedControl } from '@/components/segmented-control';
+import { SkeletonRow } from '@/components/skeleton';
+import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { loadErrorMessage } from '@/lib/api-error-message';
+import { formatDate } from '@/lib/format-date';
+import { formatCents } from '@/lib/format-money';
 import { useApplications } from '@/lib/queries/use-applications';
 import { useSubmissions } from '@/lib/queries/use-submissions';
-import { formatStatus, statusSoftColor, statusTextColor } from '@/lib/status-presentation';
 import type { Application, Submission } from '@creatordocks/shared';
 
 type Segment = 'applications' | 'submissions';
 
-function SegmentTabs({ segment, onChange }: { segment: Segment; onChange: (segment: Segment) => void }) {
+const SEGMENT_OPTIONS = [
+  { value: 'applications', label: 'Applications' },
+  { value: 'submissions', label: 'Submissions' },
+] as const;
+
+function ActivityRow({
+  title,
+  subtitle,
+  status,
+  coverSeed,
+  coverNiche,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  status: string;
+  coverSeed: string;
+  coverNiche?: string;
+  onPress: () => void;
+}) {
   const theme = useTheme();
 
-  return (
-    <View style={[styles.segmentRow, { backgroundColor: theme.backgroundElement }]}>
-      {(['applications', 'submissions'] as const).map((value) => (
-        <Pressable
-          key={value}
-          onPress={() => onChange(value)}
-          style={[styles.segmentButton, segment === value && { backgroundColor: theme.background }]}>
-          <ThemedText type="smallBold" themeColor={segment === value ? 'accent' : 'text'}>
-            {value === 'applications' ? 'Applications' : 'Submissions'}
-          </ThemedText>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
+  function handlePress() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  }
 
-function StatusPill({ status }: { status: string }) {
-  const theme = useTheme();
-  const softKey = statusSoftColor(status);
   return (
-    <View style={[styles.statusPill, { backgroundColor: softKey ? theme[softKey] : theme.backgroundSelected }]}>
-      <ThemedText type="small" themeColor={statusTextColor(status)}>
-        {formatStatus(status)}
-      </ThemedText>
-    </View>
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => [
+        styles.row,
+        {
+          backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement,
+          borderColor: theme.border,
+        },
+      ]}>
+      <CoverArt seed={coverSeed} niche={coverNiche} height={48} style={styles.rowCover} />
+      <View style={styles.rowBody}>
+        <ThemedText type="smallBold" numberOfLines={1}>
+          {title}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+          {subtitle}
+        </ThemedText>
+      </View>
+      <StatusPill status={status} />
+    </Pressable>
   );
 }
 
 function ApplicationRow({ application, onPress }: { application: Application; onPress: () => void }) {
-  const theme = useTheme();
   return (
-    <Pressable onPress={onPress} style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
-      <ThemedText type="smallBold" style={styles.rowTitle} numberOfLines={1}>
-        {application.campaign.title}
-      </ThemedText>
-      <StatusPill status={application.status} />
-    </Pressable>
+    <ActivityRow
+      title={application.campaign.title}
+      subtitle={`${formatCents(application.proposedRate)} · ${formatDate(application.createdAt)}`}
+      status={application.status}
+      coverSeed={application.campaign.id}
+      coverNiche={application.campaign.niche}
+      onPress={onPress}
+    />
   );
 }
 
 function SubmissionRow({ submission, onPress }: { submission: Submission; onPress: () => void }) {
-  const theme = useTheme();
   return (
-    <Pressable onPress={onPress} style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
-      <ThemedText type="smallBold" style={styles.rowTitle} numberOfLines={1}>
-        {submission.application.campaign.title}
-      </ThemedText>
-      <StatusPill status={submission.status} />
-    </Pressable>
+    <ActivityRow
+      title={submission.application.campaign.title}
+      subtitle={formatDate(submission.createdAt)}
+      status={submission.status}
+      coverSeed={submission.application.campaign.id}
+      onPress={onPress}
+    />
   );
 }
 
@@ -83,22 +111,19 @@ export default function ActivityScreen() {
     <Screen>
       <View style={styles.header}>
         <ScreenHeader title="Activity" />
-        <SegmentTabs segment={segment} onChange={setSegment} />
+        <SegmentedControl options={SEGMENT_OPTIONS} value={segment} onChange={setSegment} />
       </View>
 
       {active.isLoading && (
-        <View style={styles.centered}>
-          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        <View style={styles.skeletons}>
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
         </View>
       )}
 
-      {active.error && (
-        <View style={styles.centered}>
-          <ThemedText themeColor="textSecondary" style={styles.centeredText}>
-            {loadErrorMessage(active.error)}
-          </ThemedText>
-        </View>
-      )}
+      {active.error && <ErrorState message={loadErrorMessage(active.error)} onRetry={active.refetch} />}
 
       {!active.isLoading && !active.error && segment === 'applications' && (
         <FlatList
@@ -113,9 +138,11 @@ export default function ActivityScreen() {
             <ApplicationRow application={item} onPress={() => router.push(`/activity/applications/${item.id}`)} />
           )}
           ListEmptyComponent={
-            <ThemedView style={styles.centered}>
-              <ThemedText themeColor="textSecondary">No applications yet.</ThemedText>
-            </ThemedView>
+            <EmptyState
+              symbol={{ ios: 'paperplane', android: 'send', web: 'send' }}
+              title="No applications yet"
+              message="Apply to a campaign from Discover and it'll show up here."
+            />
           }
         />
       )}
@@ -133,9 +160,11 @@ export default function ActivityScreen() {
             <SubmissionRow submission={item} onPress={() => router.push(`/activity/submissions/${item.id}`)} />
           )}
           ListEmptyComponent={
-            <ThemedView style={styles.centered}>
-              <ThemedText themeColor="textSecondary">No submissions yet.</ThemedText>
-            </ThemedView>
+            <EmptyState
+              symbol={{ ios: 'film', android: 'movie', web: 'movie' }}
+              title="No submissions yet"
+              message="Once an application is accepted, submit your content here."
+            />
           }
         />
       )}
@@ -150,46 +179,29 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.three,
     gap: Spacing.three,
   },
-  segmentRow: {
-    flexDirection: 'row',
-    borderRadius: Spacing.two,
-    padding: 4,
-  },
-  segmentButton: {
-    flex: 1,
-    borderRadius: Spacing.two - 4,
-    paddingVertical: Spacing.two,
-    alignItems: 'center',
-    minHeight: 44,
+  skeletons: {
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.two,
   },
   listContent: {
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.four,
     flexGrow: 1,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.four,
-  },
-  centeredText: {
-    textAlign: 'center',
-  },
   row: {
     borderRadius: Spacing.three,
-    padding: Spacing.four,
+    borderWidth: 1,
+    padding: Spacing.three,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
-  rowTitle: {
+  rowCover: {
+    width: 48,
+    borderRadius: Spacing.two,
+  },
+  rowBody: {
     flex: 1,
-  },
-  statusPill: {
-    borderRadius: 999,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 4,
+    gap: 2,
   },
 });
