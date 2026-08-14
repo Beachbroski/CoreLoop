@@ -19,14 +19,13 @@ type AnimatedMoneyProps = {
  */
 export function AnimatedMoney({ cents, durationMs = 700, themeColor = 'accent', style }: AnimatedMoneyProps) {
   const reducedMotion = useReducedMotion();
-  const [display, setDisplay] = useState(reducedMotion ? cents : 0);
+  const [display, setDisplay] = useState(0);
   const frame = useRef<number | null>(null);
 
   useEffect(() => {
-    if (reducedMotion) {
-      setDisplay(cents);
-      return;
-    }
+    // Reduced motion renders the final value directly (see below) — no
+    // animation loop, and no setState inside the effect body.
+    if (reducedMotion) return;
 
     const startedAt = performance.now();
     const tick = (now: number) => {
@@ -46,7 +45,7 @@ export function AnimatedMoney({ cents, durationMs = 700, themeColor = 'accent', 
 
   return (
     <ThemedText type="money" themeColor={themeColor} style={style}>
-      {formatCentsCompact(display)}
+      {formatCentsCompact(reducedMotion ? cents : display)}
     </ThemedText>
   );
 }

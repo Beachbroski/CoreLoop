@@ -26,7 +26,6 @@ export function Skeleton({ width = '100%', height, borderRadius = Spacing.two, s
 
   useEffect(() => {
     if (reducedMotion) return;
-    // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutated by design
     pulse.value = withRepeat(withTiming(0.45, { duration: 700 }), -1, true);
   }, [pulse, reducedMotion]);
 

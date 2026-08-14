@@ -28,7 +28,6 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
   const translate = useSharedValue(activeIndex * segmentWidth);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutated by design
     translate.value = withSpring(activeIndex * segmentWidth, { damping: 22, stiffness: 260 });
   }, [activeIndex, segmentWidth, translate]);
 
