@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Only brands can release payouts' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`stripe:release-payout:${user.id}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`stripe:release-payout:${user.id}:${getRequestIp(req)}`, {
       limit: 10,
       windowMs: 60_000,
     })

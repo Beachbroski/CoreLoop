@@ -20,7 +20,7 @@ export async function PATCH(
     const adminGate = await requireAdminApiUser()
     if (adminGate.response) return adminGate.response
 
-    const rateLimit = checkRateLimit(`waitlist:update:${adminGate.user.id}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`waitlist:update:${adminGate.user.id}:${getRequestIp(req)}`, {
       limit: 30,
       windowMs: 60_000,
     })

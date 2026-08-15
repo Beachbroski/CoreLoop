@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Only brands can create campaigns' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`campaigns:create:${user.id}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`campaigns:create:${user.id}:${getRequestIp(req)}`, {
       limit: 10,
       windowMs: 60_000,
     })

@@ -36,7 +36,7 @@ export async function PATCH(
       return Response.json({ error: 'Only brands can review applications' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`applications:review:${user.id}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`applications:review:${user.id}:${getRequestIp(req)}`, {
       limit: 20,
       windowMs: 60_000,
     })

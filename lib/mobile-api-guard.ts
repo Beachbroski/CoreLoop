@@ -26,7 +26,7 @@ export function withPublicMobileApi(
 ) {
   return async (req: Request): Promise<Response> => {
     try {
-      const rl = checkRateLimit(`v1:public:${getRequestIp(req)}`, rateLimit)
+      const rl = await checkRateLimit(`v1:public:${getRequestIp(req)}`, rateLimit)
       if (!rl.ok) {
         return jsonError('Too many requests. Please try again shortly.', 429, {
           'Retry-After': String(rl.retryAfterSeconds),
@@ -64,7 +64,7 @@ export function withMobileApi<RouteContext = unknown>(
       const { user } = await getCurrentAppUser()
       if (!user) return jsonError('Unauthorized', 401)
 
-      const rl = checkRateLimit(`v1:${user.id}:${getRequestIp(req)}`, options.rateLimit)
+      const rl = await checkRateLimit(`v1:${user.id}:${getRequestIp(req)}`, options.rateLimit)
       if (!rl.ok) {
         return jsonError('Too many requests. Please try again shortly.', 429, {
           'Retry-After': String(rl.retryAfterSeconds),

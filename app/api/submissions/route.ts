@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Only creators can submit content' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`submissions:create:${user.id}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`submissions:create:${user.id}:${getRequestIp(req)}`, {
       limit: 20,
       windowMs: 60_000,
     })

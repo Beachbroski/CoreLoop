@@ -1,19 +1,5 @@
+import { rateLimit, type RateLimitOptions, type RateLimitResult } from './rate-limit'
 import { getSiteUrl } from './site-url'
-
-type RateLimitBucket = {
-  count: number
-  resetAt: number
-}
-
-const globalStore = globalThis as unknown as {
-  __creatordocksRateLimitStore?: Map<string, RateLimitBucket>
-}
-
-const rateLimitStore = globalStore.__creatordocksRateLimitStore ?? new Map<string, RateLimitBucket>()
-
-if (!globalStore.__creatordocksRateLimitStore) {
-  globalStore.__creatordocksRateLimitStore = rateLimitStore
-}
 
 function getAllowedOrigins(req: Request): Set<string> {
   const allowedOrigins = new Set<string>()
@@ -85,30 +71,10 @@ export function getRequestIp(req: Request): string {
   return req.headers.get('x-real-ip') ?? 'unknown'
 }
 
-export function checkRateLimit(
-  key: string,
-  { limit, windowMs }: { limit: number; windowMs: number },
-): { ok: boolean; retryAfterSeconds: number } {
-  const now = Date.now()
-  const existing = rateLimitStore.get(key)
-
-  if (!existing || existing.resetAt <= now) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs })
-    return { ok: true, retryAfterSeconds: Math.ceil(windowMs / 1000) }
-  }
-
-  if (existing.count >= limit) {
-    return {
-      ok: false,
-      retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
-    }
-  }
-
-  existing.count += 1
-  rateLimitStore.set(key, existing)
-
-  return {
-    ok: true,
-    retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
-  }
+/**
+ * Durable, cross-instance rate limit. Delegates to lib/rate-limit (Upstash Redis
+ * with an in-memory fallback when unconfigured). Now async — callers must await.
+ */
+export function checkRateLimit(key: string, options: RateLimitOptions): Promise<RateLimitResult> {
+  return rateLimit(key, options)
 }

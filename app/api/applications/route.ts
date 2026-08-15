@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Only creators can apply to campaigns' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`applications:create:${user.id}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`applications:create:${user.id}:${getRequestIp(req)}`, {
       limit: 15,
       windowMs: 60_000,
     })

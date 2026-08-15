@@ -168,7 +168,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Waitlist form is too large.' }, { status: 413 })
     }
 
-    const rateLimit = checkRateLimit(`waitlist:create:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`waitlist:create:${getRequestIp(req)}`, {
       limit: 12,
       windowMs: 60_000,
     })

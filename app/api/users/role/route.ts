@@ -22,7 +22,7 @@ export async function PATCH(req: Request) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`users:role:${userId}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`users:role:${userId}:${getRequestIp(req)}`, {
       limit: 10,
       windowMs: 60_000,
     })

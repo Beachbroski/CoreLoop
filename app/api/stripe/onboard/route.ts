@@ -23,7 +23,7 @@ export async function POST(_req: Request) {
       return Response.json({ error: 'Only creators can connect Stripe' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`stripe:onboard:${user.id}:${getRequestIp(_req)}`, {
+    const rateLimit = await checkRateLimit(`stripe:onboard:${user.id}:${getRequestIp(_req)}`, {
       limit: 5,
       windowMs: 60_000,
     })

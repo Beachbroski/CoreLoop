@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Only brands can create payment intents' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`stripe:create-intent:${user.id}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`stripe:create-intent:${user.id}:${getRequestIp(req)}`, {
       limit: 8,
       windowMs: 60_000,
     })

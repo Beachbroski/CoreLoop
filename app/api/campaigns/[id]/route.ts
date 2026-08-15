@@ -120,7 +120,7 @@ export async function PATCH(
       return Response.json({ error: 'Only brands can update campaigns' }, { status: 403 })
     }
 
-    const rateLimit = checkRateLimit(`campaigns:update:${user.id}:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`campaigns:update:${user.id}:${getRequestIp(req)}`, {
       limit: 20,
       windowMs: 60_000,
     })
