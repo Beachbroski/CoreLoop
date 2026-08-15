@@ -39,7 +39,8 @@
         {
           "photosPermission": "CreatorDocks needs access to your photos so you can upload content for your campaign submissions."
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

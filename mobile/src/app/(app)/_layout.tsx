@@ -4,6 +4,7 @@ import { SymbolView } from 'expo-symbols';
 import { Redirect, Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { useTheme } from '@/hooks/use-theme';
 
 type SymbolName = Parameters<typeof SymbolView>[0]['name'];
@@ -30,6 +31,8 @@ function onTabPress() {
 export default function AppTabsLayout() {
   const theme = useTheme();
   const { isLoaded, isSignedIn } = useAuth();
+
+  usePushNotifications();
 
   // Defense in depth: a deep link could land here directly, bypassing the
   // root index redirect.

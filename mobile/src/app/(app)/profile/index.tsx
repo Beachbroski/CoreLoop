@@ -14,16 +14,24 @@ import { ThemedText } from '@/components/themed-text';
 import { Gradients, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatRoleLabel } from '@/lib/format-role';
+import { unregisterForPushNotifications } from '@/lib/push';
 import { useDeleteAccount } from '@/lib/queries/use-delete-account';
 import { useMe } from '@/lib/queries/use-me';
 
 export default function ProfileScreen() {
   const theme = useTheme();
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
   const queryClient = useQueryClient();
   const { data: me, isLoading, error, refetch } = useMe();
   const { mutate: deleteAccount, isPending: deleting } = useDeleteAccount();
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Stop pushes to this identity before the session ends (needs a token, so
+  // it must run before signOut).
+  async function signOutAndUnregister() {
+    await unregisterForPushNotifications(getToken);
+    await signOut();
+  }
 
   function confirmDelete() {
     Alert.alert('Delete your account?', "Your profile, applications, and submissions will be permanently deleted. This can't be undone.", [
@@ -99,7 +107,7 @@ export default function ProfileScreen() {
 
             <View style={styles.settings}>
               <SettingsRow label="App version" trailing={Constants.expoConfig?.version ?? '—'} />
-              <SettingsRow label="Sign out" onPress={() => signOut()} />
+              <SettingsRow label="Sign out" onPress={signOutAndUnregister} />
               <SettingsRow label="Delete account" destructive onPress={confirmDelete} disabled={deleting} />
             </View>
 
