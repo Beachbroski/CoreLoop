@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { isAllowedContentUrl } from '@/lib/content-url'
 import { withMobileApi } from '@/lib/mobile-api-guard'
 import { createSubmissionRequestSchema, listSubmissionsQuerySchema, submissionSchema } from '@creatordocks/shared'
 
@@ -29,6 +30,13 @@ export const POST = withMobileApi(
     if (!parsed.success) {
       return Response.json(
         { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid request' },
+        { status: 400 },
+      )
+    }
+
+    if (!isAllowedContentUrl(parsed.data.contentUrl)) {
+      return Response.json(
+        { success: false, error: 'Content must be uploaded through the app' },
         { status: 400 },
       )
     }

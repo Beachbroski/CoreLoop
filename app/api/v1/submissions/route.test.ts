@@ -21,7 +21,7 @@ vi.mock('@/lib/mobile-api-guard', () => ({
 const { POST, GET } = await import('./route')
 
 const creator = { id: 'user_1', email: 'creator@example.com', name: null, role: 'CREATOR' as const }
-const validBody = { applicationId: 'app_1', contentUrl: 'https://tiktok.com/@creator/video/123' }
+const validBody = { applicationId: 'app_1', contentUrl: 'https://app123.ufs.sh/f/uploaded-key' }
 
 function postCtx(body: unknown) {
   return {
@@ -67,6 +67,16 @@ describe('POST /api/v1/submissions', () => {
     const res = await POST(postCtx(validBody) as never)
 
     expect(res.status).toBe(400)
+  })
+
+  it('rejects a contentUrl that was not uploaded through the app', async () => {
+    const res = await POST(
+      postCtx({ applicationId: 'app_1', contentUrl: 'https://tiktok.com/@creator/video/123' }) as never,
+    )
+
+    expect(res.status).toBe(400)
+    expect(applicationFindUniqueMock).not.toHaveBeenCalled()
+    expect(submissionCreateMock).not.toHaveBeenCalled()
   })
 
   it('creates the submission on success', async () => {

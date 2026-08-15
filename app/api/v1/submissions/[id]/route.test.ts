@@ -79,7 +79,7 @@ describe('PATCH /api/v1/submissions/:id (resubmit)', () => {
     updateMock.mockReset()
   })
 
-  const newBody = { contentUrl: 'https://tiktok.com/@creator/video/456' }
+  const newBody = { contentUrl: 'https://app123.ufs.sh/f/updated-key' }
 
   it('resubmits a REJECTED submission and resets it to PENDING', async () => {
     findUniqueMock.mockResolvedValue(dbSubmission)
