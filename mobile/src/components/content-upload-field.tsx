@@ -1,0 +1,149 @@
+import { useAuth } from '@clerk/clerk-expo';
+import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
+import { SymbolView } from 'expo-symbols';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { useImageUploader } from '@/lib/uploadthing';
+import { ThemedText } from './themed-text';
+
+type ContentUploadFieldProps = {
+  /** The uploaded content URL, or null before anything is uploaded. */
+  value: string | null;
+  onUploaded: (url: string) => void;
+  onError: (message: string) => void;
+};
+
+/**
+ * Pick → upload → preview control for submission content. Replaces the old
+ * raw-URL text field: creators upload real media through UploadThing (our
+ * bearer-authed /api/v1/uploads route) and the resulting URL feeds the
+ * create/resubmit mutations.
+ */
+export function ContentUploadField({ value, onUploaded, onError }: ContentUploadFieldProps) {
+  const theme = useTheme();
+  const { getToken } = useAuth();
+
+  const { openImagePicker, isUploading } = useImageUploader('mobileContentUploader', {
+    headers: async (): Promise<Record<string, string>> => {
+      const token = await getToken();
+      return token ? { authorization: `Bearer ${token}` } : {};
+    },
+    onClientUploadComplete: (res) => {
+      const uploaded = res?.[0]?.ufsUrl ?? res?.[0]?.url;
+      if (uploaded) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onUploaded(uploaded);
+      }
+    },
+    onUploadError: () => onError('Upload failed. Please try again.'),
+  });
+
+  function pick() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    openImagePicker({
+      source: 'library',
+      onInsufficientPermissions: () => onError('Photo access is needed to upload content.'),
+      onCancel: () => {},
+    });
+  }
+
+  if (isUploading) {
+    return (
+      <View style={[styles.tile, styles.center, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        <ActivityIndicator color={theme.accent} />
+        <ThemedText type="small" themeColor="textSecondary">
+          Uploading…
+        </ThemedText>
+      </View>
+    );
+  }
+
+  if (value) {
+    return (
+      <Pressable
+        onPress={pick}
+        style={[styles.tile, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        <Image source={{ uri: value }} style={styles.preview} contentFit="cover" transition={150} />
+        <View style={styles.replaceRow}>
+          <SymbolView
+            name={{ ios: 'arrow.triangle.2.circlepath', android: 'sync', web: 'sync' }}
+            size={15}
+            tintColor={theme.accent}
+          />
+          <ThemedText type="smallBold" themeColor="accent">
+            Replace
+          </ThemedText>
+        </View>
+      </Pressable>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={pick}
+      style={({ pressed }) => [
+        styles.tile,
+        styles.center,
+        styles.empty,
+        {
+          backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement,
+          borderColor: theme.border,
+        },
+      ]}>
+      <View style={[styles.iconCircle, { backgroundColor: theme.accentSoft }]}>
+        <SymbolView
+          name={{ ios: 'photo.badge.plus', android: 'add_photo_alternate', web: 'add_photo_alternate' }}
+          size={24}
+          tintColor={theme.accent}
+        />
+      </View>
+      <ThemedText type="smallBold">Upload content</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary" style={styles.hint}>
+        Pick a photo from your library
+      </ThemedText>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  tile: {
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    overflow: 'hidden',
+    minHeight: 160,
+  },
+  empty: {
+    borderStyle: 'dashed',
+    gap: Spacing.two,
+    padding: Spacing.four,
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.one,
+  },
+  hint: {
+    textAlign: 'center',
+  },
+  preview: {
+    width: '100%',
+    height: 200,
+  },
+  replaceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    paddingVertical: Spacing.two,
+  },
+});

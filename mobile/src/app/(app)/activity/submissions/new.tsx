@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
+import { ContentUploadField } from '@/components/content-upload-field';
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
@@ -11,7 +12,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { ApiError } from '@/lib/api-client';
 import { useCreateSubmission } from '@/lib/queries/use-create-submission';
 
-type Field = 'contentUrl' | 'caption' | 'notes';
+type Field = 'caption' | 'notes';
 
 export default function NewSubmissionScreen() {
   const { applicationId } = useLocalSearchParams<{ applicationId: string }>();
@@ -19,7 +20,7 @@ export default function NewSubmissionScreen() {
   const router = useRouter();
   const { mutate, isPending } = useCreateSubmission();
 
-  const [contentUrl, setContentUrl] = useState('');
+  const [contentUrl, setContentUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [notes, setNotes] = useState('');
   const [focusedField, setFocusedField] = useState<Field | null>(null);
@@ -28,15 +29,15 @@ export default function NewSubmissionScreen() {
   function onSubmit() {
     setError(null);
 
-    if (!contentUrl.trim()) {
-      setError('Enter a link to your content.');
+    if (!contentUrl) {
+      setError('Upload your content first.');
       return;
     }
 
     mutate(
       {
         applicationId,
-        contentUrl: contentUrl.trim(),
+        contentUrl,
         caption: caption.trim() || undefined,
         notes: notes.trim() || undefined,
       },
@@ -62,17 +63,8 @@ export default function NewSubmissionScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <ThemedText type="title">Submit content</ThemedText>
 
-          <TextInput
-            value={contentUrl}
-            onChangeText={setContentUrl}
-            onFocus={() => setFocusedField('contentUrl')}
-            onBlur={() => setFocusedField(null)}
-            placeholder="Content link"
-            placeholderTextColor={theme.textSecondary}
-            autoCapitalize="none"
-            keyboardType="url"
-            style={[styles.input, fieldStyle('contentUrl')]}
-          />
+          <ContentUploadField value={contentUrl} onUploaded={setContentUrl} onError={setError} />
+
           <TextInput
             value={caption}
             onChangeText={setCaption}

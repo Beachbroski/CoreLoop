@@ -33,7 +33,13 @@
           "imageWidth": 100
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "CreatorDocks needs access to your photos so you can upload content for your campaign submissions."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

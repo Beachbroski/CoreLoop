@@ -2,9 +2,10 @@ import * as Linking from 'expo-linking';
 import { useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
+import { ContentUploadField } from '@/components/content-upload-field';
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
 import { StatusPill } from '@/components/status-pill';
@@ -23,7 +24,7 @@ export default function SubmissionDetailScreen() {
   const { mutate: resubmit, isPending } = useResubmitSubmission(id);
   const theme = useTheme();
 
-  const [contentUrl, setContentUrl] = useState('');
+  const [contentUrl, setContentUrl] = useState<string | null>(null);
   const [resubmitError, setResubmitError] = useState<string | null>(null);
   const [resubmitted, setResubmitted] = useState(false);
 
@@ -52,13 +53,13 @@ export default function SubmissionDetailScreen() {
   function onResubmit() {
     setResubmitError(null);
 
-    if (!contentUrl.trim()) {
-      setResubmitError('Enter a link to your updated content.');
+    if (!contentUrl) {
+      setResubmitError('Upload your updated content first.');
       return;
     }
 
     resubmit(
-      { contentUrl: contentUrl.trim() },
+      { contentUrl },
       {
         onSuccess: () => setResubmitted(true),
         onError: (err) => {
@@ -118,14 +119,7 @@ export default function SubmissionDetailScreen() {
 
           {!resubmitted && RESUBMITTABLE_STATUSES.has(submission.status) && (
             <View style={styles.section}>
-              <TextInput
-                value={contentUrl}
-                onChangeText={setContentUrl}
-                placeholder="Updated content link"
-                placeholderTextColor={theme.textSecondary}
-                autoCapitalize="none"
-                style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-              />
+              <ContentUploadField value={contentUrl} onUploaded={setContentUrl} onError={setResubmitError} />
 
               <PrimaryButton onPress={onResubmit} loading={isPending}>
                 Resubmit
@@ -161,12 +155,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     padding: Spacing.three,
     gap: Spacing.one,
-  },
-  input: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
   },
   contentLink: {
     flexDirection: 'row',
