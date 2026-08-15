@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import prisma from '@/lib/prisma'
 import { sendPayoutPaidEmail, sendPaymentAlertEmail } from '@/lib/email'
+import { sendPayoutFailedPush, sendPayoutPaidPush } from '@/lib/push'
 import { calculatePlatformFee } from '@/lib/utils'
 import { getAllowedAdminEmails } from '@/lib/admin-config'
 
@@ -103,6 +104,7 @@ export async function POST(req: Request) {
           campaignTitle: submission.application.campaign.title,
           amountCents: submission.application.proposedRate,
         })
+        await sendPayoutPaidPush(submission.creatorId, { amount: submission.application.proposedRate })
         break
       }
 
@@ -135,6 +137,8 @@ export async function POST(req: Request) {
             status: 'FAILED',
           },
         })
+        // Previously silent — the creator now hears when a payout fails.
+        await sendPayoutFailedPush(submission.creatorId)
         break
       }
 

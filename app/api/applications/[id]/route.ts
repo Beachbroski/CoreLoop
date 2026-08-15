@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireTesterApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
 import { sendApplicationAcceptedEmail, sendApplicationRejectedEmail } from '@/lib/email'
+import { sendApplicationAcceptedPush, sendApplicationRejectedPush } from '@/lib/push'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 import {
   cancelPaymentIntentIfCancelable,
@@ -145,8 +146,10 @@ export async function PATCH(
 
     if (parsed.data.status === 'ACCEPTED') {
       await sendApplicationAcceptedEmail(application.creator.email, { campaignTitle: application.campaign.title })
+      await sendApplicationAcceptedPush(application.creator.id, { campaignTitle: application.campaign.title })
     } else {
       await sendApplicationRejectedEmail(application.creator.email, { campaignTitle: application.campaign.title })
+      await sendApplicationRejectedPush(application.creator.id, { campaignTitle: application.campaign.title })
     }
 
     return Response.json({ success: true, data: updated })

@@ -4,6 +4,11 @@ import { requireTesterApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
 import { sendSubmissionApprovedEmail } from '@/lib/email'
 import { releasePayout } from '@/lib/payout'
+import {
+  sendSubmissionApprovedPush,
+  sendSubmissionRejectedPush,
+  sendSubmissionRevisionRequestedPush,
+} from '@/lib/push'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 const updateSchema = z.object({
@@ -86,6 +91,10 @@ export async function PATCH(
       await sendSubmissionApprovedEmail(submission.creator.email, {
         campaignTitle: submission.application.campaign.title,
       })
+      await sendSubmissionApprovedPush(submission.creator.id, {
+        campaignTitle: submission.application.campaign.title,
+        submissionId: submission.id,
+      })
       return Response.json({ success: true, data: approvedSubmission })
     }
 
@@ -96,6 +105,18 @@ export async function PATCH(
         ...(parsed.data.reviewNote !== undefined ? { reviewNote: parsed.data.reviewNote } : {}),
       },
     })
+
+    // These paths sent no notification before — a creator now hears when the
+    // brand asks for changes or declines their content.
+    const pushParams = {
+      campaignTitle: submission.application.campaign.title,
+      submissionId: submission.id,
+    }
+    if (parsed.data.status === 'REVISION_REQUESTED') {
+      await sendSubmissionRevisionRequestedPush(submission.creator.id, pushParams)
+    } else if (parsed.data.status === 'REJECTED') {
+      await sendSubmissionRejectedPush(submission.creator.id, pushParams)
+    }
 
     return Response.json({ success: true, data: updated })
   } catch (err) {
