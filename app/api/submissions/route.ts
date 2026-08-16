@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import { requireTesterApiUser } from '@/lib/admin-api-guard'
+import { creatorWriteBlockedResponse } from '@/lib/creator-web-mode'
 import prisma from '@/lib/prisma'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
@@ -19,6 +20,13 @@ export async function POST(req: Request) {
 
     const testerGate = await requireTesterApiUser()
     if (testerGate.response) return testerGate.response
+
+    // W7-4: submitting content is a creator mutation, so it closes in
+    // `readonly`/`sunset`. Server-side by design — hiding the submit modal is
+    // not enough. The iOS app posts to /api/v1/submissions, which is a separate
+    // handler and stays open.
+    const creatorWebGate = creatorWriteBlockedResponse()
+    if (creatorWebGate) return creatorWebGate
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
