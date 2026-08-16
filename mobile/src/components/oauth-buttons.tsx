@@ -9,6 +9,7 @@ import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } f
 
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { isSessionExistsError } from '@/lib/clerk-errors';
 import { isUserCancellation, isUserCancelledError } from '@/lib/sso-cancellation';
 import { ThemedText } from './themed-text';
 
@@ -83,12 +84,19 @@ export function OAuthButtons({ onError }: { onError: (message: string) => void }
         await setActive({ session: createdSessionId });
         router.replace('/discover');
       } else if (!isUserCancellation(authSessionResult)) {
-        // Flow ended without a session for a reason other than the user
-        // backing out (e.g. additional verification required).
-        onError('Sign-in did not complete. Please try again.');
+        // Authenticated but no usable session. The usual cause is a Clerk
+        // session task (e.g. `choose-organization`) leaving the session
+        // `pending` — Clerk treats that as signed-out, so say so plainly
+        // rather than looking like a random failure.
+        onError("Sign-in couldn't be completed for this account. Please contact support.");
       }
     } catch (err) {
-      if (!isUserCancelledError(err)) {
+      if (isSessionExistsError(err)) {
+        // A session is already active on this device — nothing to fix, just go.
+        router.replace('/discover');
+      } else if (!isUserCancelledError(err)) {
+        // Keep the diagnostic locally — the user-facing copy stays generic.
+        if (__DEV__) console.error('[sso] flow failed', JSON.stringify(err, null, 2), err);
         onError('Unable to continue. Please try again.');
       }
     } finally {

@@ -11,6 +11,7 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Gradients, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { isPendingSessionStatus, isSessionExistsError } from '@/lib/clerk-errors';
 
 export default function SignInScreen() {
   const { isLoaded: authLoaded, isSignedIn } = useAuth();
@@ -37,10 +38,19 @@ export default function SignInScreen() {
       if (attempt.status === 'complete') {
         await setActive({ session: attempt.createdSessionId });
         router.replace('/discover');
+      } else if (isPendingSessionStatus(attempt.status)) {
+        // Clerk authenticated the user but the session is held by an
+        // unfinished task (e.g. `choose-organization`), which Clerk treats as
+        // signed-out. Without this branch it reads as a mystery failure.
+        setError("Sign-in couldn't be completed for this account. Please contact support.");
       } else {
         setError('Additional verification is required. Please continue on the web.');
       }
     } catch (err) {
+      if (isSessionExistsError(err)) {
+        router.replace('/discover');
+        return;
+      }
       const clerkError = err as { errors?: { message: string }[] };
       setError(clerkError.errors?.[0]?.message ?? 'Unable to sign in. Please try again.');
     } finally {
