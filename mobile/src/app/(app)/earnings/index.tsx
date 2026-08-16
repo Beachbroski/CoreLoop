@@ -1,7 +1,8 @@
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { AnimatedMoney } from '@/components/animated-money';
 import { EmptyState } from '@/components/empty-state';
@@ -21,6 +22,46 @@ import { usePayouts } from '@/lib/queries/use-payouts';
 import { useStripeOnboard } from '@/lib/queries/use-stripe-onboard';
 import { useStripeStatus } from '@/lib/queries/use-stripe-status';
 import type { Payout } from '@creatordocks/shared';
+
+/**
+ * Non-destructive refetch failure notice. React Query keeps the previously
+ * fetched `data` alongside the `error`, so a refetch that fails on bad signal
+ * must leave the loaded earnings on screen — this slim banner reports the
+ * failure instead of taking the content away.
+ */
+function StaleDataBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const theme = useTheme();
+
+  function handleRetry() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onRetry();
+  }
+
+  return (
+    <View style={[styles.staleBanner, { backgroundColor: theme.warningSoft }]}>
+      <ThemedText type="small" themeColor="warning" style={styles.staleBannerText}>
+        {message}
+      </ThemedText>
+      <Pressable onPress={handleRetry} hitSlop={Spacing.two} accessibilityRole="button">
+        <ThemedText type="smallBold" themeColor="warning">
+          Retry
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+}
+
+/** Loading shape for the hero total plus the payout rows beneath it. */
+function EarningsSkeleton() {
+  return (
+    <View style={styles.skeletons}>
+      <Skeleton height={110} borderRadius={Spacing.four} />
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+    </View>
+  );
+}
 
 function PayoutRow({ payout }: { payout: Payout }) {
   const theme = useTheme();
@@ -94,23 +135,30 @@ export default function EarningsScreen() {
       .filter((payout) => payout.status === 'PAID')
       .reduce((sum, payout) => sum + payout.amount, 0);
 
+  // A failed refetch keeps the last good `data` in place, so a full-screen error
+  // only earns the layout when the query has nothing to show at all. An error
+  // arriving on top of already-loaded data goes in the banner instead, leaving
+  // the numbers the creator was reading exactly where they were.
+  const staleStatusError = status !== undefined ? statusError : null;
+  const stalePayoutsError = payouts.data !== undefined ? payouts.error : null;
+  const staleError = staleStatusError ?? stalePayoutsError;
+  const retryStale = staleStatusError ? refetchStatus : payouts.refetch;
+
   // The header always renders — only the content region below it switches
   // between skeleton / error / onboarding / list states.
   let content;
   if (statusLoading) {
-    content = (
-      <View style={styles.skeletons}>
-        <Skeleton height={110} borderRadius={Spacing.four} />
-        <SkeletonRow />
-        <SkeletonRow />
-        <SkeletonRow />
-      </View>
-    );
-  } else if (statusError) {
+    content = <EarningsSkeleton />;
+  } else if (statusError && status === undefined) {
     content = <ErrorState message={loadErrorMessage(statusError)} onRetry={refetchStatus} />;
   } else if (!status?.onboarded) {
     content = <OnboardingPrompt />;
-  } else if (payouts.error) {
+  } else if (payouts.isLoading) {
+    // Without this branch an in-flight payouts query renders a confident lie:
+    // $0.00 in the hero and "No payouts yet" beneath it, which then flips to the
+    // real figures a moment later.
+    content = <EarningsSkeleton />;
+  } else if (payouts.isError && payouts.data === undefined) {
     content = <ErrorState message={loadErrorMessage(payouts.error)} onRetry={payouts.refetch} />;
   } else {
     content = (
@@ -153,6 +201,7 @@ export default function EarningsScreen() {
       <View style={styles.header}>
         <ScreenHeader title="Earnings" />
       </View>
+      {staleError ? <StaleDataBanner message={loadErrorMessage(staleError)} onRetry={retryStale} /> : null}
       {content}
     </Screen>
   );
@@ -167,6 +216,20 @@ const styles = StyleSheet.create({
   skeletons: {
     paddingHorizontal: Spacing.four,
     gap: Spacing.two,
+  },
+  staleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    marginHorizontal: Spacing.four,
+    marginBottom: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.three,
+  },
+  staleBannerText: {
+    flexShrink: 1,
   },
   listContent: {
     paddingHorizontal: Spacing.four,

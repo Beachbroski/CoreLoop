@@ -3,19 +3,22 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
+import { ErrorState } from '@/components/error-state';
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
+import { Skeleton } from '@/components/skeleton';
 import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { ApiError } from '@/lib/api-client';
 import { formatCents } from '@/lib/format-money';
 import { useApplication } from '@/lib/queries/use-application';
 import { useWithdrawApplication } from '@/lib/queries/use-withdraw-application';
 
 export default function ApplicationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: application, isLoading, error } = useApplication(id);
+  const { data: application, isLoading, isError, error, refetch } = useApplication(id);
   const { mutate: withdraw, isPending: withdrawing } = useWithdrawApplication();
   const theme = useTheme();
   const router = useRouter();
@@ -25,20 +28,30 @@ export default function ApplicationDetailScreen() {
     return (
       <Screen edges={['top', 'bottom']}>
         <BackHeader />
-        <View style={styles.centered}>
-          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        <View style={styles.loading}>
+          <Skeleton height={40} width="75%" />
+          <Skeleton height={52} borderRadius={Spacing.three} />
+          <Skeleton height={16} width="35%" />
+          <Skeleton height={72} borderRadius={Spacing.two} />
         </View>
       </Screen>
     );
   }
 
-  if (error || !application) {
+  // A failed refetch keeps the last good `data`, so the application stays on
+  // screen; only an outright absence takes over the layout. And a network blip
+  // is not a deleted application — only a 404 says it's genuinely gone, so
+  // anything else offers a retry against a message that admits it might come
+  // back.
+  if (!application) {
+    const gone = !isError || (error instanceof ApiError && error.status === 404);
     return (
       <Screen edges={['top', 'bottom']}>
         <BackHeader />
-        <View style={styles.centered}>
-          <ThemedText themeColor="textSecondary">This application is no longer available.</ThemedText>
-        </View>
+        <ErrorState
+          message={gone ? 'This application is no longer available.' : "Couldn't load this application."}
+          onRetry={refetch}
+        />
       </Screen>
     );
   }
@@ -60,11 +73,14 @@ export default function ApplicationDetailScreen() {
           <ThemedText type="smallBold">Your pitch</ThemedText>
           <ThemedText themeColor="textSecondary">{application.pitch}</ThemedText>
         </View>
-
-        {withdrawError ? <ThemedText themeColor="danger">{withdrawError}</ThemedText> : null}
       </ScrollView>
 
       <View style={styles.footer}>
+        {/* Sits with the button that produced it. Inside the ScrollView this
+            message could scroll out of sight while the action stayed pinned,
+            so a failed withdrawal read as nothing happening at all. */}
+        {withdrawError ? <ThemedText themeColor="danger">{withdrawError}</ThemedText> : null}
+
         {application.status === 'PENDING' && (
           <Pressable
             onPress={() =>
@@ -107,11 +123,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingBottom: Spacing.four,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.four,
+  loading: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    gap: Spacing.three,
   },
   statusRow: {
     flexDirection: 'row',

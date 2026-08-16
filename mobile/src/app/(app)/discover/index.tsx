@@ -1,6 +1,15 @@
+import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
 import { CampaignTile } from '@/components/campaign-tile';
 import { ALL_CATEGORIES, CategoryChips } from '@/components/category-chips';
@@ -26,8 +35,36 @@ const SPARSE_THRESHOLD = 2;
 /** Keeps a full-width hero card from becoming a tall slab. */
 const SPARSE_MAX_ART_HEIGHT = 210;
 
+/**
+ * Non-destructive refetch failure notice. React Query keeps the previously
+ * fetched `data` alongside the `error`, so a refetch that fails on bad signal
+ * must leave the loaded feed on screen — this slim banner reports the failure
+ * instead of taking the content away.
+ */
+function StaleDataBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const theme = useTheme();
+
+  function handleRetry() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onRetry();
+  }
+
+  return (
+    <View style={[styles.staleBanner, { backgroundColor: theme.warningSoft }]}>
+      <ThemedText type="small" themeColor="warning" style={styles.staleBannerText}>
+        {message}
+      </ThemedText>
+      <Pressable onPress={handleRetry} hitSlop={Spacing.two} accessibilityRole="button">
+        <ThemedText type="smallBold" themeColor="warning">
+          Retry
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+}
+
 export default function DiscoverScreen() {
-  const { data, isLoading, isRefetching, error, refetch } = useCampaigns();
+  const { data, isLoading, isRefetching, isError, refetch } = useCampaigns();
   const theme = useTheme();
   const { width: screenWidth } = useWindowDimensions();
 
@@ -41,6 +78,17 @@ export default function DiscoverScreen() {
     const niches = Array.from(new Set(campaigns.map((campaign) => campaign.niche))).sort();
     return [ALL_CATEGORIES, ...niches];
   }, [campaigns]);
+
+  // A refetch can narrow the feed to niches that no longer include the selected
+  // category. The chip row hides itself at two options or fewer, so the stale
+  // selection would keep filtering the feed down to "Nothing matches yet" with
+  // no visible control left to clear it. Adjusting state during render (rather
+  // than in an effect) re-renders before paint, so the dead filter is never
+  // shown. `categories` always contains ALL_CATEGORIES, so this settles in one
+  // extra pass.
+  if (!categories.includes(category)) {
+    setCategory(ALL_CATEGORIES);
+  }
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -75,7 +123,12 @@ export default function DiscoverScreen() {
     [filtered, columnWidth, columnCount],
   );
 
-  const showEmpty = !isLoading && !error && filtered.length === 0;
+  // A failed refetch keeps the last good `data` in place, so the full-screen
+  // error only earns the layout when there is genuinely nothing to show.
+  const hasLoadedFeed = data !== undefined;
+  const showErrorState = isError && !hasLoadedFeed;
+  const showStaleBanner = isError && hasLoadedFeed;
+  const showEmpty = !isLoading && !showErrorState && filtered.length === 0;
   const hasFilters = query.trim().length > 0 || category !== ALL_CATEGORIES;
 
   return (
@@ -122,9 +175,11 @@ export default function DiscoverScreen() {
         </View>
       )}
 
-      {error && <ErrorState message="Couldn't load campaigns." onRetry={refetch} />}
+      {showStaleBanner && <StaleDataBanner message="Couldn't refresh campaigns." onRetry={refetch} />}
 
-      {!isLoading && !error && (
+      {showErrorState && <ErrorState message="Couldn't load campaigns." onRetry={refetch} />}
+
+      {!isLoading && !showErrorState && (
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
@@ -200,6 +255,20 @@ const styles = StyleSheet.create({
   skeletons: {
     paddingHorizontal: SCREEN_PADDING,
     gap: GUTTER,
+  },
+  staleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    marginHorizontal: SCREEN_PADDING,
+    marginBottom: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.three,
+  },
+  staleBannerText: {
+    flexShrink: 1,
   },
   scroll: {
     paddingBottom: Spacing.five,

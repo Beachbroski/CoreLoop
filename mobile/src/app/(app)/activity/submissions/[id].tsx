@@ -6,8 +6,10 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View
 
 import { BackHeader } from '@/components/back-header';
 import { ContentUploadField } from '@/components/content-upload-field';
+import { ErrorState } from '@/components/error-state';
 import { PrimaryButton } from '@/components/primary-button';
 import { Screen } from '@/components/screen';
+import { Skeleton } from '@/components/skeleton';
 import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -20,11 +22,12 @@ const RESUBMITTABLE_STATUSES = new Set(['REVISION_REQUESTED', 'REJECTED']);
 
 export default function SubmissionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: submission, isLoading, error } = useSubmission(id);
+  const { data: submission, isLoading, isError, error, refetch } = useSubmission(id);
   const { mutate: resubmit, isPending } = useResubmitSubmission(id);
   const theme = useTheme();
 
   const [contentUrl, setContentUrl] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [resubmitError, setResubmitError] = useState<string | null>(null);
   const [resubmitted, setResubmitted] = useState(false);
 
@@ -32,20 +35,30 @@ export default function SubmissionDetailScreen() {
     return (
       <Screen edges={['top', 'bottom']}>
         <BackHeader />
-        <View style={styles.centered}>
-          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        <View style={styles.loading}>
+          <Skeleton height={40} width="75%" />
+          <Skeleton height={44} borderRadius={Spacing.three} />
+          <Skeleton height={16} width="30%" />
+          <Skeleton height={16} width="85%" />
         </View>
       </Screen>
     );
   }
 
-  if (error || !submission) {
+  // A failed refetch keeps the last good `data`, so the submission stays on
+  // screen; only an outright absence takes over the layout. And a network blip
+  // is not a deleted submission — only a 404 says it's genuinely gone, so
+  // anything else offers a retry against a message that admits it might come
+  // back.
+  if (!submission) {
+    const gone = !isError || (error instanceof ApiError && error.status === 404);
     return (
       <Screen edges={['top', 'bottom']}>
         <BackHeader />
-        <View style={styles.centered}>
-          <ThemedText themeColor="textSecondary">This submission is no longer available.</ThemedText>
-        </View>
+        <ErrorState
+          message={gone ? 'This submission is no longer available.' : "Couldn't load this submission."}
+          onRetry={refetch}
+        />
       </Screen>
     );
   }
@@ -83,11 +96,10 @@ export default function SubmissionDetailScreen() {
           <View style={styles.section}>
             <ThemedText type="smallBold">Content</ThemedText>
             <Pressable
-              onPress={() =>
-                Linking.openURL(submission.contentUrl).catch(() =>
-                  setResubmitError("Couldn't open that link."),
-                )
-              }
+              onPress={() => {
+                setLinkError(null);
+                Linking.openURL(submission.contentUrl).catch(() => setLinkError("Couldn't open that link."));
+              }}
               style={styles.contentLink}>
               <ThemedText themeColor="accent" numberOfLines={1} style={styles.contentLinkText}>
                 {submission.contentUrl}
@@ -98,6 +110,13 @@ export default function SubmissionDetailScreen() {
                 tintColor={theme.accent}
               />
             </Pressable>
+            {/* Kept beside the link it belongs to. It used to share one state
+                with the resubmit failures further down the scroll. */}
+            {linkError ? (
+              <ThemedText type="small" themeColor="danger">
+                {linkError}
+              </ThemedText>
+            ) : null}
           </View>
 
           {submission.reviewNote && (
@@ -113,13 +132,15 @@ export default function SubmissionDetailScreen() {
             </View>
           )}
 
-          {resubmitError ? <ThemedText themeColor="danger">{resubmitError}</ThemedText> : null}
-
           {resubmitted && <ThemedText themeColor="textSecondary">Resubmitted for review.</ThemedText>}
 
           {!resubmitted && RESUBMITTABLE_STATUSES.has(submission.status) && (
             <View style={styles.section}>
               <ContentUploadField value={contentUrl} onUploaded={setContentUrl} onError={setResubmitError} />
+
+              {/* Directly above the button that produced it — from the top of
+                  the scroll content this could be missed entirely. */}
+              {resubmitError ? <ThemedText themeColor="danger">{resubmitError}</ThemedText> : null}
 
               <PrimaryButton onPress={onResubmit} loading={isPending}>
                 Resubmit
@@ -138,11 +159,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingBottom: Spacing.four,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.four,
+  loading: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    gap: Spacing.three,
   },
   statusRow: {
     borderRadius: Spacing.three,

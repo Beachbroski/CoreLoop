@@ -28,6 +28,34 @@ const SEGMENT_OPTIONS = [
   { value: 'submissions', label: 'Submissions' },
 ] as const;
 
+/**
+ * Non-destructive refetch failure notice. React Query keeps the previously
+ * fetched `data` alongside the `error`, so a refetch that fails on bad signal
+ * must leave the loaded list on screen — this slim banner reports the failure
+ * instead of taking the content away.
+ */
+function StaleDataBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const theme = useTheme();
+
+  function handleRetry() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onRetry();
+  }
+
+  return (
+    <View style={[styles.staleBanner, { backgroundColor: theme.warningSoft }]}>
+      <ThemedText type="small" themeColor="warning" style={styles.staleBannerText}>
+        {message}
+      </ThemedText>
+      <Pressable onPress={handleRetry} hitSlop={Spacing.two} accessibilityRole="button">
+        <ThemedText type="smallBold" themeColor="warning">
+          Retry
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+}
+
 function ActivityRow({
   title,
   subtitle,
@@ -107,6 +135,11 @@ export default function ActivityScreen() {
 
   const active = segment === 'applications' ? applications : submissions;
 
+  // A failed refetch keeps the last good `data` in place, so the full-screen
+  // error only earns the layout when there is genuinely nothing to show.
+  const hasLoadedList = active.data !== undefined;
+  const showErrorState = active.isError && !hasLoadedList;
+
   return (
     <Screen>
       <View style={styles.header}>
@@ -123,9 +156,13 @@ export default function ActivityScreen() {
         </View>
       )}
 
-      {active.error && <ErrorState message={loadErrorMessage(active.error)} onRetry={active.refetch} />}
+      {active.isError && hasLoadedList && (
+        <StaleDataBanner message={loadErrorMessage(active.error)} onRetry={active.refetch} />
+      )}
 
-      {!active.isLoading && !active.error && segment === 'applications' && (
+      {showErrorState && <ErrorState message={loadErrorMessage(active.error)} onRetry={active.refetch} />}
+
+      {!active.isLoading && !showErrorState && segment === 'applications' && (
         <FlatList
           data={applications.data?.data ?? []}
           keyExtractor={(item) => item.id}
@@ -147,7 +184,7 @@ export default function ActivityScreen() {
         />
       )}
 
-      {!active.isLoading && !active.error && segment === 'submissions' && (
+      {!active.isLoading && !showErrorState && segment === 'submissions' && (
         <FlatList
           data={submissions.data?.data ?? []}
           keyExtractor={(item) => item.id}
@@ -182,6 +219,20 @@ const styles = StyleSheet.create({
   skeletons: {
     paddingHorizontal: Spacing.four,
     gap: Spacing.two,
+  },
+  staleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    marginHorizontal: Spacing.four,
+    marginBottom: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.three,
+  },
+  staleBannerText: {
+    flexShrink: 1,
   },
   listContent: {
     paddingHorizontal: Spacing.four,

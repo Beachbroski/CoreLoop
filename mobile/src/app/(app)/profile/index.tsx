@@ -1,9 +1,10 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { ErrorState } from '@/components/error-state';
 import { Screen } from '@/components/screen';
@@ -18,11 +19,39 @@ import { unregisterForPushNotifications } from '@/lib/push';
 import { useDeleteAccount } from '@/lib/queries/use-delete-account';
 import { useMe } from '@/lib/queries/use-me';
 
+/**
+ * Non-destructive refetch failure notice. React Query keeps the previously
+ * fetched `data` alongside the `error`, so a refetch that fails on bad signal
+ * must leave the loaded profile on screen — this slim banner reports the
+ * failure instead of stacking a full-screen error on top of the card.
+ */
+function StaleDataBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const theme = useTheme();
+
+  function handleRetry() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onRetry();
+  }
+
+  return (
+    <View style={[styles.staleBanner, { backgroundColor: theme.warningSoft }]}>
+      <ThemedText type="small" themeColor="warning" style={styles.staleBannerText}>
+        {message}
+      </ThemedText>
+      <Pressable onPress={handleRetry} hitSlop={Spacing.two} accessibilityRole="button">
+        <ThemedText type="smallBold" themeColor="warning">
+          Retry
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
   const theme = useTheme();
   const { signOut, getToken } = useAuth();
   const queryClient = useQueryClient();
-  const { data: me, isLoading, error, refetch } = useMe();
+  const { data: me, isLoading, isError, refetch } = useMe();
   const { mutate: deleteAccount, isPending: deleting } = useDeleteAccount();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
@@ -91,7 +120,12 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {error && <ErrorState message="Couldn't load your profile." onRetry={refetch} />}
+        {/* Mutually exclusive with the profile card below: a failed refetch keeps
+            the last good `me`, and a full-flex ErrorState stacked on top of the
+            card used to bury it. Only a cold failure takes the whole region. */}
+        {isError && !me && <ErrorState message="Couldn't load your profile." onRetry={refetch} />}
+
+        {isError && me ? <StaleDataBanner message="Couldn't refresh your profile." onRetry={refetch} /> : null}
 
         {me && (
           <>
@@ -147,6 +181,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.four,
     gap: Spacing.three,
+  },
+  // Sits inside `content`, which already supplies the horizontal padding and gap.
+  staleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.three,
+  },
+  staleBannerText: {
+    flexShrink: 1,
   },
   identityCard: {
     flexDirection: 'row',
