@@ -8,13 +8,21 @@ const { authMock, getCurrentAppUserMock } = vi.hoisted(() => ({
 vi.mock('@clerk/nextjs/server', () => ({ auth: authMock }))
 vi.mock('./current-app-user', () => ({ getCurrentAppUser: getCurrentAppUserMock }))
 
-const { withMobileApi, withPublicMobileApi } = await import('./mobile-api-guard')
+const { withMobileApi, withPublicMobileApi, withMobileAuthOnly } = await import('./mobile-api-guard')
+type MobileAuthedUser = import('./mobile-api-guard').MobileAuthedUser
 
 function makeRequest(headers: Record<string, string> = {}): Request {
   return new Request('https://example.com/api/v1/me', { headers })
 }
 
-const creatorUser = { id: 'user_1', email: 'creator@example.com', name: 'Creator', role: 'CREATOR' as const }
+// `name` is nullable on MobileAuthedUser; typing it explicitly keeps the mock
+// assignable to the handler signature.
+const creatorUser: { id: string; email: string; name: string | null; role: 'CREATOR' } = {
+  id: 'user_1',
+  email: 'creator@example.com',
+  name: 'Creator',
+  role: 'CREATOR',
+}
 
 describe('withMobileApi', () => {
   beforeEach(() => {
@@ -82,7 +90,7 @@ describe('withMobileApi', () => {
   it('calls the handler and returns its response when everything checks out', async () => {
     authMock.mockResolvedValue({ userId: 'clerk_1' })
     getCurrentAppUserMock.mockResolvedValue({ user: creatorUser })
-    const handler = vi.fn(async ({ user }: { user: typeof creatorUser }) =>
+    const handler = vi.fn(async ({ user }: { user: MobileAuthedUser }) =>
       Response.json({ success: true, data: { id: user.id } }),
     )
     const route = withMobileApi({ rateLimit: { limit: 5, windowMs: 60_000 }, role: 'CREATOR' }, handler)
@@ -146,6 +154,66 @@ describe('withPublicMobileApi', () => {
     const handler = vi.fn(async () => Response.json({ success: true, data: {} }))
     const route = withPublicMobileApi({ limit: 1, windowMs: 60_000 }, handler)
     const req = () => makeRequest({ 'x-forwarded-for': '203.0.113.9' })
+
+    const first = await route(req())
+    const second = await route(req())
+
+    expect(first.status).toBe(200)
+    expect(second.status).toBe(429)
+  })
+})
+
+describe('withMobileAuthOnly', () => {
+  beforeEach(() => {
+    authMock.mockReset()
+    getCurrentAppUserMock.mockReset()
+  })
+
+  it('rejects a request with no Bearer token', async () => {
+    const route = withMobileAuthOnly({ rateLimit: { limit: 5, windowMs: 60_000 } }, async () =>
+      Response.json({ ok: true }),
+    )
+
+    const res = await route(makeRequest())
+
+    expect(res.status).toBe(401)
+  })
+
+  it('rejects a cookie-only session, like the other v1 guards', async () => {
+    authMock.mockResolvedValue({ userId: 'clerk_1' })
+    const route = withMobileAuthOnly({ rateLimit: { limit: 5, windowMs: 60_000 } }, async () =>
+      Response.json({ ok: true }),
+    )
+
+    const res = await route(makeRequest())
+
+    expect(res.status).toBe(401)
+  })
+
+  // The whole point of this variant: withMobileApi 401s here, which would make
+  // creating that missing row impossible from the app.
+  it('runs the handler for an authenticated Clerk user with NO database row', async () => {
+    authMock.mockResolvedValue({ userId: 'clerk_new' })
+    getCurrentAppUserMock.mockResolvedValue({ userId: 'clerk_new', user: null, email: 'new@example.com' })
+
+    const route = withMobileAuthOnly(
+      { rateLimit: { limit: 5, windowMs: 60_000 } },
+      async ({ clerkUserId }) => Response.json({ ok: true, clerkUserId }),
+    )
+
+    const res = await route(makeRequest({ authorization: 'Bearer token_new' }))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.clerkUserId).toBe('clerk_new')
+  })
+
+  it('rate limits per Clerk user', async () => {
+    authMock.mockResolvedValue({ userId: 'clerk_rate_limited' })
+    const route = withMobileAuthOnly({ rateLimit: { limit: 1, windowMs: 60_000 } }, async () =>
+      Response.json({ ok: true }),
+    )
+    const req = () => makeRequest({ authorization: 'Bearer t' })
 
     const first = await route(req())
     const second = await route(req())

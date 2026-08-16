@@ -17,6 +17,49 @@ function jsonError(message: string, status: number, extraHeaders?: Record<string
 }
 
 /**
+ * Wraps an /api/v1 route that needs a verified Clerk identity but must run
+ * BEFORE a DB user row exists — currently only /api/v1/onboarding, which
+ * creates that row.
+ *
+ * `withMobileApi` 401s when getCurrentAppUser() finds no row, which is correct
+ * for every other route but would make account creation impossible from the
+ * app: a creator who only ever signs up on iOS has a Clerk identity and no
+ * row, so every call fails and nothing can ever create one.
+ *
+ * Same Bearer-only rule as withMobileApi (a cookie session must not reach
+ * /api/v1). Rate limited on the Clerk user id — there is no DB id yet — under
+ * its own key prefix so it can't collide with the other two guards' keyspaces.
+ */
+export function withMobileAuthOnly(
+  options: { rateLimit: RateLimitConfig },
+  handler: (ctx: { req: Request; clerkUserId: string }) => Promise<Response>,
+) {
+  return async (req: Request): Promise<Response> => {
+    try {
+      const authHeader = req.headers.get('authorization')
+      if (!authHeader?.startsWith('Bearer ')) {
+        return jsonError('Unauthorized', 401)
+      }
+
+      const { userId } = await auth()
+      if (!userId) return jsonError('Unauthorized', 401)
+
+      const rl = await checkRateLimit(`v1:onboard:${userId}`, options.rateLimit)
+      if (!rl.ok) {
+        return jsonError('Too many requests. Please try again shortly.', 429, {
+          'Retry-After': String(rl.retryAfterSeconds),
+        })
+      }
+
+      return await handler({ req, clerkUserId: userId })
+    } catch (err) {
+      console.error('[mobile-api-guard:auth-only]', err)
+      return jsonError('Internal server error', 500)
+    }
+  }
+}
+
+/**
  * Wraps a public, unauthenticated /api/v1 route (currently only /api/v1/meta).
  * Still rate limited — by IP, since there's no user yet.
  */
