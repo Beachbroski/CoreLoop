@@ -1,11 +1,12 @@
 import { z } from 'zod'
+import { contentUrlSchema } from './content-url'
 import { SubmissionStatusSchema } from './enums'
 import { listQuerySchema } from './pagination'
 
 // POST /api/v1/submissions
 export const createSubmissionRequestSchema = z.object({
   applicationId: z.string().min(1),
-  contentUrl: z.string().url(),
+  contentUrl: contentUrlSchema,
   caption: z.string().trim().max(2000).optional(),
   notes: z.string().trim().max(2000).optional(),
 })
@@ -13,7 +14,7 @@ export type CreateSubmissionRequest = z.infer<typeof createSubmissionRequestSche
 
 // PATCH /api/v1/submissions/:id — resubmitting after REVISION_REQUESTED/REJECTED
 export const resubmitSubmissionRequestSchema = z.object({
-  contentUrl: z.string().url(),
+  contentUrl: contentUrlSchema,
   caption: z.string().trim().max(2000).optional(),
   notes: z.string().trim().max(2000).optional(),
 })

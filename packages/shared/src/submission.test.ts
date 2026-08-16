@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { createSubmissionRequestSchema, resubmitSubmissionRequestSchema, submissionSchema } from './submission'
 
 describe('createSubmissionRequestSchema', () => {
-  it('accepts a valid submission', () => {
+  it('accepts content uploaded through CreatorDocks', () => {
     const result = createSubmissionRequestSchema.safeParse({
       applicationId: 'app_1',
-      contentUrl: 'https://tiktok.com/@creator/video/123',
+      contentUrl: 'https://abc123.ufs.sh/f/uploaded-key',
     })
     expect(result.success).toBe(true)
   })
@@ -14,6 +14,16 @@ describe('createSubmissionRequestSchema', () => {
     const result = createSubmissionRequestSchema.safeParse({
       applicationId: 'app_1',
       contentUrl: 'not-a-url',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  // Submissions are rendered as a clickable link in the brand's dashboard, so an
+  // arbitrary external URL is not acceptable content — see content-url.ts.
+  it('rejects an arbitrary external URL', () => {
+    const result = createSubmissionRequestSchema.safeParse({
+      applicationId: 'app_1',
+      contentUrl: 'https://tiktok.com/@creator/video/123',
     })
     expect(result.success).toBe(false)
   })
