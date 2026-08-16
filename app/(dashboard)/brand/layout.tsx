@@ -18,8 +18,10 @@ export default async function BrandLayout({ children }: { children: React.ReactN
         userLabel={user.role === 'ADMIN' ? 'Brand account (admin view)' : 'Brand account'}
         navItems={[
           { label: 'Dashboard', href: '/brand' },
+          { label: 'Metrics', href: '/brand/metrics' },
           { label: 'New campaign', href: '/brand/campaigns/new' },
           { label: 'Applications', href: '/brand/applications' },
+          { label: 'Submissions', href: '/brand/submissions' },
           { label: 'Settings', href: '/brand/settings' },
         ]}
       />

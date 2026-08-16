@@ -2,9 +2,12 @@ import Link from 'next/link'
 import type { Application, Campaign } from '@prisma/client'
 import { Suspense } from 'react'
 import prisma from '@/lib/prisma'
-import { compareToLastWeek, formatCents, type Trend } from '@/lib/utils'
+import { buildBrandMetrics, formatPercent } from '@/lib/brand-metrics'
+import { formatCents, type Trend } from '@/lib/utils'
 import { resolveDashboardViewer } from '@/lib/view-as'
 import { AdminViewBanner } from '../AdminViewBanner'
+import { AttentionList } from './metrics/AttentionList'
+import { FunnelBars } from './metrics/FunnelBars'
 
 const STATUS: Record<string, { bg: string; color: string; label: string }> = {
   DRAFT: { bg: 'rgba(15,23,42,0.06)', color: 'var(--text-soft)', label: 'Draft' },
@@ -19,40 +22,31 @@ type CampaignWithApplications = Campaign & { applications: Application[] }
 async function BrandDashboardContent({ viewAsId }: { viewAsId?: string }) {
   const { viewer: user, isAdminViewing, readOnly, viewAsNotFound } = await resolveDashboardViewer('BRAND', viewAsId)
 
-  const campaigns: CampaignWithApplications[] = await prisma.campaign.findMany({
-    where: { brandId: user.id },
-    include: { applications: true },
-    orderBy: { createdAt: 'desc' },
-  })
+  const [campaigns, submissions, payouts] = await Promise.all([
+    prisma.campaign.findMany({
+      where: { brandId: user.id },
+      include: { applications: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.submission.findMany({
+      where: { application: { campaign: { brandId: user.id } } },
+      select: { id: true, applicationId: true, status: true },
+    }),
+    prisma.payout.findMany({
+      where: { submission: { application: { campaign: { brandId: user.id } } } },
+      select: { id: true, submissionId: true, amount: true, platformFee: true, status: true },
+    }),
+  ])
 
   const allApplications = campaigns.flatMap((campaign: CampaignWithApplications) => campaign.applications)
-  const totalApplications = allApplications.length
-  const acceptedCount = allApplications.filter(app => app.status === 'ACCEPTED').length
-  const pendingCount = allApplications.filter(app => app.status === 'PENDING').length
-  const acceptanceRate = totalApplications > 0 ? Math.round((acceptedCount / totalApplications) * 100) : null
-
-  const now = new Date()
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
-  const applicationsThisWeek = allApplications.filter(app => app.createdAt >= oneWeekAgo).length
-  const applicationsLastWeek = allApplications.filter(
-    app => app.createdAt >= twoWeeksAgo && app.createdAt < oneWeekAgo,
-  ).length
-  const applicationsTrend = compareToLastWeek(applicationsThisWeek, applicationsLastWeek)
-
-  const totalSpent = await prisma.payout.aggregate({
-    where: {
-      status: 'PAID',
-      submission: { application: { campaign: { brandId: user.id } } },
-    },
-    _sum: { amount: true },
-  })
+  const metrics = buildBrandMetrics({ campaigns, applications: allApplications, submissions, payouts })
+  const awaitingReview = metrics.attention.pendingApplications + metrics.attention.submissionsAwaitingReview
 
   const stats: Array<{ label: string; value: string; trend?: Trend }> = [
-    { label: 'Applications received', value: String(totalApplications), trend: applicationsTrend },
-    { label: 'Acceptance rate', value: acceptanceRate === null ? '—' : `${acceptanceRate}%` },
-    { label: 'Awaiting review', value: String(pendingCount) },
-    { label: 'Total creator spend', value: formatCents(totalSpent._sum.amount ?? 0) },
+    { label: 'Applications received', value: String(metrics.applications.total), trend: metrics.trend.trend },
+    { label: 'Acceptance rate', value: formatPercent(metrics.applications.acceptanceRate) },
+    { label: 'Awaiting your review', value: String(awaitingReview) },
+    { label: 'Paid to creators', value: formatCents(metrics.spend.realizedCents) },
   ]
 
   return (
@@ -140,22 +134,35 @@ async function BrandDashboardContent({ viewAsId }: { viewAsId?: string }) {
         </section>
 
         <section className="dashboard-panel">
-          <div>
-            <h2 style={{ margin: '0 0 8px' }}>What makes a campaign convert</h2>
-            <p style={{ margin: 0, color: 'var(--text-soft)' }}>
-              Better briefs feel more concrete, more trustworthy, and easier to imagine creating for.
-            </p>
+          <div className="section-header">
+            <div className="section-header-copy">
+              <h2 style={{ margin: 0 }}>Where things stand</h2>
+              <p style={{ margin: '8px 0 0', color: 'var(--text-soft)' }}>
+                What is waiting on you, and how far your applicants get.
+              </p>
+            </div>
+            <div className="section-header-action">
+              <Link href="/brand/metrics" className="apple-btn-ghost">View metrics</Link>
+            </div>
           </div>
-          <div className="subtle-grid">
-            {[
-              'Lead with an outcome, not just a product mention.',
-              'Use realistic budgets so creators self-select faster.',
-              'Give each brief a clean deadline and a narrow ask instead of six optional deliverables.',
-            ].map(item => (
-              <div key={item} className="glass-card" style={{ boxShadow: 'var(--shadow-sm)' }}>
-                <p style={{ margin: 0, lineHeight: 1.65 }}>{item}</p>
-              </div>
-            ))}
+
+          <AttentionList attention={metrics.attention} />
+
+          <div style={{ marginTop: 22 }}>
+            <p className="sidebar-label" style={{ margin: '0 0 12px' }}>Pipeline</p>
+            {metrics.hasApplications ? (
+              <>
+                <FunnelBars steps={metrics.funnel.steps} compact />
+                <p style={{ margin: '14px 0 0', color: 'var(--text-faint)', fontSize: '.8rem' }}>
+                  {formatCents(metrics.spend.outstandingCents)} still owed on accepted work.
+                </p>
+              </>
+            ) : (
+              <p className="page-copy" style={{ margin: 0, fontSize: '.92rem' }}>
+                No applications yet. As creators apply, this shows how many convert to accepted, delivered, approved,
+                and paid.
+              </p>
+            )}
           </div>
         </section>
       </div>
