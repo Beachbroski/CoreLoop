@@ -33,10 +33,13 @@ export function CampaignTile({
   campaign,
   width,
   index,
+  maxArtHeight,
 }: {
   campaign: CampaignListItem;
   width: number;
   index: number;
+  /** Caps the cover art so a full-width tile doesn't become a tall slab. */
+  maxArtHeight?: number;
 }) {
   const theme = useTheme();
   const router = useRouter();
@@ -61,7 +64,8 @@ export function CampaignTile({
     router.push(`/discover/${campaign.id}`);
   }
 
-  const artHeight = Math.round(width / tileAspectRatio(campaign.id));
+  const naturalArtHeight = width / tileAspectRatio(campaign.id);
+  const artHeight = Math.round(maxArtHeight ? Math.min(naturalArtHeight, maxArtHeight) : naturalArtHeight);
   const deadline = deadlineSignal(campaign.deadline);
   const isNew = isNewCampaign(campaign.createdAt);
   const spots = spotsLabel(campaign.creatorsNeeded);
@@ -105,6 +109,8 @@ export function CampaignTile({
         </CoverArt>
 
         <View style={styles.caption}>
+          {/* Brand owns its own row — real brand names are long and were
+              getting crushed to "Jacks…" when the niche shared the line. */}
           <View style={styles.brandRow}>
             {campaign.brand.avatarUrl ? (
               <Image source={{ uri: campaign.brand.avatarUrl }} style={styles.mark} contentFit="cover" />
@@ -116,10 +122,6 @@ export function CampaignTile({
             <ThemedText type="small" numberOfLines={1} style={styles.brandName}>
               {brandName}
             </ThemedText>
-            <View style={[styles.nicheDot, { backgroundColor: markEnd }]} />
-            <ThemedText type="small" themeColor="textSecondary" numberOfLines={1} style={styles.niche}>
-              {campaign.niche}
-            </ThemedText>
           </View>
 
           <ThemedText numberOfLines={2} style={styles.title}>
@@ -127,20 +129,29 @@ export function CampaignTile({
           </ThemedText>
 
           <View style={styles.metaRow}>
+            <View style={[styles.nicheDot, { backgroundColor: markEnd }]} />
+            <ThemedText type="small" themeColor="textSecondary" numberOfLines={1} style={styles.niche}>
+              {campaign.niche}
+            </ThemedText>
             {spots ? (
               <>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {spots}
-                </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.sep}>
                   ·
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {spots}
                 </ThemedText>
               </>
             ) : null}
             {deadline.label ? (
-              <ThemedText type="small" themeColor={deadline.urgent && !deadline.passed ? 'accent' : 'textSecondary'}>
-                {deadline.label}
-              </ThemedText>
+              <>
+                <ThemedText type="small" themeColor="textSecondary" style={styles.sep}>
+                  ·
+                </ThemedText>
+                <ThemedText type="small" themeColor={deadline.urgent && !deadline.passed ? 'accent' : 'textSecondary'}>
+                  {deadline.label}
+                </ThemedText>
+              </>
             ) : null}
           </View>
         </View>
@@ -243,11 +254,9 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    marginLeft: 'auto',
   },
   niche: {
-    flexShrink: 0,
-    maxWidth: '45%',
+    flexShrink: 1,
   },
   title: {
     fontSize: 14.5,

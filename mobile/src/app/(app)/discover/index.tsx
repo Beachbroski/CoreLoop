@@ -21,6 +21,10 @@ import type { CampaignListItem } from '@creatordocks/shared';
 const GUTTER = Spacing.three - 4;
 const SCREEN_PADDING = Spacing.four;
 const CAPTION_HEIGHT = 86; // approximate, only used to balance column heights
+/** At or below this many results, show full-width cards instead of a grid. */
+const SPARSE_THRESHOLD = 2;
+/** Keeps a full-width hero card from becoming a tall slab. */
+const SPARSE_MAX_ART_HEIGHT = 210;
 
 export default function DiscoverScreen() {
   const { data, isLoading, isRefetching, error, refetch } = useCampaigns();
@@ -51,17 +55,24 @@ export default function DiscoverScreen() {
     });
   }, [campaigns, category, query]);
 
-  const columnWidth = Math.floor((screenWidth - SCREEN_PADDING * 2 - GUTTER) / 2);
+  // A two-column mosaic needs enough tiles to read as a grid — with one or two
+  // campaigns it just looks broken, so the feed falls back to full-width hero
+  // cards until there's enough to fill it.
+  const isSparse = filtered.length <= SPARSE_THRESHOLD;
+  const columnCount = isSparse ? 1 : 2;
+  const columnWidth = isSparse
+    ? screenWidth - SCREEN_PADDING * 2
+    : Math.floor((screenWidth - SCREEN_PADDING * 2 - GUTTER) / 2);
 
-  // Shortest-column-first packing keeps the two columns visually even.
+  // Shortest-column-first packing keeps the columns visually even.
   const columns = useMemo(
     () =>
       balanceColumns<CampaignListItem>(
         filtered,
         (campaign) => columnWidth / tileAspectRatio(campaign.id) + CAPTION_HEIGHT,
-        2,
+        columnCount,
       ),
-    [filtered, columnWidth],
+    [filtered, columnWidth, columnCount],
   );
 
   const showEmpty = !isLoading && !error && filtered.length === 0;
@@ -150,7 +161,8 @@ export default function DiscoverScreen() {
                         key={campaign.id}
                         campaign={campaign}
                         width={columnWidth}
-                        index={rowIndex * 2 + columnIndex}
+                        index={rowIndex * columnCount + columnIndex}
+                        maxArtHeight={isSparse ? SPARSE_MAX_ART_HEIGHT : undefined}
                       />
                     ))}
                   </View>
