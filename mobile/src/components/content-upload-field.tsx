@@ -33,21 +33,29 @@ export function ContentUploadField({ value, onUploaded, onError }: ContentUpload
     },
     onClientUploadComplete: (res) => {
       const uploaded = res?.[0]?.ufsUrl ?? res?.[0]?.url;
-      if (uploaded) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        onUploaded(uploaded);
+      if (!uploaded) {
+        // Without this branch the spinner just stops: no preview, no error, and
+        // Submit then complains the content is missing for no visible reason.
+        onError("Upload finished but didn't return a file. Please try again.");
+        return;
       }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      onUploaded(uploaded);
     },
-    onUploadError: () => onError('Upload failed. Please try again.'),
+    // Surface the server's reason (e.g. the waitlist-mode allowlist rejection);
+    // a generic "try again" tells the user to repeat something that can't work.
+    onUploadError: (err) => onError(err?.message || 'Upload failed. Please try again.'),
   });
 
   function pick() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    openImagePicker({
+    // openImagePicker returns a promise — an unhandled rejection here would
+    // leave the user staring at a control that silently did nothing.
+    void openImagePicker({
       source: 'library',
       onInsufficientPermissions: () => onError('Photo access is needed to upload content.'),
       onCancel: () => {},
-    });
+    })?.catch(() => onError("Couldn't open your photo library. Please try again."));
   }
 
   if (isUploading) {

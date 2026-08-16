@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
+import { useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { AnimatedMoney } from '@/components/animated-money';
@@ -42,13 +43,23 @@ function PayoutRow({ payout }: { payout: Payout }) {
 function OnboardingPrompt() {
   const { mutate: onboard, isPending } = useStripeOnboard();
   const { refetch: refetchStatus } = useStripeStatus();
+  const [error, setError] = useState<string | null>(null);
 
   function onConnect() {
+    setError(null);
     onboard(undefined, {
+      // This is the only path to getting paid — a silent failure here leaves
+      // the creator tapping a button that appears to do nothing.
       onSuccess: async ({ url }) => {
-        await WebBrowser.openBrowserAsync(url);
+        try {
+          await WebBrowser.openBrowserAsync(url);
+        } catch {
+          setError("Couldn't open Stripe. Please try again.");
+          return;
+        }
         refetchStatus();
       },
+      onError: () => setError("Couldn't start payout setup. Please try again."),
     });
   }
 
@@ -58,6 +69,7 @@ function OnboardingPrompt() {
       <ThemedText themeColor="textSecondary" style={styles.centeredText}>
         Connect a payout account to start earning from accepted campaigns.
       </ThemedText>
+      {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
       <View style={styles.onboardButton}>
         <PrimaryButton onPress={onConnect} loading={isPending}>
           Connect payout account
@@ -72,9 +84,15 @@ export default function EarningsScreen() {
   const { data: status, isLoading: statusLoading, error: statusError, refetch: refetchStatus } = useStripeStatus();
   const payouts = usePayouts();
 
-  const lifetimeEarnings = (payouts.data?.data ?? [])
-    .filter((payout) => payout.status === 'PAID')
-    .reduce((sum, payout) => sum + payout.amount, 0);
+  // Server-aggregated across ALL payouts. Summing the returned page would
+  // undercount any creator with more payouts than the page limit (20), and the
+  // number is silently wrong when it does — so only fall back to the page sum
+  // if an older server hasn't sent the aggregate yet.
+  const lifetimeEarnings =
+    payouts.data?.meta?.lifetimePaidAmount ??
+    (payouts.data?.data ?? [])
+      .filter((payout) => payout.status === 'PAID')
+      .reduce((sum, payout) => sum + payout.amount, 0);
 
   // The header always renders — only the content region below it switches
   // between skeleton / error / onboarding / list states.

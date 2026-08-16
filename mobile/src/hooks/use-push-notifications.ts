@@ -31,13 +31,31 @@ export function usePushNotifications() {
   }, [isSignedIn, getToken]);
 
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const url = response.notification.request.content.data?.url;
-      // Deep-link params are untrusted: only follow an internal app path.
-      if (typeof url === 'string' && url.startsWith('/')) {
-        router.push(url as Parameters<typeof router.push>[0]);
-      }
-    });
-    return () => subscription.remove();
+    let cancelled = false;
+
+    function openFromResponse(response: Notifications.NotificationResponse | null) {
+      const url = response?.notification.request.content.data?.url;
+      // Deep-link payloads are untrusted. Only follow an in-app absolute path,
+      // and reject '//host' which the browser/router would treat as external.
+      if (typeof url !== 'string' || !url.startsWith('/') || url.startsWith('//')) return;
+      router.push(url as Parameters<typeof router.push>[0]);
+    }
+
+    // A tap that LAUNCHES the app (the most common case — the app is usually
+    // killed when a push arrives) never reaches the listener below; its
+    // response is only retrievable via getLastNotificationResponseAsync.
+    Notifications.getLastNotificationResponseAsync()
+      .then((response) => {
+        if (!cancelled) openFromResponse(response);
+      })
+      .catch(() => {
+        // A missing launch response is normal — nothing to recover.
+      });
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(openFromResponse);
+    return () => {
+      cancelled = true;
+      subscription.remove();
+    };
   }, [router]);
 }

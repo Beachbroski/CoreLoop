@@ -4,6 +4,14 @@ export const paginationMetaSchema = z.object({
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   limit: z.number().int().positive(),
+  /**
+   * Whole-collection aggregates that must NOT be derived from the current page.
+   * `/api/v1/payouts` returns lifetimePaidAmount here because the earnings
+   * screen shows a lifetime total: summing the returned page would silently
+   * undercount any creator with more payouts than the page limit.
+   * Cents, like every other amount.
+   */
+  lifetimePaidAmount: z.number().int().nonnegative().optional(),
 })
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>
 
