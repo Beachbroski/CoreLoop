@@ -25,12 +25,25 @@ export default function ProfileScreen() {
   const { data: me, isLoading, error, refetch } = useMe();
   const { mutate: deleteAccount, isPending: deleting } = useDeleteAccount();
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
 
-  // Stop pushes to this identity before the session ends (needs a token, so
-  // it must run before signOut).
+  // Stop pushes to this identity before the session ends (needs a token, so it
+  // must run before signOut), then drop every cached query. The QueryClient is
+  // module-scoped and the keys aren't namespaced by user, so skipping the clear
+  // would show the NEXT person to sign in on this device the previous user's
+  // profile, applications and payout amounts until each refetch lands.
   async function signOutAndUnregister() {
-    await unregisterForPushNotifications(getToken);
-    await signOut();
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await unregisterForPushNotifications(getToken);
+      await signOut();
+      queryClient.clear();
+    } catch {
+      setSignOutError("Couldn't sign out. Please try again.");
+      setSigningOut(false);
+    }
   }
 
   function confirmDelete() {
@@ -107,10 +120,15 @@ export default function ProfileScreen() {
 
             <View style={styles.settings}>
               <SettingsRow label="App version" trailing={Constants.expoConfig?.version ?? '—'} />
-              <SettingsRow label="Sign out" onPress={signOutAndUnregister} />
+              <SettingsRow
+                label={signingOut ? 'Signing out…' : 'Sign out'}
+                onPress={signOutAndUnregister}
+                disabled={signingOut}
+              />
               <SettingsRow label="Delete account" destructive onPress={confirmDelete} disabled={deleting} />
             </View>
 
+            {signOutError ? <ThemedText themeColor="danger">{signOutError}</ThemedText> : null}
             {deleteError ? <ThemedText themeColor="danger">{deleteError}</ThemedText> : null}
           </>
         )}
