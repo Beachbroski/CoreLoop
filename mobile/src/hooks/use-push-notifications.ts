@@ -18,17 +18,22 @@ Notifications.setNotificationHandler({
 /**
  * Registers the device for push once signed in and routes notification taps to
  * the screen named in the payload's `url`. Mounted once in the authed layout.
+ *
+ * `enabled` gates registration on the account row existing: POST /api/v1/devices
+ * is the first authenticated call the app makes, and it 401s (silently) until
+ * onboarding has created the row — so a brand-new creator would never register
+ * for push at all.
  */
-export function usePushNotifications() {
+export function usePushNotifications(enabled = true) {
   const { isSignedIn, getToken } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isSignedIn) return;
+    if (!isSignedIn || !enabled) return;
     registerForPushNotifications(getToken).catch((err) => {
       if (__DEV__) console.warn('[push] registration failed', err);
     });
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn, enabled, getToken]);
 
   useEffect(() => {
     let cancelled = false;

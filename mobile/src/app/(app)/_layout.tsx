@@ -2,12 +2,66 @@ import { useAuth } from '@clerk/clerk-expo';
 import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
 import { Redirect, Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, type ColorValue } from 'react-native';
 
+import { ErrorState } from '@/components/error-state';
+import { Logo } from '@/components/logo';
+import { Screen } from '@/components/screen';
+import { ThemedText } from '@/components/themed-text';
+import { Spacing } from '@/constants/theme';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { useTheme } from '@/hooks/use-theme';
+import { isNotInvitedError, useEnsureAccount } from '@/lib/queries/use-ensure-account';
 
 type SymbolName = Parameters<typeof SymbolView>[0]['name'];
+
+/** Shown while the account is being resolved or created on first launch. */
+function AccountLoading() {
+  const theme = useTheme();
+
+  return (
+    <Screen edges={['top', 'bottom']}>
+      <View style={styles.centered}>
+        <Logo size={44} />
+        <ActivityIndicator color={theme.accent} />
+        <ThemedText type="small" themeColor="textSecondary">
+          Setting up your account…
+        </ThemedText>
+      </View>
+    </Screen>
+  );
+}
+
+/**
+ * CreatorDocks is invite-only while in waitlist mode. Without this the app
+ * would render four tabs that all fail, with retry buttons that can never
+ * succeed — this says what is actually happening instead.
+ */
+function WaitlistGate() {
+  const { signOut } = useAuth();
+
+  return (
+    <Screen edges={['top', 'bottom']}>
+      <View style={styles.centered}>
+        <Logo size={56} />
+        <ThemedText type="subtitle" style={styles.gateTitle}>
+          You&apos;re on the list
+        </ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.gateBody}>
+          CreatorDocks is invite-only right now. We&apos;ll email you as soon as your spot opens up.
+        </ThemedText>
+        <ThemedText
+          type="link"
+          themeColor="accent"
+          style={styles.gateAction}
+          onPress={() => signOut()}
+          accessibilityRole="button">
+          Sign out
+        </ThemedText>
+      </View>
+    </Screen>
+  );
+}
 
 function TabIcon({
   focused,
@@ -32,11 +86,31 @@ export default function AppTabsLayout() {
   const theme = useTheme();
   const { isLoaded, isSignedIn } = useAuth();
 
-  usePushNotifications();
+  // This layout is the single choke point every authenticated session crosses
+  // — a cold launch of an already-signed-in device reaches the tabs without
+  // passing through any sign-in screen, so account setup has to live here
+  // rather than in the auth flows.
+  const account = useEnsureAccount();
+
+  // Device registration is the first authenticated call the app makes and it
+  // 401s until the account row exists, so hold it until we have one.
+  usePushNotifications(Boolean(account.data));
+
+  if (!isLoaded) return null;
 
   // Defense in depth: a deep link could land here directly, bypassing the
   // root index redirect.
-  if (isLoaded && !isSignedIn) return <Redirect href="/sign-in" />;
+  if (!isSignedIn) return <Redirect href="/sign-in" />;
+
+  if (account.isPending) return <AccountLoading />;
+  if (isNotInvitedError(account.error)) return <WaitlistGate />;
+  if (account.isError) {
+    return (
+      <Screen edges={['top', 'bottom']}>
+        <ErrorState message="Couldn't open your account." onRetry={account.refetch} />
+      </Screen>
+    );
+  }
 
   return (
     <Tabs
@@ -116,3 +190,25 @@ export default function AppTabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.four,
+  },
+  gateTitle: {
+    textAlign: 'center',
+  },
+  gateBody: {
+    textAlign: 'center',
+    maxWidth: 320,
+  },
+  gateAction: {
+    marginTop: Spacing.two,
+    minHeight: 44,
+    textAlignVertical: 'center',
+  },
+});
