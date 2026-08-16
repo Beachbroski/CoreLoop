@@ -45,10 +45,10 @@ export default function Image() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           <div style={{ fontSize: 88, lineHeight: 0.96, letterSpacing: '-0.07em', fontWeight: 700, maxWidth: 920 }}>
-            Get matched with local brand deals that fit.
+            Hire local creators. Pay for approved work.
           </div>
           <div style={{ fontSize: 34, lineHeight: 1.28, color: '#53627a', maxWidth: 850 }}>
-            Join free. We match creators with local cafes, gyms, salons, boutiques, and home services.
+            Post a brief, review creators who apply with their rate, and release payment after you approve the content.
           </div>
         </div>
       </div>

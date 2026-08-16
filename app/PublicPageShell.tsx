@@ -26,9 +26,10 @@ function PublicNav({ variant }: { variant: 'content' | 'form' }) {
         <>
           <div className="nav-links">
             <Link href="/#how-it-works" className="nav-link">How it works</Link>
-            <Link href="/#local-brands" className="nav-link">Local brands</Link>
+            <Link href="/#why-creatordocks" className="nav-link">Why CreatorDocks</Link>
+            <Link href="/get-the-app" className="nav-link">For creators</Link>
           </div>
-          <PublicWaitlistLink className="apple-btn public-nav-cta">Join waitlist</PublicWaitlistLink>
+          <PublicWaitlistLink className="apple-btn public-nav-cta">Request access</PublicWaitlistLink>
         </>
       )}
     </nav>
@@ -45,10 +46,11 @@ function PublicFooter() {
         <span className="brand-wordmark">CreatorDocks</span>
       </div>
       <div className="public-footer-links">
+        <Link href="/get-the-app" className="footer-link">Creators — get the app</Link>
         <Link href="/privacy" className="footer-link">Privacy</Link>
         <Link href="/terms" className="footer-link">Terms</Link>
         <Link href="/support" className="footer-link">Support</Link>
-        <Link href="/sign-in" className="footer-link tester-link">Tester sign in</Link>
+        <Link href="/sign-in" className="footer-link">Sign in</Link>
       </div>
       {/* Social links placeholder: add TikTok/Instagram/X handles once finalized. */}
       <p className="public-footer-copy">© CreatorDocks {year}</p>

@@ -21,24 +21,24 @@ if (process.env.NODE_ENV === 'production' && clerkPublishableKey.startsWith('pk_
 }
 
 export const metadata: Metadata = {
-  title: 'CreatorDocks — Creator Waitlist',
-  description: 'Join CreatorDocks free and get matched with local brand deals that fit.',
+  title: 'CreatorDocks — Hire Local Creators',
+  description: 'Post a brief, review local creators who apply with their rate, and pay only for the content you approve. 15% platform fee, no retainer.',
   metadataBase: siteUrl ? new URL(siteUrl) : undefined,
   alternates: {
     canonical: siteUrl || undefined,
   },
   openGraph: {
-    title: 'CreatorDocks — Local Brand Deals for Creators',
-    description: 'Join free, get matched with local brands, and get paid through the platform when deals go live.',
+    title: 'CreatorDocks — Hire Local Creators',
+    description: 'Local businesses post a brief, review creators who apply with their rate, and pay only for approved work.',
     url: siteUrl || undefined,
     siteName: 'CreatorDocks',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'CreatorDocks creator waitlist' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'CreatorDocks — hire local creators and pay for approved work' }],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CreatorDocks — Creator Waitlist',
-    description: 'We match creators with local brand deals that fit.',
+    title: 'CreatorDocks — Hire Local Creators',
+    description: 'Post a brief, review local creators, and pay only for the content you approve.',
     images: ['/opengraph-image'],
   },
 }

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { SignIn } from '@clerk/nextjs'
 import { authClerkAppearance } from '@/lib/clerk-appearance'
 
@@ -12,13 +13,16 @@ export default function SignInPage() {
           </div>
           <div>
             <span className="eyebrow auth-hero-eyebrow">
-              Internal dashboard access
+              CreatorDocks dashboard
             </span>
             <h1 className="auth-hero-title">
-              Sign in and jump back into the CreatorDocks test environment.
+              Sign in to your campaigns.
             </h1>
             <p className="auth-hero-copy">
-              Campaigns, applications, approvals, payouts, and internal waitlist ops all live behind this sign-in for approved testers.
+              Briefs, creator applications, content review, approvals, and payouts all live behind this sign-in.
+            </p>
+            <p className="auth-hero-copy" style={{ marginTop: 14 }}>
+              No account yet? <Link href="/waitlist" className="apple-link">Request access</Link>
             </p>
           </div>
         </section>
