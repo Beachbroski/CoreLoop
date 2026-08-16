@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { Spacing } from '@/constants/theme';
+import { Brand, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { deadlineSignal, isNewCampaign, spotsLabel, tileAspectRatio } from '@/lib/campaign-signals';
 import { coverArtSpec } from '@/lib/cover-art';
@@ -22,6 +22,35 @@ function brandInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   const letters = (parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '');
   return (letters || name[0] || '•').toUpperCase();
+}
+
+type TileLabelParts = {
+  title: string;
+  brandName: string;
+  payout: string;
+  niche: string;
+  spots: string | null;
+  deadlineLabel: string;
+  isNew: boolean;
+};
+
+/**
+ * One sentence for VoiceOver. Without it the tile announces as ~6 disconnected
+ * fragments ("New", "$1,200", "Acme", "Ends in 4h", …) with no indication they
+ * describe the same campaign.
+ */
+function tileAccessibilityLabel(parts: TileLabelParts): string {
+  return [
+    parts.title,
+    `by ${parts.brandName}`,
+    `${parts.payout} payout`,
+    parts.niche,
+    parts.spots,
+    parts.deadlineLabel,
+    parts.isNew ? 'New' : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
 }
 
 /**
@@ -70,7 +99,10 @@ export function CampaignTile({
   const isNew = isNewCampaign(campaign.createdAt);
   const spots = spotsLabel(campaign.creatorsNeeded);
   const brandName = campaign.brand.name ?? 'A brand';
-  const [markStart, markEnd] = coverArtSpec(campaign.id, campaign.niche).colors;
+  const payout = formatCentsCompact(campaign.budget);
+  // Only the darker palette stop is used behind the white initials: the light
+  // stops score as low as 2.15:1 against white, the dark stops 5.70:1 or better.
+  const [, markEnd] = coverArtSpec(campaign.id, campaign.niche).colors;
 
   return (
     <Animated.View entering={FadeIn.duration(300).delay(Math.min(index, ENTRANCE_CAP) * ENTRANCE_STAGGER_MS)}>
@@ -78,6 +110,17 @@ export function CampaignTile({
         onPress={onPress}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={tileAccessibilityLabel({
+          title: campaign.title,
+          brandName,
+          payout,
+          niche: campaign.niche,
+          spots,
+          deadlineLabel: deadline.label,
+          isNew,
+        })}
         style={[
           styles.tile,
           { backgroundColor: theme.backgroundElement, borderColor: theme.border },
@@ -86,8 +129,11 @@ export function CampaignTile({
         <CoverArt seed={campaign.id} niche={campaign.niche} height={artHeight} overlayStyle={styles.artOverlay}>
           <View style={styles.artTop}>
             {deadline.urgent && !deadline.passed ? (
-              <View style={[styles.badge, styles.badgeUrgent, { borderColor: theme.accent }]}>
-                <View style={[styles.pulse, { backgroundColor: theme.accent }]} />
+              // Fixed Brand.coral, not `theme.accent`: this badge always sits on
+              // a dark scrim over the cover art, so light mode's darkened
+              // foreground coral would disappear into it.
+              <View style={[styles.badge, styles.badgeUrgent, { borderColor: Brand.coral }]}>
+                <View style={[styles.pulse, { backgroundColor: Brand.coral }]} />
                 <ThemedText type="small" style={styles.badgeUrgentText}>
                   {deadline.label}
                 </ThemedText>
@@ -101,9 +147,11 @@ export function CampaignTile({
             ) : null}
           </View>
 
-          <View style={[styles.price, { backgroundColor: theme.accent }]}>
+          {/* `accentFill` — the pill carries white text, so it needs the darker
+              fill coral (4.51:1) rather than the foreground `accent` (3.25:1). */}
+          <View style={[styles.price, { backgroundColor: theme.accentFill }]}>
             <ThemedText type="smallBold" style={styles.priceText}>
-              {formatCentsCompact(campaign.budget)}
+              {payout}
             </ThemedText>
           </View>
         </CoverArt>
@@ -115,7 +163,7 @@ export function CampaignTile({
             {campaign.brand.avatarUrl ? (
               <Image source={{ uri: campaign.brand.avatarUrl }} style={styles.mark} contentFit="cover" />
             ) : (
-              <View style={[styles.mark, { backgroundColor: markStart }]}>
+              <View style={[styles.mark, { backgroundColor: markEnd }]}>
                 <ThemedText style={styles.markText}>{brandInitials(brandName)}</ThemedText>
               </View>
             )}

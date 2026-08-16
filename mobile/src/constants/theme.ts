@@ -9,9 +9,25 @@ import { Platform } from 'react-native';
 
 // Mobile deliberately diverges from web here (approved 2026-08): coral is the
 // hero accent — buttons, money, highlights — with the old web blue demoted to
-// `secondary` for informational chips. Dark is the flagship appearance; light
-// gets the same coral treatment with a darkened accent for text-size contrast
-// (#ff503d on white is ~3.0:1 — fine for large money type, too low for body).
+// `secondary` for informational chips. Dark is the flagship appearance.
+//
+// Coral carries two jobs that need opposite luminances, so they are two tokens
+// (WCAG AA, 4.5:1 for normal text — every ratio below is computed, not guessed):
+//
+//   `accent`      — coral as FOREGROUND: text, icon tints, focus rings, the tab
+//                   bar's active tint. Must be dark enough to sit on our light
+//                   surfaces. Light #bf3524 scores 5.60:1 on #ffffff, 5.22:1 on
+//                   #f5f7fb, 4.98:1 on #eef2f8. Dark #ff503d is unchanged — it
+//                   already clears AA on every dark surface (6.17 / 5.66 / 5.13).
+//   `accentFill`  — coral as a SURFACE that carries white text: primary buttons,
+//                   the tile price pill, the active category chip. Must be dark
+//                   enough that #ffffff on it clears 4.5:1, which the foreground
+//                   coral does not (white on #ff503d is only 3.25:1). Light
+//                   #d83e2a = 4.52:1, dark #d64131 = 4.51:1 against white.
+//   `accentStrong`— the pressed state of `accentFill`; still white-text safe
+//                   (light 5.42:1, dark 5.41:1).
+//
+// Only luminance moves — the hue is the same coral in every token.
 export const Colors = {
   light: {
     text: '#101828',
@@ -20,8 +36,9 @@ export const Colors = {
     backgroundElement: '#ffffff',
     backgroundSelected: '#eef2f8',
     border: 'rgba(15, 23, 42, 0.08)',
-    accent: '#e0402c',
-    accentStrong: '#c33420',
+    accent: '#bf3524',
+    accentFill: '#d83e2a',
+    accentStrong: '#c33625',
     accentSoft: 'rgba(224, 64, 44, 0.1)',
     secondary: '#1371ff',
     secondarySoft: 'rgba(19, 113, 255, 0.1)',
@@ -40,7 +57,8 @@ export const Colors = {
     backgroundSelected: '#1b1e27',
     border: 'rgba(255, 255, 255, 0.1)',
     accent: '#ff503d',
-    accentStrong: '#e63f2d',
+    accentFill: '#d64131',
+    accentStrong: '#c03a2c',
     accentSoft: 'rgba(255, 80, 61, 0.16)',
     secondary: '#3b82f6',
     secondarySoft: 'rgba(59, 130, 246, 0.16)',
@@ -67,8 +85,10 @@ export const Brand = {
 
 // Gradient stops for hero surfaces (buttons, avatar rings, earnings glow).
 // Cover-art palettes live in lib/cover-art.ts so they stay unit-testable.
+// coralHero carries the white avatar initial (32px — large text, 3:1), so its
+// light stop is capped at 3.11:1 against #ffffff; the old #ff6a58 was 2.82:1.
 export const Gradients = {
-  coralHero: ['#ff6a58', '#e63f2d'],
+  coralHero: ['#f36453', '#e63f2d'],
   coralGlow: ['rgba(255, 80, 61, 0.22)', 'rgba(255, 80, 61, 0)'],
 } as const;
 

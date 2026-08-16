@@ -31,8 +31,12 @@ export function Skeleton({ width = '100%', height, borderRadius = Spacing.two, s
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
+  // Placeholders carry no information — without this VoiceOver stops on every
+  // pulsing block while a screen loads.
   return (
     <Animated.View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[
         { width, height, borderRadius, backgroundColor: theme.backgroundSelected },
         animatedStyle,
@@ -47,7 +51,10 @@ export function SkeletonCard() {
   const theme = useTheme();
 
   return (
-    <Animated.View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+    <Animated.View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
       <Skeleton height={130} borderRadius={0} style={styles.cardCover} />
       <Animated.View style={styles.cardBody}>
         <Skeleton height={16} width="60%" />
@@ -63,7 +70,10 @@ export function SkeletonRow() {
   const theme = useTheme();
 
   return (
-    <Animated.View style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
+    <Animated.View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
       <Skeleton height={48} width={48} borderRadius={Spacing.two} />
       <Animated.View style={styles.rowBody}>
         <Skeleton height={14} width="70%" />

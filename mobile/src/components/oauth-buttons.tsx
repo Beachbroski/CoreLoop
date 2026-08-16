@@ -61,6 +61,9 @@ function ProviderButton({
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled, busy: isPending }}
       style={[styles.button, animatedStyle, { backgroundColor: theme.backgroundElement, opacity: disabled ? 0.6 : 1 }]}>
       <ThemedText type="smallBold">{isPending ? 'Connecting…' : label}</ThemedText>
     </AnimatedPressable>

@@ -104,16 +104,28 @@ function Decor({ decor, pattern, height }: { decor: CoverArtDecor[]; pattern: st
 export function CoverArt({ seed, niche, imageUrl, height = 130, style, overlayStyle, children }: CoverArtProps) {
   const spec = coverArtSpec(seed, niche);
 
+  // The artwork itself is purely decorative — it carries no information a
+  // screen reader could use — so only the art layers are hidden. `children`
+  // (the price pill, the niche chip on the detail screen) stay announced.
   return (
     <View style={[styles.container, { height }, style]}>
       {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+        <Image
+          source={{ uri: imageUrl }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          transition={150}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
       ) : (
         <LinearGradient
           colors={[spec.colors[0], spec.colors[1]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}>
+          style={StyleSheet.absoluteFill}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants">
           <Decor decor={spec.decor} pattern={spec.pattern} height={height} />
         </LinearGradient>
       )}

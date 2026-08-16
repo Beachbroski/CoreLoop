@@ -34,10 +34,14 @@ export function SettingsRow({ label, onPress, destructive, trailing, disabled }:
           trailing
         )}
         {onPress ? (
+          // Decorative: `accessibilityRole="button"` on the row already tells
+          // VoiceOver the row is tappable.
           <SymbolView
             name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
             size={14}
             tintColor={theme.textSecondary}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
           />
         ) : null}
       </View>
@@ -45,7 +49,13 @@ export function SettingsRow({ label, onPress, destructive, trailing, disabled }:
   );
 
   if (!onPress) {
-    return <View style={[styles.row, { backgroundColor: theme.backgroundElement }]}>{content}</View>;
+    // Static rows still collapse to one element so the label and its value
+    // ("Version", "1.0.0") are announced together rather than as two stops.
+    return (
+      <View accessible style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
+        {content}
+      </View>
+    );
   }
 
   function handlePress() {
@@ -57,6 +67,8 @@ export function SettingsRow({ label, onPress, destructive, trailing, disabled }:
     <Pressable
       onPress={handlePress}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: Boolean(disabled) }}
       style={({ pressed }) => [
         styles.row,
         {

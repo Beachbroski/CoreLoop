@@ -40,15 +40,22 @@ export function CategoryChips({
           <Pressable
             key={category}
             onPress={() => handlePress(category)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            // The chip stays 34pt tall by design; hitSlop lifts the tappable
+            // area to 50pt so it clears Apple's 44pt minimum.
+            hitSlop={{ top: Spacing.two, bottom: Spacing.two }}
             style={({ pressed }) => [
               styles.chip,
               {
+                // Active chips carry a white label, so they take the darker
+                // `accentFill` rather than the foreground `accent`.
                 backgroundColor: active
-                  ? theme.accent
+                  ? theme.accentFill
                   : pressed
                     ? theme.backgroundSelected
                     : theme.backgroundElement,
-                borderColor: active ? theme.accent : theme.border,
+                borderColor: active ? theme.accentFill : theme.border,
               },
             ]}>
             <ThemedText type="smallBold" style={active ? styles.activeLabel : undefined} themeColor={active ? undefined : 'textSecondary'}>
@@ -65,6 +72,10 @@ const styles = StyleSheet.create({
   row: {
     gap: Spacing.two,
     paddingHorizontal: Spacing.four,
+    // Symmetric vertical padding gives the chips' hitSlop somewhere to land:
+    // a touch above the ScrollView's own frame never reaches its children, so
+    // without this the slop above each chip would be clipped away.
+    paddingTop: Spacing.two,
     paddingBottom: Spacing.two,
   },
   chip: {

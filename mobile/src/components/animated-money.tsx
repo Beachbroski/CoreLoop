@@ -43,8 +43,16 @@ export function AnimatedMoney({ cents, durationMs = 700, themeColor = 'accent', 
     };
   }, [cents, durationMs, reducedMotion]);
 
+  // The visible string changes ~60x/sec during the count-up. A fixed label of
+  // the final amount stops VoiceOver re-announcing every frame, and keeps the
+  // announced value truthful the moment the element is focused.
   return (
-    <ThemedText type="money" themeColor={themeColor} style={style}>
+    <ThemedText
+      type="money"
+      themeColor={themeColor}
+      accessible
+      accessibilityLabel={formatCentsCompact(cents)}
+      style={style}>
       {formatCentsCompact(reducedMotion ? cents : display)}
     </ThemedText>
   );

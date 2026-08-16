@@ -17,7 +17,12 @@ export function BackHeader({ title }: { title?: string }) {
   }
 
   return (
-    <Pressable onPress={onPress} style={styles.container} hitSlop={Spacing.three}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Back"
+      style={styles.container}
+      hitSlop={Spacing.three}>
       <SymbolView
         name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
         size={20}

@@ -20,10 +20,13 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
   return (
     <View style={styles.container}>
+      {/* Decorative: the message text below says the same thing. */}
       <SymbolView
         name={{ ios: 'exclamationmark.triangle', android: 'warning', web: 'warning' }}
         size={32}
         tintColor={theme.warning}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
       />
       <ThemedText themeColor="textSecondary" style={styles.message}>
         {message}
@@ -31,6 +34,8 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
       {onRetry ? (
         <Pressable
           onPress={handleRetry}
+          accessibilityRole="button"
+          accessibilityLabel="Retry"
           style={({ pressed }) => [
             styles.retry,
             {
@@ -62,6 +67,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two + 2,
     minWidth: 120,
+    // 44pt is Apple's minimum touch target; the padding alone gave 40pt.
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
   },
 });

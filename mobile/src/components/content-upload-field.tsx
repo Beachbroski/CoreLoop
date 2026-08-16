@@ -60,7 +60,11 @@ export function ContentUploadField({ value, onUploaded, onError }: ContentUpload
 
   if (isUploading) {
     return (
-      <View style={[styles.tile, styles.center, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+      <View
+        accessible
+        accessibilityLabel="Uploading content"
+        accessibilityState={{ busy: true }}
+        style={[styles.tile, styles.center, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
         <ActivityIndicator color={theme.accent} />
         <ThemedText type="small" themeColor="textSecondary">
           Uploading…
@@ -73,8 +77,18 @@ export function ContentUploadField({ value, onUploaded, onError }: ContentUpload
     return (
       <Pressable
         onPress={pick}
+        accessibilityRole="button"
+        accessibilityLabel="Replace uploaded content"
+        accessibilityHint="Opens your photo library"
         style={[styles.tile, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-        <Image source={{ uri: value }} style={styles.preview} contentFit="cover" transition={150} />
+        <Image
+          source={{ uri: value }}
+          style={styles.preview}
+          contentFit="cover"
+          transition={150}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
         <View style={styles.replaceRow}>
           <SymbolView
             name={{ ios: 'arrow.triangle.2.circlepath', android: 'sync', web: 'sync' }}
@@ -92,6 +106,9 @@ export function ContentUploadField({ value, onUploaded, onError }: ContentUpload
   return (
     <Pressable
       onPress={pick}
+      accessibilityRole="button"
+      accessibilityLabel="Upload content"
+      accessibilityHint="Pick a photo from your library"
       style={({ pressed }) => [
         styles.tile,
         styles.center,

@@ -15,9 +15,14 @@ type EmptyStateProps = {
 export function EmptyState({ symbol, title, message }: EmptyStateProps) {
   const theme = useTheme();
 
+  // One accessible element: title and message are a single thought, and the
+  // symbol only restates them pictorially.
   return (
-    <View style={styles.container}>
-      <View style={[styles.iconCircle, { backgroundColor: theme.accentSoft }]}>
+    <View accessible accessibilityLabel={message ? `${title}, ${message}` : title} style={styles.container}>
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={[styles.iconCircle, { backgroundColor: theme.accentSoft }]}>
         <SymbolView name={symbol} size={28} tintColor={theme.accent} />
       </View>
       <ThemedText type="smallBold">{title}</ThemedText>

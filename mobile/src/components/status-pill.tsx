@@ -13,8 +13,13 @@ export function StatusPill({ status }: { status: string }) {
   const theme = useTheme();
   const softKey = statusSoftColor(status);
 
+  // Announced as "Status: Approved" — the bare word on its own gave no hint
+  // that it described the row's state.
   return (
-    <View style={[styles.pill, { backgroundColor: softKey ? theme[softKey] : theme.backgroundSelected }]}>
+    <View
+      accessible
+      accessibilityLabel={`Status: ${formatStatus(status)}`}
+      style={[styles.pill, { backgroundColor: softKey ? theme[softKey] : theme.backgroundSelected }]}>
       <ThemedText type="small" themeColor={statusTextColor(status)}>
         {formatStatus(status)}
       </ThemedText>

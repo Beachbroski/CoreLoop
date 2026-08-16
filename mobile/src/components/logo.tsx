@@ -8,7 +8,11 @@ import { ThemedText } from './themed-text';
 // SVG data URI; here it's just a View + Text, same visual result.
 export function Logo({ size = 34 }: { size?: number }) {
   return (
+    // Decorative: the "D" is a logotype, not content. Left in the tree it made
+    // VoiceOver announce a bare "D" on every screen that renders the mark.
     <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[
         styles.mark,
         { width: size, height: size, borderRadius: size * 0.24, backgroundColor: Brand.coral },

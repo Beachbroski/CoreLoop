@@ -9,7 +9,11 @@ export function ScreenHeader({ title }: { title: string }) {
   return (
     <View style={styles.row}>
       <Logo size={26} />
-      <ThemedText type="title">{title}</ThemedText>
+      {/* The one heading on each tab screen — gives VoiceOver's rotor something
+          to navigate by. The mark beside it is hidden as decoration. */}
+      <ThemedText type="title" accessibilityRole="header">
+        {title}
+      </ThemedText>
     </View>
   );
 }

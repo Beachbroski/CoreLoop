@@ -44,6 +44,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
   return (
     <View
       onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+      accessibilityRole="tablist"
       style={[styles.container, { backgroundColor: theme.backgroundElement }]}>
       {segmentWidth > 0 && (
         <Animated.View
@@ -55,7 +56,14 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
         />
       )}
       {options.map((option) => (
-        <Pressable key={option.value} onPress={() => handlePress(option.value)} style={styles.segment}>
+        <Pressable
+          key={option.value}
+          onPress={() => handlePress(option.value)}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: option.value === value }}
+          style={styles.segment}>
+          {/* `accent` is the foreground coral, which clears AA on the
+              `backgroundSelected` indicator in both themes (4.98 / 5.13). */}
           <ThemedText type="smallBold" themeColor={option.value === value ? 'accent' : 'text'}>
             {option.label}
           </ThemedText>
