@@ -57,8 +57,8 @@ export async function POST(req: Request) {
 
         if (!submission || submission.application.id !== applicationId) break
 
-        await prisma.$transaction(async (tx) => {
-          await tx.payout.upsert({
+        const payout = await prisma.$transaction(async (tx) => {
+          const upserted = await tx.payout.upsert({
             where: { submissionId },
             update: {
               creatorId: submission.creatorId,
@@ -98,13 +98,23 @@ export async function POST(req: Request) {
               data: { status: 'COMPLETE' },
             })
           }
+
+          return upserted
         })
+
+        // This is a destination charge: the connected account is credited the
+        // charge minus `application_fee_amount`, so `proposedRate` is the gross
+        // and never what the creator receives. Both notifications quote the net
+        // off the stored Payout row, which already prefers Stripe's own fee
+        // figure over `calculatePlatformFee`.
+        const netAmountCents = payout.amount - payout.platformFee
 
         await sendPayoutPaidEmail(submission.creator.email, {
           campaignTitle: submission.application.campaign.title,
-          amountCents: submission.application.proposedRate,
+          netAmountCents,
+          platformFeeCents: payout.platformFee,
         })
-        await sendPayoutPaidPush(submission.creatorId, { amount: submission.application.proposedRate })
+        await sendPayoutPaidPush(submission.creatorId, { netAmount: netAmountCents })
         break
       }
 

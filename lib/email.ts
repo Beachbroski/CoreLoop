@@ -99,14 +99,26 @@ export async function sendSubmissionApprovedEmail(to: string, params: { campaign
   )
 }
 
-export async function sendPayoutPaidEmail(to: string, params: { campaignTitle: string; amountCents: number }) {
+/**
+ * The Stripe charge is a destination charge, so the connected account is
+ * credited the agreed rate minus our application fee. Quoting the gross rate
+ * here would promise money that never arrives — the params are named for the
+ * net on purpose, and the body shows the arithmetic so the smaller number is
+ * never a surprise.
+ */
+export async function sendPayoutPaidEmail(
+  to: string,
+  params: { campaignTitle: string; netAmountCents: number; platformFeeCents: number },
+) {
   const campaignTitle = escapeHtml(params.campaignTitle)
+  const grossCents = params.netAmountCents + params.platformFeeCents
   await sendEmail(
     to,
     `You've been paid for "${params.campaignTitle}"`,
     emailShell(
-      `${formatCents(params.amountCents)} is on its way.`,
-      `<p>Your payout for <strong>${campaignTitle}</strong> has been sent to your connected Stripe account.</p>`,
+      `${formatCents(params.netAmountCents)} is on its way.`,
+      `<p>Your payout for <strong>${campaignTitle}</strong> has been sent to your connected Stripe account.</p>
+       <p style="background: #f4f6fb; padding: 10px 14px; border-radius: 10px; font-size: 13px;">${formatCents(grossCents)} agreed rate &minus; ${formatCents(params.platformFeeCents)} platform fee = <strong>${formatCents(params.netAmountCents)}</strong> to you.</p>`,
       absoluteUrl('/creator/settings'),
       'View payouts',
     ),

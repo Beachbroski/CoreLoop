@@ -116,10 +116,15 @@ export function sendSubmissionRejectedPush(
   })
 }
 
-export function sendPayoutPaidPush(userId: string, params: { amount: number }) {
+/**
+ * `netAmount` is the creator's take-home — the agreed rate minus the platform
+ * fee the destination charge withholds. The gross rate would announce money
+ * that never lands, and it has to match the figure in the payout email.
+ */
+export function sendPayoutPaidPush(userId: string, params: { netAmount: number }) {
   return sendPushToUser(userId, {
     title: 'You got paid 💸',
-    body: `${formatCents(params.amount)} is on its way to your account.`,
+    body: `${formatCents(params.netAmount)} is on its way to your account.`,
     data: { url: '/earnings' },
   })
 }
