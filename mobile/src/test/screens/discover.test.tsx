@@ -21,11 +21,19 @@ jest.mock('@/lib/queries/use-campaigns', () => ({ useCampaigns: jest.fn() }));
 
 const mockUseCampaigns = useCampaigns as jest.MockedFunction<typeof useCampaigns>;
 
+/**
+ * Deadlines are read against the real clock, and the "N live" count now depends
+ * on them — so fixtures sit far enough either side of today that no assertion
+ * in this file starts failing on a particular date.
+ */
+const OPEN_DEADLINE = '2099-01-01T00:00:00.000Z';
+const PASSED_DEADLINE = '2020-01-01T00:00:00.000Z';
+
 function campaign(overrides: Partial<CampaignListItem> & { id: string }): CampaignListItem {
   return {
     title: `Campaign ${overrides.id}`,
     budget: 15000,
-    deadline: '2026-12-01T00:00:00.000Z',
+    deadline: OPEN_DEADLINE,
     niche: 'Fashion',
     platforms: ['tiktok'],
     creatorsNeeded: 3,
@@ -260,6 +268,70 @@ describe('Discover category filter', () => {
     // One niche means the row would be "All | Fashion" — two chips that filter
     // to the same thing.
     expect(screen.queryByText('All')).toBeNull();
+  });
+});
+
+/**
+ * `GET /api/v1/campaigns` filters expired campaigns out server-side, but React
+ * Query serves the last fetched page while it refetches, so a deadline can pass
+ * while its tile is still on screen. When that happens the header must not
+ * claim the campaign is live — the creator would otherwise open the brief,
+ * write a pitch, and only then be told the deadline has gone.
+ */
+describe('Discover live count', () => {
+  it('leaves a campaign past its deadline out of the count', async () => {
+    mockUseCampaigns.mockReturnValue(
+      queryState({
+        data: feed([
+          campaign({ id: 'c1', title: 'Autumn lookbook' }),
+          campaign({ id: 'c2', title: 'Expired drop', deadline: PASSED_DEADLINE }),
+          campaign({ id: 'c3', title: 'Gym opening' }),
+        ]),
+      }),
+    );
+
+    await renderWithProviders(<DiscoverScreen />);
+
+    expect(screen.getByText('2 live')).toBeOnTheScreen();
+    // Still rendered, and honest about being shut — the count is what changed.
+    expect(screen.getByText('Expired drop')).toBeOnTheScreen();
+    expect(screen.getByText('Closed')).toBeOnTheScreen();
+  });
+
+  it('reports zero live when every campaign on screen has closed', async () => {
+    mockUseCampaigns.mockReturnValue(
+      queryState({
+        data: feed([
+          campaign({ id: 'c1', deadline: PASSED_DEADLINE }),
+          campaign({ id: 'c2', deadline: PASSED_DEADLINE }),
+        ]),
+      }),
+    );
+
+    await renderWithProviders(<DiscoverScreen />);
+
+    expect(screen.getByText('0 live')).toBeOnTheScreen();
+    // "0 live" over visible tiles, not an empty state: there is still content.
+    expect(screen.queryByText('No campaigns right now')).toBeNull();
+  });
+
+  it('counts only the live campaigns left after a category filter', async () => {
+    mockUseCampaigns.mockReturnValue(
+      queryState({
+        data: feed([
+          campaign({ id: 'c1', title: 'Autumn lookbook', niche: 'Fashion' }),
+          campaign({ id: 'c2', title: 'Gym opening', niche: 'Fitness' }),
+          campaign({ id: 'c3', title: 'Expired gym', niche: 'Fitness', deadline: PASSED_DEADLINE }),
+        ]),
+      }),
+    );
+    await renderWithProviders(<DiscoverScreen />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Fitness' }));
+
+    expect(screen.getByText('Gym opening')).toBeOnTheScreen();
+    expect(screen.getByText('Expired gym')).toBeOnTheScreen();
+    expect(screen.getByText('1 live')).toBeOnTheScreen();
   });
 });
 

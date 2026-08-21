@@ -22,7 +22,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { balanceColumns } from '@/lib/masonry';
-import { tileAspectRatio } from '@/lib/campaign-signals';
+import { deadlineSignal, tileAspectRatio } from '@/lib/campaign-signals';
 import { useCampaigns } from '@/lib/queries/use-campaigns';
 
 import type { CampaignListItem } from '@creatordocks/shared';
@@ -102,6 +102,16 @@ export default function DiscoverScreen() {
       );
     });
   }, [campaigns, category, query]);
+
+  // "N live" counts what a creator can actually apply to, which is not the same
+  // as what is on screen. The API filters expired campaigns out of the feed, but
+  // React Query keeps serving the last fetched page while it refetches, so a
+  // deadline can pass while its tile is still up — the tile relabels itself
+  // "Closed" and the count has to agree with it rather than overstate the feed.
+  const liveCount = useMemo(
+    () => filtered.filter((campaign) => !deadlineSignal(campaign.deadline).passed).length,
+    [filtered],
+  );
 
   // A two-column mosaic needs enough tiles to read as a grid — with one or two
   // campaigns it just looks broken, so the feed falls back to full-width hero
@@ -204,7 +214,7 @@ export default function DiscoverScreen() {
                   {category === ALL_CATEGORIES ? 'Fresh drops' : category}
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {filtered.length} live
+                  {liveCount} live
                 </ThemedText>
               </View>
 

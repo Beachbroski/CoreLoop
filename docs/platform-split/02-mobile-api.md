@@ -28,7 +28,7 @@ Single wrapper used by every v1 handler, in order:
 - `DELETE /api/v1/me` — **Apple guideline 5.1.1(v) requires in-app account deletion.** Design deliberately: reject or defer if PROCESSING payouts exist (return actionable message); anonymize User rows referenced by Payout/Submission (financial audit trail) rather than hard-delete; delete Clerk user via backend API; revoke sessions; cascade per legal/DPA requirements. Document exactly what is deleted vs anonymized — App Review and the privacy policy must agree.
 
 ### Campaigns (discovery)
-- `GET /api/v1/campaigns` — ACTIVE campaigns only, never DRAFT/CANCELLED. Paginated (cursor, default 20, max 50). Filters: niche, platform. Response excludes brand-internal fields.
+- `GET /api/v1/campaigns` — ACTIVE campaigns only, never DRAFT/CANCELLED, and **only those still open for applications** (`deadline >= now`, the same boundary `POST /api/v1/applications` enforces — the feed must never advertise a campaign whose application would be rejected). Paginated (cursor, default 20, max 50). Filters: niche, platform. Response excludes brand-internal fields.
 - `GET /api/v1/campaigns/:id` — ACTIVE only (404 otherwise, including for existing-but-inactive ids — don't leak campaign existence).
 
 ### Applications
