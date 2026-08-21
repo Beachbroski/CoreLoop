@@ -8,7 +8,10 @@
     "scheme": "creatordocks",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.anonymous.creatordocks"
+      "bundleIdentifier": "com.anonymous.creatordocks",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,16 +31,26 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#07080b",
+          "backgroundColor": "#f5f7fb",
+          "dark": {
+            "backgroundColor": "#07080b"
+          },
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 100
         }
       ],
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "CreatorDocks needs access to your photos so you can upload content for your campaign submissions."
+          "photosPermission": "CreatorDocks needs access to your photos so you can upload content for your campaign submissions.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ],
       "expo-notifications"

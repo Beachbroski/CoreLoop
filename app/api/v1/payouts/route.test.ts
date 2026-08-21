@@ -18,6 +18,21 @@ const { GET } = await import('./route')
 
 const creator = { id: 'user_1', email: 'creator@example.com', name: null, role: 'CREATOR' as const }
 
+/** A payout row as Prisma returns it for this route, relation chain included. */
+function payoutRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'payout_1',
+    amount: 4500,
+    platformFee: 500,
+    status: 'PAID',
+    createdAt: new Date('2026-07-01T00:00:00.000Z'),
+    submission: {
+      application: { campaign: { id: 'campaign_1', title: 'Summer Skincare Launch' } },
+    },
+    ...overrides,
+  }
+}
+
 describe('GET /api/v1/payouts', () => {
   beforeEach(() => {
     findManyMock.mockReset()
@@ -27,15 +42,7 @@ describe('GET /api/v1/payouts', () => {
   })
 
   it("only queries the caller's own payouts and excludes stripeTransferId", async () => {
-    findManyMock.mockResolvedValue([
-      {
-        id: 'payout_1',
-        amount: 4500,
-        platformFee: 500,
-        status: 'PAID',
-        createdAt: new Date('2026-07-01T00:00:00.000Z'),
-      },
-    ])
+    findManyMock.mockResolvedValue([payoutRow()])
     countMock.mockResolvedValue(1)
 
     const res = await GET({ req: new Request('https://example.com/api/v1/payouts'), user: creator } as never)
@@ -47,6 +54,39 @@ describe('GET /api/v1/payouts', () => {
       expect.objectContaining({
         where: { creatorId: 'user_1' },
         select: expect.not.objectContaining({ stripeTransferId: true }),
+      }),
+    )
+  })
+
+  // Without this the Earnings screen shows a number smaller than the rate the
+  // creator proposed, with nothing on screen saying what it paid for.
+  it('names the campaign each payout came from, traced through the submission', async () => {
+    findManyMock.mockResolvedValue([payoutRow()])
+    countMock.mockResolvedValue(1)
+
+    const res = await GET({ req: new Request('https://example.com/api/v1/payouts'), user: creator } as never)
+    const body = await res.json()
+
+    expect(body.data[0].campaign).toEqual({ id: 'campaign_1', title: 'Summer Skincare Launch' })
+    // Flattened onto the payout — the app is never handed the relation chain.
+    expect(body.data[0]).not.toHaveProperty('submission')
+  })
+
+  it('reaches the campaign through Payout -> Submission -> Application without over-fetching', async () => {
+    findManyMock.mockResolvedValue([])
+    countMock.mockResolvedValue(0)
+
+    await GET({ req: new Request('https://example.com/api/v1/payouts'), user: creator } as never)
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          submission: {
+            select: {
+              application: { select: { campaign: { select: { id: true, title: true } } } },
+            },
+          },
+        }),
       }),
     )
   })

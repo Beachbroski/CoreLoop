@@ -51,14 +51,23 @@ function setIsDevice(value: boolean) {
   (Device as { isDevice: boolean }).isDevice = value;
 }
 
-function setProjectId(projectId: string | undefined) {
+// Deliberately `unknown`: `expo.extra` is free-form JSON, so the tests need to
+// be able to put a blank string or a non-string in there, not just a valid id.
+function setProjectId(projectId: unknown) {
   (Constants as { expoConfig: unknown }).expoConfig = {
-    extra: projectId ? { eas: { projectId } } : {},
+    extra: projectId === undefined ? {} : { eas: { projectId } },
   };
 }
 
 function grantPermission(granted: boolean, canAskAgain = false) {
   mockNotifications.getPermissionsAsync.mockResolvedValue({
+    granted,
+    canAskAgain,
+  } as never);
+}
+
+function answerPrompt(granted: boolean, canAskAgain = false) {
+  mockNotifications.requestPermissionsAsync.mockResolvedValue({
     granted,
     canAskAgain,
   } as never);
@@ -75,7 +84,7 @@ beforeEach(() => {
 
 describe('registerForPushNotifications', () => {
   it('registers the device token with the backend', async () => {
-    await registerForPushNotifications(getToken);
+    const result = await registerForPushNotifications(getToken);
 
     expect(mockApiFetch).toHaveBeenCalledWith(
       '/api/v1/devices',
@@ -86,53 +95,85 @@ describe('registerForPushNotifications', () => {
         token: 'clerk-token',
       }),
     );
+    expect(result).toEqual({ status: 'registered', expoPushToken: 'ExponentPushToken[abc]' });
   });
 
   it('skips the simulator, where push tokens do not exist', async () => {
     setIsDevice(false);
 
-    await registerForPushNotifications(getToken);
+    const result = await registerForPushNotifications(getToken);
 
     expect(mockNotifications.getPermissionsAsync).not.toHaveBeenCalled();
     expect(mockApiFetch).not.toHaveBeenCalled();
+    expect(result).toEqual({ status: 'unsupported' });
   });
 
   it('skips when no EAS project is configured yet', async () => {
     setProjectId(undefined);
 
-    await registerForPushNotifications(getToken);
+    const result = await registerForPushNotifications(getToken);
 
     expect(mockApiFetch).not.toHaveBeenCalled();
+    expect(result).toEqual({ status: 'unconfigured' });
+  });
+
+  // `expo.extra` is hand-edited JSON (or written by `eas init`), so a present
+  // but useless value is as likely as a missing one — and it must not reach
+  // getExpoPushTokenAsync, where it fails as an opaque network-looking error.
+  it.each(['   ', 42, null])('treats a projectId of %p as unconfigured', async (projectId) => {
+    setProjectId(projectId);
+
+    const result = await registerForPushNotifications(getToken);
+
+    expect(mockNotifications.getExpoPushTokenAsync).not.toHaveBeenCalled();
+    expect(result).toEqual({ status: 'unconfigured' });
   });
 
   it('asks for permission when it has not been granted and can still ask', async () => {
     grantPermission(false, true);
-    mockNotifications.requestPermissionsAsync.mockResolvedValue({ granted: true } as never);
+    answerPrompt(true);
 
-    await registerForPushNotifications(getToken);
+    const result = await registerForPushNotifications(getToken);
 
     expect(mockNotifications.requestPermissionsAsync).toHaveBeenCalled();
     expect(mockApiFetch).toHaveBeenCalled();
+    expect(result).toEqual({ status: 'registered', expoPushToken: 'ExponentPushToken[abc]' });
   });
 
   it('does not re-prompt when permission was already denied for good', async () => {
     grantPermission(false, false);
 
-    await registerForPushNotifications(getToken);
+    const result = await registerForPushNotifications(getToken);
 
     // Re-prompting a user who said no is both useless (iOS shows nothing) and
     // the kind of thing App Review flags.
     expect(mockNotifications.requestPermissionsAsync).not.toHaveBeenCalled();
     expect(mockApiFetch).not.toHaveBeenCalled();
+    // canAskAgain: false is the signal a priming UI needs — the only remaining
+    // route is Settings, so re-asking in-app would be a dead end.
+    expect(result).toEqual({ status: 'denied', canAskAgain: false });
   });
 
   it('registers nothing when the permission request is refused', async () => {
     grantPermission(false, true);
-    mockNotifications.requestPermissionsAsync.mockResolvedValue({ granted: false } as never);
+    answerPrompt(false);
 
-    await registerForPushNotifications(getToken);
+    const result = await registerForPushNotifications(getToken);
 
     expect(mockNotifications.getExpoPushTokenAsync).not.toHaveBeenCalled();
+    expect(mockApiFetch).not.toHaveBeenCalled();
+    expect(result).toEqual({ status: 'denied', canAskAgain: false });
+  });
+
+  it("explains a token failure instead of forwarding Expo's opaque error", async () => {
+    mockNotifications.getExpoPushTokenAsync.mockRejectedValue(
+      new Error('Encountered an error while fetching the token'),
+    );
+
+    // The wrapper message has to name the projectId and the credentials, because
+    // that is what is actually wrong ~every time this throws.
+    await expect(registerForPushNotifications(getToken)).rejects.toThrow(/test-project-id/);
+    await expect(registerForPushNotifications(getToken)).rejects.toThrow(/credentials/);
     expect(mockApiFetch).not.toHaveBeenCalled();
   });
 });

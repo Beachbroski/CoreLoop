@@ -1,9 +1,13 @@
 import { useAuth } from '@clerk/clerk-expo';
+import { Stack, Tabs } from 'expo-router';
+import type { ReactElement } from 'react';
 
 import { ApiError } from '@/lib/api-client';
 import { NOT_INVITED_ERROR, useEnsureAccount } from '@/lib/queries/use-ensure-account';
 import { fireEvent, renderWithProviders, screen } from '@/test/render';
 import AppTabsLayout from '@/app/(app)/_layout';
+import ActivityStackLayout from '@/app/(app)/activity/_layout';
+import DiscoverStackLayout from '@/app/(app)/discover/_layout';
 
 /**
  * Screen tests live here rather than beside the screen. Everything under
@@ -41,6 +45,52 @@ const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 const mockSignOut = jest.fn();
 
+/* ------------------------------------------------ navigator registrations -- */
+
+type SymbolName = { ios: string; android: string; web: string };
+type IconProps = { name: SymbolName; filledName: SymbolName };
+type ScreenOptions = {
+  href?: null;
+  popToTopOnBlur?: boolean;
+  presentation?: string;
+  tabBarIcon?: (props: { color: string; focused: boolean; size: number }) => ReactElement<IconProps>;
+};
+type Registration = { name?: string; options?: ScreenOptions };
+
+const tabRegistrations: Registration[] = [];
+const stackRegistrations: Registration[] = [];
+
+/**
+ * A layout file's entire contract is *which* routes it registers and with what
+ * options — and none of that reaches the rendered tree. `Tabs.Screen` and
+ * `Stack.Screen` are mocked as components that render nothing (jest.setup.js),
+ * and RNTL 14 removed `UNSAFE_getAllByType`, which was the old way to reach a
+ * composite that renders null. Swapping in recording components is what is
+ * left. They are assigned once, at module scope, so every render in this file
+ * reports through them; the arrays are cleared per test.
+ */
+function RecordedTabScreen(props: Registration): null {
+  tabRegistrations.push(props);
+  return null;
+}
+
+function RecordedStackScreen(props: Registration): null {
+  stackRegistrations.push(props);
+  return null;
+}
+
+(Tabs as unknown as { Screen: typeof RecordedTabScreen }).Screen = RecordedTabScreen;
+(Stack as unknown as { Screen: typeof RecordedStackScreen }).Screen = RecordedStackScreen;
+
+/** Registrations by route name. A re-render can record the same name twice. */
+function registration(list: Registration[], name: string): Registration | undefined {
+  return list.find((entry) => entry.name === name);
+}
+
+function registeredNames(list: Registration[]): string[] {
+  return Array.from(new Set(list.map((entry) => entry.name ?? '')));
+}
+
 type AccountState = Partial<ReturnType<typeof useEnsureAccount>>;
 
 /** Only the four fields this layout branches on; the rest is React Query noise. */
@@ -68,8 +118,17 @@ function signedIn(isSignedIn = true, isLoaded = true) {
 beforeEach(() => {
   mockSignOut.mockReset().mockResolvedValue(undefined);
   mockUsePushNotifications.mockReset();
+  tabRegistrations.length = 0;
+  stackRegistrations.length = 0;
   signedIn();
 });
+
+/** The only account state that gets as far as rendering a navigator. */
+function accountResolved() {
+  mockUseEnsureAccount.mockReturnValue(
+    accountState({ data: { id: 'user_1', email: 'creator@example.com' } as never }),
+  );
+}
 
 describe('AppTabsLayout gating', () => {
   it('renders nothing until Clerk has loaded, rather than flashing sign-in', async () => {
@@ -122,6 +181,22 @@ describe('AppTabsLayout gating', () => {
     expect(mockSignOut).toHaveBeenCalled();
   });
 
+  it('gives the waitlist sign-out a real 44pt target', async () => {
+    mockUseEnsureAccount.mockReturnValue(
+      accountState({ isError: true, error: new ApiError(NOT_INVITED_ERROR, 403) }),
+    );
+    await renderWithProviders(<AppTabsLayout />);
+
+    // It is the only control on a dead-end screen. It was a Text centering
+    // itself with `textAlignVertical`, which is Android-only — on iOS the label
+    // sat at the top of its box, so the bottom of the target hit nothing.
+    const button = screen.getByLabelText('Sign out');
+    expect(button).toBeOnTheScreen();
+
+    await fireEvent.press(button);
+    expect(mockSignOut).toHaveBeenCalled();
+  });
+
   it('shows a retryable error for a genuine failure', async () => {
     const refetch = jest.fn();
     mockUseEnsureAccount.mockReturnValue(
@@ -156,6 +231,116 @@ describe('AppTabsLayout gating', () => {
     expect(screen.queryByText('Setting up your account…')).toBeNull();
     expect(screen.queryByText("Couldn't open your account.")).toBeNull();
     expect(screen.queryByText("You're on the list")).toBeNull();
+  });
+});
+
+/**
+ * The tab bar is a four-item control, and the five drill-in screens used to be
+ * registered here too, as tabs hidden with `href: null`. Hidden or not, a tab
+ * is a tab: `router.push('/discover/<id>')` was a lateral switch, so a campaign
+ * opened with no card transition and no swipe-back. They live in nested stacks
+ * now (`discover/_layout.tsx`, `activity/_layout.tsx`), and the thing worth
+ * pinning is that they never come back here — a stray `Tabs.Screen` for a
+ * detail route silently reintroduces the whole bug.
+ */
+describe('tab registration', () => {
+  const DRILL_IN_ROUTES = [
+    'discover/[id]/index',
+    'discover/[id]/apply',
+    'activity/applications/[id]',
+    'activity/submissions/[id]',
+    'activity/submissions/new',
+  ];
+
+  it('registers the four tabs and nothing else', async () => {
+    accountResolved();
+
+    await renderWithProviders(<AppTabsLayout />);
+
+    expect(registeredNames(tabRegistrations)).toEqual([
+      'discover',
+      'activity',
+      'earnings/index',
+      'profile/index',
+    ]);
+  });
+
+  it('registers no drill-in route as a hidden tab', async () => {
+    accountResolved();
+
+    await renderWithProviders(<AppTabsLayout />);
+
+    for (const route of DRILL_IN_ROUTES) {
+      expect(registration(tabRegistrations, route)).toBeUndefined();
+    }
+    // `href: null` is the only way a tab hides itself, so its absence is the
+    // general form of the assertion above.
+    expect(tabRegistrations.some((entry) => entry.options?.href === null)).toBe(false);
+  });
+
+  it('resets a stack-owning tab when it loses focus', async () => {
+    accountResolved();
+
+    await renderWithProviders(<AppTabsLayout />);
+
+    // Switching tabs does not unwind the stack that presented a modal, so
+    // without this a submitted application's modal stays up over the next tab.
+    expect(registration(tabRegistrations, 'discover')?.options?.popToTopOnBlur).toBe(true);
+    expect(registration(tabRegistrations, 'activity')?.options?.popToTopOnBlur).toBe(true);
+    // The two leaf tabs have no stack to pop.
+    expect(registration(tabRegistrations, 'earnings/index')?.options?.popToTopOnBlur).toBeUndefined();
+    expect(registration(tabRegistrations, 'profile/index')?.options?.popToTopOnBlur).toBeUndefined();
+  });
+
+  it('pairs every tab icon with the filled variant of the same symbol', async () => {
+    accountResolved();
+
+    await renderWithProviders(<AppTabsLayout />);
+
+    // Activity shipped `list.bullet` unselected against `list.bullet.circle.fill`
+    // selected — two different glyphs, so the icon changed shape on selection
+    // rather than filling in. Stated as an invariant so the next pair cannot
+    // drift the same way.
+    for (const entry of tabRegistrations) {
+      const icon = entry.options?.tabBarIcon?.({ color: '#ffffff', focused: true, size: 24 });
+      expect(icon).toBeDefined();
+      expect(icon?.props.filledName.ios).toBe(`${icon?.props.name.ios}.fill`);
+    }
+  });
+});
+
+describe('nested stacks', () => {
+  it('gives Discover a stack with the campaign detail and the apply flow', async () => {
+    await renderWithProviders(<DiscoverStackLayout />);
+
+    expect(registeredNames(stackRegistrations)).toEqual(['index', '[id]/index', '[id]/apply']);
+  });
+
+  it('gives Activity a stack with both detail routes and the new-submission flow', async () => {
+    await renderWithProviders(<ActivityStackLayout />);
+
+    expect(registeredNames(stackRegistrations)).toEqual([
+      'index',
+      'applications/[id]',
+      'submissions/[id]',
+      'submissions/new',
+    ]);
+  });
+
+  it.each([
+    ['discover', DiscoverStackLayout, '[id]/apply', ['index', '[id]/index']],
+    ['activity', ActivityStackLayout, 'submissions/new', ['index', 'applications/[id]', 'submissions/[id]']],
+  ])('presents only the %s create flow modally', async (_tab, Layout, modalRoute, pushRoutes) => {
+    await renderWithProviders(<Layout />);
+
+    // A create flow behind a card can be abandoned by a stray tab tap with the
+    // half-written form left on a stack nobody returns to. A modal has to be
+    // finished or cancelled.
+    expect(registration(stackRegistrations, modalRoute)?.options?.presentation).toBe('modal');
+
+    for (const route of pushRoutes) {
+      expect(registration(stackRegistrations, route)?.options?.presentation).toBeUndefined();
+    }
   });
 });
 

@@ -2,6 +2,33 @@ import prisma from '@/lib/prisma'
 import { withMobileApi } from '@/lib/mobile-api-guard'
 import { listPayoutsQuerySchema, payoutSchema } from '@creatordocks/shared'
 
+// Payout -> Submission -> Application -> Campaign is the only path from a
+// payment back to the work that earned it. Every hop is a plain `select` so
+// the intermediate rows carry nothing but the edge to the next one.
+const campaignProvenanceSelect = {
+  select: {
+    application: { select: { campaign: { select: { id: true, title: true } } } },
+  },
+} as const
+
+// The relation chain is flattened away on the wire — the app is told what the
+// payment was for, not how the tables get there.
+function toPayoutResponse(payout: {
+  id: string
+  amount: number
+  platformFee: number
+  status: string
+  createdAt: Date
+  submission: { application: { campaign: { id: string; title: string } } }
+}) {
+  const { submission, ...rest } = payout
+  return payoutSchema.parse({
+    ...rest,
+    createdAt: payout.createdAt.toISOString(),
+    campaign: submission.application.campaign,
+  })
+}
+
 export const GET = withMobileApi(
   { rateLimit: { limit: 60, windowMs: 60_000 }, role: 'CREATOR' },
   async ({ req, user }) => {
@@ -26,19 +53,22 @@ export const GET = withMobileApi(
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
-        select: { id: true, amount: true, platformFee: true, status: true, createdAt: true },
+        select: {
+          id: true,
+          amount: true,
+          platformFee: true,
+          status: true,
+          createdAt: true,
+          submission: campaignProvenanceSelect,
+        },
       }),
       prisma.payout.count({ where }),
       prisma.payout.aggregate({ where: { ...where, status: 'PAID' }, _sum: { amount: true } }),
     ])
 
-    const data = payouts.map((payout) =>
-      payoutSchema.parse({ ...payout, createdAt: payout.createdAt.toISOString() }),
-    )
-
     return Response.json({
       success: true,
-      data,
+      data: payouts.map(toPayoutResponse),
       meta: { total, page, limit, lifetimePaidAmount: paidAggregate._sum.amount ?? 0 },
     })
   },

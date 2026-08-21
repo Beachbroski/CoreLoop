@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
 import { Redirect, Tabs } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View, type ColorValue } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type ColorValue } from 'react-native';
 
 import { ErrorState } from '@/components/error-state';
 import { Logo } from '@/components/logo';
@@ -50,14 +50,22 @@ function WaitlistGate() {
         <ThemedText themeColor="textSecondary" style={styles.gateBody}>
           CreatorDocks is invite-only right now. We&apos;ll email you as soon as your spot opens up.
         </ThemedText>
-        <ThemedText
-          type="link"
-          themeColor="accent"
-          style={styles.gateAction}
+        {/*
+         * A Pressable, not a Text with `onPress`. The 44pt minimum is a hit
+         * target, and centering text inside one needs a box that can center —
+         * `textAlignVertical` was doing that job, but it is an Android-only
+         * prop, so on iOS the label sat at the top of its 44pt box.
+         */}
+        <Pressable
           onPress={() => signOut()}
-          accessibilityRole="button">
-          Sign out
-        </ThemedText>
+          accessibilityRole="button"
+          accessibilityLabel="Sign out"
+          hitSlop={Spacing.two}
+          style={styles.gateAction}>
+          <ThemedText type="link" themeColor="accent">
+            Sign out
+          </ThemedText>
+        </Pressable>
       </View>
     </Screen>
   );
@@ -112,6 +120,18 @@ export default function AppTabsLayout() {
     );
   }
 
+  // Four tabs, two of which own a nested stack (`discover/_layout.tsx`,
+  // `activity/_layout.tsx`). Drill-in screens used to be registered here as
+  // `href: null` tabs, which made every `router.push()` a lateral tab switch:
+  // no card transition, no swipe-back. They are stack children now, so this
+  // layout only knows about the four things the tab bar actually shows.
+  //
+  // `popToTopOnBlur` on the two stack-owning tabs: leaving a tab resets its
+  // stack. That matters most for the two create flows, which are modals that
+  // finish with `router.replace('/activity')` — a tab jump does not unwind the
+  // stack that presented them, so without this a submitted-and-left modal
+  // stays presented over the tab the creator landed on. The cost is losing
+  // your place in a drill-in when you tab away, which is one screen deep.
   return (
     <Tabs
       screenOptions={{
@@ -121,10 +141,11 @@ export default function AppTabsLayout() {
         tabBarStyle: { backgroundColor: theme.backgroundElement, borderTopColor: theme.border },
       }}>
       <Tabs.Screen
-        name="discover/index"
+        name="discover"
         listeners={{ tabPress: onTabPress }}
         options={{
           title: 'Discover',
+          popToTopOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <TabIcon
               focused={focused}
@@ -136,14 +157,15 @@ export default function AppTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="activity/index"
+        name="activity"
         listeners={{ tabPress: onTabPress }}
         options={{
           title: 'Activity',
+          popToTopOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <TabIcon
               focused={focused}
-              name={{ ios: 'list.bullet', android: 'checklist', web: 'checklist' }}
+              name={{ ios: 'list.bullet.circle', android: 'checklist', web: 'checklist' }}
               filledName={{ ios: 'list.bullet.circle.fill', android: 'checklist', web: 'checklist' }}
               color={color}
             />
@@ -180,13 +202,6 @@ export default function AppTabsLayout() {
           ),
         }}
       />
-
-      {/* Nested detail/form screens — reachable via router.push(), not tabs. */}
-      <Tabs.Screen name="discover/[id]/index" options={{ href: null }} />
-      <Tabs.Screen name="discover/[id]/apply" options={{ href: null }} />
-      <Tabs.Screen name="activity/applications/[id]" options={{ href: null }} />
-      <Tabs.Screen name="activity/submissions/[id]" options={{ href: null }} />
-      <Tabs.Screen name="activity/submissions/new" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -209,6 +224,9 @@ const styles = StyleSheet.create({
   gateAction: {
     marginTop: Spacing.two,
     minHeight: 44,
-    textAlignVertical: 'center',
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
   },
 });
