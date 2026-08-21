@@ -5,17 +5,17 @@ Blockers found in the 2026-08-20 design audit. Kept here rather than in
 cannot carry comments — and anything parked in `expo.extra` ships to every
 device inside the runtime manifest.
 
-## 1. Bundle identifier — release blocker
+## 1. Bundle identifier — set, still needs registering
 
-`expo.ios.bundleIdentifier` is still `com.anonymous.creatordocks`, the Expo
-template default. `com.anonymous` is a domain nobody owns and no matching App ID
-exists, so signing, push credentials and App Store Connect all fail against it.
+`expo.ios.bundleIdentifier` is now `com.creatordocks.app` (was the Expo template
+default `com.anonymous.creatordocks`, a domain nobody owns).
 
-1. Register the real reverse-DNS App ID in the Apple Developer portal
+Still outstanding — the identifier is only half the job:
+
+1. Register `com.creatordocks.app` as an App ID in the Apple Developer portal
    (Certificates, Identifiers & Profiles → Identifiers), with **Push
    Notifications** capability enabled.
-2. Set `expo.ios.bundleIdentifier` to it.
-3. `xattr -cr mobile/ios && npx expo prebuild --clean`
+2. `xattr -cr mobile/ios && npx expo prebuild --clean`
 
 It propagates: the generated Info.plist registers it as a second
 `CFBundleURLSchemes` entry alongside `creatordocks`, and `NSUserActivityTypes`

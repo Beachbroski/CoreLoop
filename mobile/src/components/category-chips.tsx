@@ -7,6 +7,9 @@ import { ThemedText } from './themed-text';
 
 export const ALL_CATEGORIES = 'All';
 
+/** The chip's resting height at the default text size. It grows from here. */
+const CHIP_MIN_HEIGHT = 34;
+
 /**
  * Horizontal niche filter. Options are derived from the campaigns actually
  * loaded, so a chip never promises a category with nothing behind it.
@@ -42,8 +45,9 @@ export function CategoryChips({
             onPress={() => handlePress(category)}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
-            // The chip stays 34pt tall by design; hitSlop lifts the tappable
-            // area to 50pt so it clears Apple's 44pt minimum.
+            // The chip's resting height is 34pt; hitSlop lifts the tappable
+            // area past Apple's 44pt minimum. It grows from there with Dynamic
+            // Type, and the slop rides along.
             hitSlop={{ top: Spacing.two, bottom: Spacing.two }}
             style={({ pressed }) => [
               styles.chip,
@@ -58,7 +62,7 @@ export function CategoryChips({
                 borderColor: active ? theme.accentFill : theme.border,
               },
             ]}>
-            <ThemedText type="smallBold" style={active ? styles.activeLabel : undefined} themeColor={active ? undefined : 'textSecondary'}>
+            <ThemedText type="smallBold" themeColor={active ? 'onAccent' : 'textSecondary'}>
               {category}
             </ThemedText>
           </Pressable>
@@ -79,14 +83,18 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.two,
   },
   chip: {
-    height: 34,
+    // `minHeight`, not `height`: the label scales with Dynamic Type and a fixed
+    // 34pt box clipped it at the very first accessibility size — the filter
+    // read as a row of half-eaten words. The vertical padding keeps the
+    // resting height at 34 so nothing moves at the default text size.
+    minHeight: CHIP_MIN_HEIGHT,
     paddingHorizontal: Spacing.three - 1,
-    borderRadius: 17,
+    paddingVertical: Spacing.one + 1,
+    // A capsule rather than the old fixed 17pt corner, which stopped being a
+    // half-height radius the moment the chip was allowed to grow.
+    borderRadius: 999,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  activeLabel: {
-    color: '#ffffff',
   },
 });

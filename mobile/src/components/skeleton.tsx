@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { StyleSheet, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, type ReactNode } from 'react';
+import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -10,6 +10,50 @@ import Animated, {
 
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+
+/**
+ * Hoisted so it is one object for the lifetime of the module rather than a new
+ * one on every render — `accessibilityState` is compared by identity downstream.
+ */
+const BUSY = { busy: true } as const;
+
+type SkeletonGroupProps = {
+  /**
+   * What is loading, phrased as a sentence VoiceOver can read on its own:
+   * "Loading campaigns", "Loading your earnings". This is the ONLY thing a
+   * screen reader gets while a screen loads, so a bare "Loading" wastes it.
+   */
+  label: string;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+};
+
+/**
+ * Wrap a screen's skeleton layout in this.
+ *
+ * Every placeholder below hides itself from VoiceOver, which is right — a
+ * pulsing grey block carries no information and stopping on twelve of them is
+ * torture. But hiding them and adding nothing back made loading *completely
+ * silent*: the screen reader landed on an empty region and said nothing, so a
+ * blind creator could not tell a slow network from a broken screen.
+ *
+ * The group is the thing that speaks. It collapses the whole placeholder region
+ * into one accessible element that announces the busy state once, and stops
+ * announcing when the real content replaces it.
+ */
+export function SkeletonGroup({ label, children, style }: SkeletonGroupProps) {
+  return (
+    <View
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={label}
+      accessibilityState={BUSY}
+      accessibilityLiveRegion="polite"
+      style={style}>
+      {children}
+    </View>
+  );
+}
 
 type SkeletonProps = {
   width?: DimensionValue;
@@ -32,7 +76,9 @@ export function Skeleton({ width = '100%', height, borderRadius = Spacing.two, s
   const animatedStyle = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
   // Placeholders carry no information — without this VoiceOver stops on every
-  // pulsing block while a screen loads.
+  // pulsing block while a screen loads. `SkeletonGroup` supplies the busy
+  // announcement that replaces them; hiding these without wrapping them leaves
+  // the loading state silent.
   return (
     <Animated.View
       accessibilityElementsHidden

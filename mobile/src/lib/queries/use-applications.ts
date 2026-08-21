@@ -1,17 +1,27 @@
 import { useAuth } from '@clerk/clerk-expo';
-import { useQuery } from '@tanstack/react-query';
-import { applicationSchema } from '@creatordocks/shared';
+import { useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query';
+import { applicationSchema, type Application } from '@creatordocks/shared';
 
 import { apiFetchList } from '@/lib/api-client';
+import { flattenPages, listQueryString, nextPage, PAGE_LIMIT, type PaginatedFeed } from './pagination';
 
-export function useApplications() {
+/**
+ * A creator's own applications, newest first. Paginated because a working
+ * creator passes 20 applications quickly, and everything past that used to be
+ * unreachable — the list simply stopped, with no indication there was more.
+ */
+export function useApplications(): UseInfiniteQueryResult<PaginatedFeed<Application>, Error> {
   const { getToken } = useAuth();
 
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['applications'],
-    queryFn: async () => {
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
       const token = await getToken();
-      return apiFetchList('/api/v1/applications', applicationSchema, { token });
+      const query = listQueryString({ page: pageParam, limit: PAGE_LIMIT });
+      return apiFetchList(`/api/v1/applications${query}`, applicationSchema, { token });
     },
+    getNextPageParam: (lastPage) => nextPage(lastPage.meta),
+    select: (data) => flattenPages(data.pages),
   });
 }

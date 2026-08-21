@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -15,8 +16,24 @@ import { ThemedText } from './themed-text';
 import type { CampaignListItem } from '@creatordocks/shared';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const ENTRANCE_MS = 300;
 const ENTRANCE_STAGGER_MS = 55;
 const ENTRANCE_CAP = 10;
+
+/**
+ * Campaign ids whose entrance has already played. Reanimated runs `entering`
+ * on every MOUNT, and the Discover masonry re-buckets its columns on every
+ * search keystroke and every category change — a campaign that moves from
+ * column 0 to column 1 gets a different parent, so React unmounts and remounts
+ * it and the whole feed re-fades while the creator is still typing.
+ *
+ * Module scope, not React state, precisely because React state is what the
+ * remount throws away. It holds one cuid per campaign the creator has actually
+ * seen — a few hundred short strings in the longest realistic session — and it
+ * is intentionally never pruned: forgetting an id would replay the animation,
+ * which is the bug.
+ */
+const enteredCampaignIds = new Set<string>();
 
 function brandInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -74,6 +91,14 @@ export function CampaignTile({
   const router = useRouter();
   const pressed = useSharedValue(0);
 
+  // Lazy initialiser, so the answer is fixed for the life of this mount even
+  // though the effect below mutates the set a moment later.
+  const [isFirstAppearance] = useState(() => !enteredCampaignIds.has(campaign.id));
+
+  useEffect(() => {
+    enteredCampaignIds.add(campaign.id);
+  }, [campaign.id]);
+
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(pressed.value, [0, 1], [1, 0.97]) }],
   }));
@@ -105,7 +130,12 @@ export function CampaignTile({
   const [, markEnd] = coverArtSpec(campaign.id, campaign.niche).colors;
 
   return (
-    <Animated.View entering={FadeIn.duration(300).delay(Math.min(index, ENTRANCE_CAP) * ENTRANCE_STAGGER_MS)}>
+    <Animated.View
+      entering={
+        isFirstAppearance
+          ? FadeIn.duration(ENTRANCE_MS).delay(Math.min(index, ENTRANCE_CAP) * ENTRANCE_STAGGER_MS)
+          : undefined
+      }>
       <AnimatedPressable
         onPress={onPress}
         onPressIn={onPressIn}
@@ -147,10 +177,11 @@ export function CampaignTile({
             ) : null}
           </View>
 
-          {/* `accentFill` — the pill carries white text, so it needs the darker
-              fill coral (4.51:1) rather than the foreground `accent` (3.25:1). */}
+          {/* `accentFill` — the pill carries `onAccent` text, so it needs the
+              darker fill coral (4.51:1) rather than the foreground `accent`
+              (3.25:1). */}
           <View style={[styles.price, { backgroundColor: theme.accentFill }]}>
-            <ThemedText type="smallBold" style={styles.priceText}>
+            <ThemedText type="smallBold" themeColor="onAccent" style={styles.priceText}>
               {payout}
             </ThemedText>
           </View>
@@ -164,7 +195,12 @@ export function CampaignTile({
               <Image source={{ uri: campaign.brand.avatarUrl }} style={styles.mark} contentFit="cover" />
             ) : (
               <View style={[styles.mark, { backgroundColor: markEnd }]}>
-                <ThemedText style={styles.markText}>{brandInitials(brandName)}</ThemedText>
+                {/* Rule 3 of the Dynamic Type policy (see themed-text.tsx): a
+                    glyph in an 18pt disc that cannot grow, whose information —
+                    the brand name — is spelled out in full right beside it. */}
+                <ThemedText allowFontScaling={false} style={styles.markText}>
+                  {brandInitials(brandName)}
+                </ThemedText>
               </View>
             )}
             <ThemedText type="small" numberOfLines={1} style={styles.brandName}>
@@ -267,7 +303,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   priceText: {
-    color: '#ffffff',
     fontSize: 15,
     lineHeight: 19,
   },

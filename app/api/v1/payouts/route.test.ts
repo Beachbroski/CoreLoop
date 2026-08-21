@@ -27,7 +27,13 @@ function payoutRow(overrides: Record<string, unknown> = {}) {
     status: 'PAID',
     createdAt: new Date('2026-07-01T00:00:00.000Z'),
     submission: {
-      application: { campaign: { id: 'campaign_1', title: 'Summer Skincare Launch' } },
+      application: {
+        campaign: {
+          id: 'campaign_1',
+          title: 'Summer Skincare Launch',
+          brand: { name: 'Glow Co' },
+        },
+      },
     },
     ...overrides,
   }
@@ -60,16 +66,42 @@ describe('GET /api/v1/payouts', () => {
 
   // Without this the Earnings screen shows a number smaller than the rate the
   // creator proposed, with nothing on screen saying what it paid for.
-  it('names the campaign each payout came from, traced through the submission', async () => {
+  it('names the brand and campaign each payout came from, traced through the submission', async () => {
     findManyMock.mockResolvedValue([payoutRow()])
     countMock.mockResolvedValue(1)
 
     const res = await GET({ req: new Request('https://example.com/api/v1/payouts'), user: creator } as never)
     const body = await res.json()
 
-    expect(body.data[0].campaign).toEqual({ id: 'campaign_1', title: 'Summer Skincare Launch' })
+    expect(body.data[0].campaign).toEqual({
+      id: 'campaign_1',
+      title: 'Summer Skincare Launch',
+      brand: { name: 'Glow Co' },
+    })
     // Flattened onto the payout — the app is never handed the relation chain.
     expect(body.data[0]).not.toHaveProperty('submission')
+  })
+
+  // User.name is nullable, so a brand that never set one is representable —
+  // the row still has to render (the app falls back to "A brand").
+  it('passes a null brand name through rather than dropping the campaign', async () => {
+    findManyMock.mockResolvedValue([
+      payoutRow({
+        submission: {
+          application: {
+            campaign: { id: 'campaign_1', title: 'Summer Skincare Launch', brand: { name: null } },
+          },
+        },
+      }),
+    ])
+    countMock.mockResolvedValue(1)
+
+    const res = await GET({ req: new Request('https://example.com/api/v1/payouts'), user: creator } as never)
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.data[0].campaign.brand).toEqual({ name: null })
+    expect(body.data[0].campaign.title).toBe('Summer Skincare Launch')
   })
 
   it('reaches the campaign through Payout -> Submission -> Application without over-fetching', async () => {
@@ -83,7 +115,13 @@ describe('GET /api/v1/payouts', () => {
         select: expect.objectContaining({
           submission: {
             select: {
-              application: { select: { campaign: { select: { id: true, title: true } } } },
+              application: {
+                select: {
+                  campaign: {
+                    select: { id: true, title: true, brand: { select: { name: true } } },
+                  },
+                },
+              },
             },
           },
         }),

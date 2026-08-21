@@ -64,7 +64,11 @@ export function ContentUploadField({ value, onUploaded, onError }: ContentUpload
         accessible
         accessibilityLabel="Uploading content"
         accessibilityState={{ busy: true }}
-        style={[styles.tile, styles.center, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        style={[
+          styles.tile,
+          styles.center,
+          { backgroundColor: theme.backgroundElement, borderColor: theme.borderStrong },
+        ]}>
         <ActivityIndicator color={theme.accent} />
         <ThemedText type="small" themeColor="textSecondary">
           Uploading…
@@ -80,7 +84,15 @@ export function ContentUploadField({ value, onUploaded, onError }: ContentUpload
         accessibilityRole="button"
         accessibilityLabel="Replace uploaded content"
         accessibilityHint="Opens your photo library"
-        style={[styles.tile, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        // Same pressed feedback as the empty state. Without it the only tappable
+        // thing on the Submit screen that already has content looks inert.
+        style={({ pressed }) => [
+          styles.tile,
+          {
+            backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement,
+            borderColor: theme.borderStrong,
+          },
+        ]}>
         <Image
           source={{ uri: value }}
           style={styles.preview}
@@ -115,7 +127,7 @@ export function ContentUploadField({ value, onUploaded, onError }: ContentUpload
         styles.empty,
         {
           backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement,
-          borderColor: theme.border,
+          borderColor: theme.borderStrong,
         },
       ]}>
       <View style={[styles.iconCircle, { backgroundColor: theme.accentSoft }]}>
@@ -133,6 +145,11 @@ export function ContentUploadField({ value, onUploaded, onError }: ContentUpload
   );
 }
 
+// `borderStrong`, not `border`, in all three states: this tile has no label
+// chrome and no fill of its own — the outline is the entire affordance, which
+// is exactly the case 1.4.11 covers and the case the whisper-weight `border`
+// token is explicitly not rated for. The focused/active look still comes from
+// `theme.accent` elsewhere; here the resting outline had to carry the control.
 const styles = StyleSheet.create({
   tile: {
     borderRadius: Spacing.three,

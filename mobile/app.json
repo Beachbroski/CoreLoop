@@ -8,7 +8,7 @@
     "scheme": "creatordocks",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.anonymous.creatordocks",
+      "bundleIdentifier": "com.creatordocks.app",
       "config": {
         "usesNonExemptEncryption": false
       }

@@ -17,8 +17,19 @@ export function EmptyState({ symbol, title, message }: EmptyStateProps) {
 
   // One accessible element: title and message are a single thought, and the
   // symbol only restates them pictorially.
+  //
+  // The live region is the counterpart to `SkeletonGroup`'s busy state. An
+  // empty state is something that *arrives* — the list resolves and the
+  // placeholders are swapped out underneath a screen reader whose focus is
+  // elsewhere. Without it the announcement stops at "Loading campaigns" and
+  // never says what loading found.
   return (
-    <View accessible accessibilityLabel={message ? `${title}, ${message}` : title} style={styles.container}>
+    <View
+      accessible
+      accessibilityRole="text"
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={message ? `${title}, ${message}` : title}
+      style={styles.container}>
       <View
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"

@@ -29,8 +29,8 @@ export function PrimaryButton({ onPress, disabled, loading, children }: PrimaryB
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(pressed.value, [0, 1], [1, 0.97]) }],
-    // `accentFill`, not `accent`: this surface carries white label text, which
-    // needs the darker fill coral to clear 4.5:1.
+    // `accentFill`, not `accent`: this surface carries `onAccent` label text,
+    // which needs the darker fill coral to clear 4.5:1.
     backgroundColor: interpolateColor(pressed.value, [0, 1], [theme.accentFill, theme.accentStrong]),
   }));
 
@@ -61,8 +61,10 @@ export function PrimaryButton({ onPress, disabled, loading, children }: PrimaryB
       {/* The label Text is the only accessible child, so VoiceOver reads the
           button's own wording — the spinner stays out of the tree. */}
       <View style={styles.content}>
-        {loading && <ActivityIndicator color="#ffffff" accessibilityElementsHidden importantForAccessibility="no" />}
-        <ThemedText type="smallBold" style={styles.text}>
+        {loading && (
+          <ActivityIndicator color={theme.onAccent} accessibilityElementsHidden importantForAccessibility="no" />
+        )}
+        <ThemedText type="smallBold" themeColor="onAccent">
           {children}
         </ThemedText>
       </View>
@@ -85,8 +87,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-  },
-  text: {
-    color: '#ffffff',
   },
 });

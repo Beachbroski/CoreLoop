@@ -70,6 +70,10 @@ jest.mock('expo-router', () => {
     useSegments: () => [],
     usePathname: () => '/',
     useFocusEffect: jest.fn(),
+    // Screens attach this to their list ref so re-tapping an active tab
+    // scrolls to top. Without it in this factory every screen that imports
+    // it throws `useScrollToTop is not a function` on render.
+    useScrollToTop: jest.fn(),
     Link: ({ children, ...props }) => <Text {...props}>{children}</Text>,
     Redirect: ({ href }) => <View testID="redirect" accessibilityValue={{ text: String(href) }} />,
     Stack: Object.assign(({ children }) => <View>{children}</View>, {

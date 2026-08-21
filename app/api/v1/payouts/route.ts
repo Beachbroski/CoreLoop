@@ -7,7 +7,15 @@ import { listPayoutsQuerySchema, payoutSchema } from '@creatordocks/shared'
 // the intermediate rows carry nothing but the edge to the next one.
 const campaignProvenanceSelect = {
   select: {
-    application: { select: { campaign: { select: { id: true, title: true } } } },
+    application: {
+      select: {
+        campaign: {
+          // brand.name only — the earnings row names the brand in text, so
+          // pulling its avatar too would be a join's worth of unused bytes.
+          select: { id: true, title: true, brand: { select: { name: true } } },
+        },
+      },
+    },
   },
 } as const
 
@@ -19,7 +27,7 @@ function toPayoutResponse(payout: {
   platformFee: number
   status: string
   createdAt: Date
-  submission: { application: { campaign: { id: string; title: string } } }
+  submission: { application: { campaign: { id: string; title: string; brand: { name: string | null } } } }
 }) {
   const { submission, ...rest } = payout
   return payoutSchema.parse({

@@ -1,4 +1,7 @@
-import { fireEvent, renderWithProviders, screen } from '@/test/render';
+import { StyleSheet } from 'react-native';
+
+import { Colors } from '@/constants/theme';
+import { act, fireEvent, renderWithProviders, screen } from '@/test/render';
 import { ContentUploadField } from './content-upload-field';
 
 /**
@@ -13,6 +16,29 @@ import { ContentUploadField } from './content-upload-field';
  * the callbacks the component registers so a test can fire them directly,
  * which is exactly how UploadThing reports outcomes at runtime.
  */
+
+jest.mock('@/hooks/use-color-scheme', () => ({ useColorScheme: () => 'dark' }));
+
+/**
+ * A Pressable's `pressed` style is only reachable through the touch responder:
+ * RNTL 14 dropped the UNSAFE queries that read the style callback directly, and
+ * `fireEvent(el, 'pressIn')` never reaches it because the rendered host View
+ * carries responder handlers, not `onPressIn`.
+ */
+const RESPONDER_GRANT = {
+  persist: () => {},
+  nativeEvent: { touches: [], changedTouches: [], identifier: 1, pageX: 0, pageY: 0, locationX: 0, locationY: 0, target: 1, timestamp: 0, force: 0 },
+};
+
+async function pressAndHold(element: Parameters<typeof fireEvent>[0]): Promise<void> {
+  await act(async () => {
+    fireEvent(element, 'responderGrant', RESPONDER_GRANT);
+  });
+}
+
+function backgroundOf(label: string): unknown {
+  return StyleSheet.flatten(screen.getByLabelText(label).props.style).backgroundColor;
+}
 
 type UploaderCallbacks = {
   onClientUploadComplete?: (res: unknown) => void;
@@ -90,6 +116,46 @@ describe('ContentUploadField', () => {
 
       expect(screen.getByLabelText('Replace uploaded content')).toBeOnTheScreen();
       expect(screen.queryByLabelText('Upload content')).toBeNull();
+    });
+
+    it('acknowledges a press the way the empty state does', async () => {
+      const { ui } = setup('https://appid.ufs.sh/f/abc123');
+      await renderWithProviders(ui);
+
+      // The filled tile used to drop the pressed style, so the one tappable
+      // thing on a Submit screen that already has content looked inert.
+      expect(backgroundOf('Replace uploaded content')).toBe(Colors.dark.backgroundElement);
+
+      await pressAndHold(screen.getByLabelText('Replace uploaded content'));
+
+      expect(backgroundOf('Replace uploaded content')).toBe(Colors.dark.backgroundSelected);
+    });
+  });
+
+  describe('boundary', () => {
+    it.each([
+      ['empty', null, 'Upload content'],
+      ['filled', 'https://appid.ufs.sh/f/abc123', 'Replace uploaded content'],
+    ])('outlines the %s tile with borderStrong', async (_state, value, label) => {
+      const { ui } = setup(value);
+      await renderWithProviders(ui);
+
+      // The tile has no label chrome and no fill of its own — the outline is
+      // the entire affordance, which the decorative `border` whisper (1.18:1)
+      // is explicitly not rated for.
+      const border = StyleSheet.flatten(screen.getByLabelText(label).props.style).borderColor;
+      expect(border).toBe(Colors.dark.borderStrong);
+      expect(border).not.toBe(Colors.dark.border);
+    });
+
+    it('outlines the uploading tile with borderStrong too', async () => {
+      mockUploaderState.isUploading = true;
+      const { ui } = setup();
+      await renderWithProviders(ui);
+
+      expect(StyleSheet.flatten(screen.getByLabelText('Uploading content').props.style).borderColor).toBe(
+        Colors.dark.borderStrong,
+      );
     });
   });
 
