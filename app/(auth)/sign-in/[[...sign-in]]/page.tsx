@@ -22,7 +22,7 @@ export default function SignInPage() {
               Briefs, creator applications, content review, approvals, and payouts all live behind this sign-in.
             </p>
             <p className="auth-hero-copy" style={{ marginTop: 14 }}>
-              No account yet? <Link href="/waitlist" className="apple-link">Request access</Link>
+              No account yet? <Link href="/sign-up" className="apple-link">Create one</Link>
             </p>
           </div>
         </section>

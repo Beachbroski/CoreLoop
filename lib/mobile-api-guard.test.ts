@@ -8,7 +8,7 @@ const { authMock, getCurrentAppUserMock } = vi.hoisted(() => ({
 vi.mock('@clerk/nextjs/server', () => ({ auth: authMock }))
 vi.mock('./current-app-user', () => ({ getCurrentAppUser: getCurrentAppUserMock }))
 
-const { withMobileApi, withPublicMobileApi, withMobileAuthOnly } = await import('./mobile-api-guard')
+const { withMobileApi, withPublicMobileApi, withMobileAuthOnly, rateLimitBucket } = await import('./mobile-api-guard')
 type MobileAuthedUser = import('./mobile-api-guard').MobileAuthedUser
 
 function makeRequest(headers: Record<string, string> = {}): Request {
@@ -38,6 +38,23 @@ describe('withMobileApi', () => {
 
     expect(res.status).toBe(401)
     expect(handler).not.toHaveBeenCalled()
+  })
+
+  // The header is what makes a 401 a challenge rather than a bare refusal
+  // (RFC 9110 / W5-H2), and it is how the app tells "your session expired"
+  // apart from "that request was wrong". Asserted on both the no-header and
+  // bad-token paths because they exit through different branches.
+  it('answers every 401 with a Bearer challenge', async () => {
+    const route = withMobileApi({ rateLimit: { limit: 5, windowMs: 60_000 } }, vi.fn())
+
+    const noHeader = await route(makeRequest())
+    expect(noHeader.status).toBe(401)
+    expect(noHeader.headers.get('www-authenticate')).toBe('Bearer realm="creatordocks"')
+
+    authMock.mockResolvedValue({ userId: null })
+    const badToken = await route(makeRequest({ authorization: 'Bearer expired.or.revoked' }))
+    expect(badToken.status).toBe(401)
+    expect(badToken.headers.get('www-authenticate')).toBe('Bearer realm="creatordocks"')
   })
 
   it('rejects a cookie-only request (Authorization header missing) even with a valid Clerk session', async () => {
@@ -220,5 +237,45 @@ describe('withMobileAuthOnly', () => {
 
     expect(first.status).toBe(200)
     expect(second.status).toBe(429)
+  })
+})
+
+describe('rateLimitBucket', () => {
+  // The bug this guards against: one shared counter meant a handful of reads
+  // exhausted the budget for the 5/min routes, so the first tap on "Connect
+  // Stripe" or "Delete account" came back 429.
+  it('gives each route and method its own bucket', () => {
+    const get = rateLimitBucket(new Request('https://x.com/api/v1/me'))
+    const del = rateLimitBucket(new Request('https://x.com/api/v1/me', { method: 'DELETE' }))
+    const onboard = rateLimitBucket(new Request('https://x.com/api/v1/stripe/onboard', { method: 'POST' }))
+
+    expect(new Set([get, del, onboard]).size).toBe(3)
+  })
+
+  // Without this, varying the id mints a fresh bucket per request and the
+  // limit stops limiting anything.
+  it('collapses resource ids so they cannot be used to mint new buckets', () => {
+    const a = rateLimitBucket(new Request('https://x.com/api/v1/applications/clzq1234567890abcdefghij'))
+    const b = rateLimitBucket(new Request('https://x.com/api/v1/applications/clzq0987654321zyxwvutsrq'))
+
+    expect(a).toBe(b)
+    expect(a).toContain(':id')
+  })
+
+  it('collapses Expo push tokens the same way', () => {
+    const a = rateLimitBucket(
+      new Request('https://x.com/api/v1/devices/ExponentPushToken%5Baaaaaaaaaaaaaaaaaaaaaa%5D', { method: 'DELETE' }),
+    )
+    const b = rateLimitBucket(
+      new Request('https://x.com/api/v1/devices/ExponentPushToken%5Bbbbbbbbbbbbbbbbbbbbbbb%5D', { method: 'DELETE' }),
+    )
+
+    expect(a).toBe(b)
+  })
+
+  it('keeps sibling collections apart', () => {
+    expect(rateLimitBucket(new Request('https://x.com/api/v1/applications'))).not.toBe(
+      rateLimitBucket(new Request('https://x.com/api/v1/submissions')),
+    )
   })
 })

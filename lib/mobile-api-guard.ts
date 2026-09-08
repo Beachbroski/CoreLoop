@@ -17,6 +17,62 @@ function jsonError(message: string, status: number, extraHeaders?: Record<string
 }
 
 /**
+ * Every 401 out of this namespace carries `WWW-Authenticate`, per RFC 9110 and
+ * the W5-H2 review: a 401 without it is a malformed challenge, and it is the
+ * signal that tells a client the failure is "your token" rather than "this
+ * resource". `Bearer` alone — no `error=` parameter — because the reason a
+ * token was refused is not something an unauthenticated caller gets to learn.
+ */
+const BEARER_CHALLENGE = { 'WWW-Authenticate': 'Bearer realm="creatordocks"' } as const
+
+function unauthorized(): Response {
+  return jsonError('Unauthorized', 401, { ...BEARER_CHALLENGE })
+}
+
+/**
+ * Rate-limit bucket for a request, so each route gets its own budget.
+ *
+ * Before this existed the key was `v1:<userId>:<ip>` for every authenticated
+ * route while the limits differed wildly per route (reads 60/min, DELETE /me
+ * and POST /stripe/onboard 5/min). One counter served them all and the *lowest*
+ * limit won: six campaign fetches on app launch consumed the budget, and the
+ * creator's first tap on "Connect Stripe" or "Delete account" came back 429.
+ *
+ * Dynamic segments are collapsed to `:id` so a caller cannot mint a fresh
+ * bucket per resource — `/applications/<cuid>` and `/applications/<other>` must
+ * share one budget, or the limit is trivially bypassed by varying the id.
+ */
+export function rateLimitBucket(req: Request): string {
+  let pathname: string
+  try {
+    pathname = new URL(req.url).pathname
+  } catch {
+    // A relative or malformed URL should never widen the limit, so fall back to
+    // a single shared bucket rather than skipping the route dimension.
+    return `${req.method}:unknown`
+  }
+
+  const normalized = pathname
+    .replace(/^\/api\/v1\/?/, '')
+    .split('/')
+    .filter(Boolean)
+    .map(segment => (looksLikeIdentifier(segment) ? ':id' : segment))
+    .join('/')
+
+  return `${req.method}:${normalized || 'root'}`
+}
+
+/**
+ * cuids (`c` + 24 chars) are what Prisma generates here; Expo push tokens are
+ * the other dynamic segment on this surface. The length floor also catches any
+ * future opaque id without needing to know its shape.
+ */
+function looksLikeIdentifier(segment: string): boolean {
+  const value = decodeURIComponent(segment)
+  return /^c[a-z0-9]{20,}$/i.test(value) || /^ExponentPushToken\[/.test(value) || value.length >= 16
+}
+
+/**
  * Wraps an /api/v1 route that needs a verified Clerk identity but must run
  * BEFORE a DB user row exists — currently only /api/v1/onboarding, which
  * creates that row.
@@ -38,13 +94,13 @@ export function withMobileAuthOnly(
     try {
       const authHeader = req.headers.get('authorization')
       if (!authHeader?.startsWith('Bearer ')) {
-        return jsonError('Unauthorized', 401)
+        return unauthorized()
       }
 
       const { userId } = await auth()
-      if (!userId) return jsonError('Unauthorized', 401)
+      if (!userId) return unauthorized()
 
-      const rl = await checkRateLimit(`v1:onboard:${userId}`, options.rateLimit)
+      const rl = await checkRateLimit(`v1:onboard:${rateLimitBucket(req)}:${userId}`, options.rateLimit)
       if (!rl.ok) {
         return jsonError('Too many requests. Please try again shortly.', 429, {
           'Retry-After': String(rl.retryAfterSeconds),
@@ -98,16 +154,16 @@ export function withMobileApi<RouteContext = unknown>(
     try {
       const authHeader = req.headers.get('authorization')
       if (!authHeader?.startsWith('Bearer ')) {
-        return jsonError('Unauthorized', 401)
+        return unauthorized()
       }
 
       const { userId } = await auth()
-      if (!userId) return jsonError('Unauthorized', 401)
+      if (!userId) return unauthorized()
 
       const { user } = await getCurrentAppUser()
-      if (!user) return jsonError('Unauthorized', 401)
+      if (!user) return unauthorized()
 
-      const rl = await checkRateLimit(`v1:${user.id}:${getRequestIp(req)}`, options.rateLimit)
+      const rl = await checkRateLimit(`v1:${rateLimitBucket(req)}:${user.id}:${getRequestIp(req)}`, options.rateLimit)
       if (!rl.ok) {
         return jsonError('Too many requests. Please try again shortly.', 429, {
           'Retry-After': String(rl.retryAfterSeconds),
