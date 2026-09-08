@@ -56,5 +56,8 @@
     "vite": "^7.3.6",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "effect": "^3.20.0"
   }
 }
