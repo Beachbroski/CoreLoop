@@ -5,6 +5,15 @@ on:
     branches: [main]
   pull_request:
 
+# A second push to the same branch cancels the first — CI has a cold cache on
+# its first ever run, and queued duplicate runs would only make that worse.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   web:
     name: Web (Next.js + shared)
@@ -13,12 +22,75 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Pinned to what Vercel runs. Before this, CI was on 22, Vercel on 24
+          # and the dev machine on 25 — three runtimes, none of them agreeing.
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run lint
-      - run: npm run test
-      - run: npm run test --workspace=packages/shared
+
+      # `npm ci` triggers postinstall -> `prisma generate`, so the client types
+      # exist by the time tsc runs. Typechecking the web workspace was missing
+      # from CI entirely: mobile had it, the Next.js app did not.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests (web)
+        run: npm run test
+
+      - name: Unit tests (@creatordocks/shared)
+        run: npm run test --workspace=packages/shared
+
+      # Offline check — parses the schema and validates relations. No database
+      # connection, so it is safe to run anywhere.
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      # Deliberately NOT `prisma migrate diff`: with `--from-migrations` it
+      # replays into a shadow database derived from DATABASE_URL, and this
+      # project points every environment at the one production Neon instance.
+      # A drift check that can touch production is worse than no drift check.
+      #
+      # This catches the failure that actually matters here — the schema being
+      # edited without a matching migration, which is how the deployed database
+      # and the checked-in schema silently diverge.
+      - name: Schema and migration must change together
+        if: github.event_name == 'pull_request'
+        run: |
+          BASE="origin/${{ github.base_ref }}"
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          CHANGED=$(git diff --name-only "$BASE"...HEAD)
+          SCHEMA_TOUCHED=$(echo "$CHANGED" | grep -c '^prisma/schema.prisma$' || true)
+          MIGRATION_ADDED=$(echo "$CHANGED" | grep -c '^prisma/migrations/.*\.sql$' || true)
+          if [ "$SCHEMA_TOUCHED" -gt 0 ] && [ "$MIGRATION_ADDED" -eq 0 ]; then
+            echo "::error::prisma/schema.prisma changed but no migration was added."
+            echo "Generate one, or say why in the PR if this is a comment-only edit."
+            exit 1
+          fi
+          echo "Schema/migration pairing OK (schema touched: $SCHEMA_TOUCHED, migrations added: $MIGRATION_ADDED)."
+
+      # Hard gate at critical only. There are 24 high advisories open today
+      # (mostly transitive), so gating on high would fail every run from day one
+      # and train everyone to ignore CI. Criticals are zero, so this holds that
+      # line while the advisory step below keeps the rest visible.
+      - name: Audit (block on critical)
+        run: npm audit --audit-level=critical
+
+  audit-report:
+    name: Dependency advisories (advisory only)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Report high and moderate advisories
+        run: npm audit --audit-level=high || true
 
   mobile:
     name: Mobile (Expo)
@@ -27,7 +99,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run typecheck --workspace=mobile
