@@ -1,6 +1,6 @@
 # Blocked on Jackson
 
-**Updated 2026-09-07.** Everything an agent cannot do, or must not decide alone. Companion to `docs/production-readiness-2026-09-06.md` (the full audit) — that document has the evidence; this one is the to-do list.
+**Updated 2026-09-08.** Everything an agent cannot do, or must not decide alone. Companion to `docs/production-readiness-2026-09-06.md` (the full audit) — that document has the evidence; this one is the to-do list.
 
 Two kinds of item:
 - **DO** — an action only you can take (an account, a payment, a dashboard, a key). No agent can do it, ever.
@@ -15,7 +15,7 @@ Ordered so the things that unblock the most work come first. The "unblocks" colu
 | # | Type | Item | Unblocks | Est. |
 |---|---|---|---|---|
 | 1 | **DO** | **Fill in the remaining broken production environment variables.** ✅ `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` set 2026-09-07 (live-mode). ✅ `STRIPE_WEBHOOK_SECRET` set 2026-09-07 (stored as Vercel *Sensitive*, so a pull reads it blank — that is expected). Still outstanding: `TURNSTILE_SECRET_KEY` + `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (confirmed genuinely unconfigured — the live waitlist page renders no widget and carries no sitekey) and `RESEND_API_KEY` (still the 14-character `re_placeholder`). Walk the table in `docs/runbooks/deploy.md`. | The waitlist form and every email. | ~40 min |
-| 2 | **DO** | **Generate an UploadThing v7 token** and set `UPLOADTHING_TOKEN`. The installed SDK (7.7.4) reads only that name; every environment sets the v6 `UPLOADTHING_SECRET`/`UPLOADTHING_APP_ID`, which it ignores. Uploads cannot work until this changes. Remove the two dead names afterwards. | Creator content submission on both web and iOS. | 20 min |
+| 2 | **DO** | ✅ **Production done 2026-09-08.** `UPLOADTHING_TOKEN` is set (encrypted) in Production, and the dead v6 `UPLOADTHING_SECRET`/`UPLOADTHING_APP_ID` are gone from *every* Vercel environment. Verified against the SDK: `uploadthing` 7.7.4's dist references `UPLOADTHING_TOKEN` and contains no reference to `UPLOADTHING_SECRET`. **Still outstanding: `.env.local`,** which keeps the old `UPLOADTHING_SECRET`/`UPLOADTHING_APP_ID` pair and has no token — so local uploads fail exactly as before, and that is the path the iOS app exercises (it calls `http://localhost:3000`). Add the same token there and delete the two dead lines. Preview and Development have no UploadThing config at all; whether that matters depends on the staging decision (item 17). | Creator content submission on both web and iOS. | 5 min left |
 | 3 | **DO** | **Set `CREATOR_WEB_MODE=full`** in Vercel Production, Preview and Development, and in `.env.local`. It is set in **no** environment, and unset resolves to `sunset` by design — so the next deploy silently retires the creator web dashboard. | Deploying without breaking creator web. | 10 min |
 | 4 | ~~DECIDE~~ **DECIDED 2026-09-07: open self-serve.** Any brand can sign up and run a campaign. Half-built: `/sign-up` is now a real Clerk sign-up page, and the allowlist gate moved behind one flag, `MARKETPLACE_ACCESS`. It still reads `invite` (today's behavior) because opening it before payments work would let brands sign up and hit a 500 at checkout. **Your remaining action: set `MARKETPLACE_ACCESS=open` in Vercel Production once items 1 and 5 are done and one real payment has gone through.** | ✅ decided | 1 env var, after Stripe |
 | 5 | **DO** | ✅ Webhook endpoint created 2026-09-07 (7 events, live mode). Still to confirm: **is the Stripe account live-ready** — business verification done, Connect platform profile approved, Express onboarding enabled — and tell us how the webhook endpoints are configured (one endpoint for account events, one for connected-account events, or both at `/api/webhooks/stripe`). There is one `STRIPE_WEBHOOK_SECRET` but the code needs events from both classes. | Real money moving. Creator Stripe onboarding. | 30 min |
@@ -55,6 +55,20 @@ Full map in `docs/platform-split/pii-inventory.md` — 80 elements, 33 gaps. Dec
 | **Uploaded media on deletion** | Nothing ever deletes files from UploadThing. Decide: delete on account closure, or document a contractual retention period. Ties to blocker #20. |
 | **Stripe Connect account on deletion** | Nulling `stripeAccountId` does not deauthorize the account, and `Payout.stripeTransferId` is still a route back to that Stripe identity. This is open question Q-P4. |
 | **A retention schedule** | There is none, for any model: no cron, no TTL, no `vercel.json`. Everything is kept forever. The DPA already lists this as a gap. |
+
+## From the parity checklist (2026-09-08)
+
+`docs/platform-split/parity-checklist.md` — 135 capabilities, 20 blocking gaps, **15 decisions that are yours**. Verdict: hold creator web at `full`. The ones I would not let pass quietly:
+
+| Decision | Why it cannot wait for the flip |
+|---|---|
+| **What happens to non-iPhone creators** | There is no Android build configured and no creator web after sunset. Today they simply lose the product. Options: keep a minimal creator web permanently, build Android, or decide the product is iPhone-only and say so publicly before you take anyone's signup. |
+| **Creators mid-obligation at the flip** | Someone with an ACCEPTED application and an unsubmitted deliverable, on a surface that is about to stop accepting writes. There is no handling for this today. |
+| **The role-change write on the one page left standing** | `/creator/settings` is sunset-exempt for the Stripe return trip, but `PATCH /api/users/role` is ungated — so the surviving page carries a live role-changing write. Deliberate or oversight; nothing in the repo says. |
+| **Email change never reaching us** | A creator changing their email in Clerk leaves `User.email` stale, and that column is what the tester allowlist and every notification key on. |
+| **Whether Earnings should hide history behind Stripe onboarding** | It does today, so a creator whose requirements come due cannot see money they have already been paid. |
+
+Nine further gaps have no recorded reason for being absent (creator home stats, platform filter, notification preferences, edit-profile, avatar, Clerk account management) — each needs a build-it-or-descope-it call, and a descope needs a written reason to satisfy W8-1.
 
 ## Tier 3 — legal and business
 
