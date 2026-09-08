@@ -2,6 +2,7 @@ import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
+import { anonymizeAccountByClerkId } from '@/app/api/_lib/account-deletion'
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
@@ -62,6 +63,34 @@ export async function POST(req: Request) {
       // has chosen, causing the onboarding page to skip role selection entirely.
     } catch (err) {
       console.error('[clerk webhook] user.created failed', err)
+      return new Response('Database error', { status: 500 })
+    }
+  }
+
+  // Deletion started on Clerk's side (dashboard, or Clerk's own account-deletion
+  // UI), and the safety net for `DELETE /api/v1/me` dying between removing the
+  // Clerk identity and scrubbing the row. Same anonymization either way, and it
+  // is idempotent, so a redelivery is harmless.
+  if (evt.type === 'user.deleted') {
+    const clerkId = evt.data.id
+    // Clerk can send a deletion event with no id (a partially-formed object).
+    // There is nothing to match on, and returning non-2xx would make Clerk
+    // redeliver an event that can never succeed, so acknowledge and move on.
+    if (!clerkId) {
+      console.warn('[clerk webhook] user.deleted arrived with no id; nothing to anonymize')
+      return Response.json({ received: true })
+    }
+
+    try {
+      const outcome = await anonymizeAccountByClerkId(clerkId)
+      if (outcome === 'not-found') {
+        // Already anonymized by the API route, or the identity never had a row.
+        console.warn('[clerk webhook] user.deleted matched no user row', { clerkId })
+      }
+    } catch (err) {
+      // 500 so Clerk retries: an identified row whose login is gone must not be
+      // left behind because one delivery happened to hit a database blip.
+      console.error('[clerk webhook] user.deleted anonymization failed', { clerkId, err })
       return new Response('Database error', { status: 500 })
     }
   }

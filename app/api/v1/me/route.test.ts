@@ -1,13 +1,36 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { findUniqueMock, updateMock, deleteUserMock } = vi.hoisted(() => ({
+const {
+  findUniqueMock,
+  updateMock,
+  deviceDeleteManyMock,
+  payoutCountMock,
+  payoutDeleteManyMock,
+  applicationDeleteManyMock,
+  submissionDeleteManyMock,
+  transactionMock,
+  deleteUserMock,
+} = vi.hoisted(() => ({
   findUniqueMock: vi.fn(),
   updateMock: vi.fn(),
+  deviceDeleteManyMock: vi.fn(),
+  payoutCountMock: vi.fn(),
+  payoutDeleteManyMock: vi.fn(),
+  applicationDeleteManyMock: vi.fn(),
+  submissionDeleteManyMock: vi.fn(),
+  transactionMock: vi.fn(),
   deleteUserMock: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
-  default: { user: { findUnique: findUniqueMock, update: updateMock } },
+  default: {
+    user: { findUnique: findUniqueMock, update: updateMock },
+    device: { deleteMany: deviceDeleteManyMock },
+    payout: { count: payoutCountMock, deleteMany: payoutDeleteManyMock },
+    application: { deleteMany: applicationDeleteManyMock },
+    submission: { deleteMany: submissionDeleteManyMock },
+    $transaction: transactionMock,
+  },
 }))
 
 vi.mock('@clerk/nextjs/server', () => ({
@@ -102,43 +125,115 @@ describe('PATCH /api/v1/me', () => {
   })
 })
 
+const anonymizedFields = {
+  name: null,
+  avatarUrl: null,
+  bio: null,
+  email: 'deleted-user_1@deleted.creatordocks.invalid',
+  clerkId: 'deleted-user_1',
+  stripeAccountId: null,
+  stripeOnboarded: false,
+}
+
 describe('DELETE /api/v1/me', () => {
   beforeEach(() => {
     findUniqueMock.mockReset()
     updateMock.mockReset()
+    deviceDeleteManyMock.mockReset()
+    payoutCountMock.mockReset()
+    payoutDeleteManyMock.mockReset()
+    applicationDeleteManyMock.mockReset()
+    submissionDeleteManyMock.mockReset()
+    transactionMock.mockReset()
     deleteUserMock.mockReset()
+
+    findUniqueMock.mockResolvedValue({ clerkId: 'clerk_real_id' })
+    payoutCountMock.mockResolvedValue(0)
+    updateMock.mockResolvedValue({})
+    deviceDeleteManyMock.mockResolvedValue({ count: 2 })
+    deleteUserMock.mockResolvedValue({})
+    transactionMock.mockImplementation(async (ops: unknown) => Promise.all(ops as Promise<unknown>[]))
   })
 
-  it('anonymizes the profile and deletes the Clerk identity', async () => {
-    findUniqueMock.mockResolvedValue({ clerkId: 'clerk_real_id' })
-    updateMock.mockResolvedValue({})
-    deleteUserMock.mockResolvedValue({})
-
+  it('deletes the Clerk identity before touching the database', async () => {
     const res = await DELETE({ user: dbUser } as never)
 
     expect(res.status).toBe(200)
-    expect(updateMock).toHaveBeenCalledWith({
-      where: { id: 'user_1' },
-      data: expect.objectContaining({
-        name: null,
-        avatarUrl: null,
-        bio: null,
-        email: 'deleted-user_1@deleted.creatordocks.invalid',
-        clerkId: 'deleted-user_1',
-      }),
-    })
     expect(deleteUserMock).toHaveBeenCalledWith('clerk_real_id')
+    expect(deleteUserMock.mock.invocationCallOrder[0]).toBeLessThan(
+      transactionMock.mock.invocationCallOrder[0],
+    )
   })
 
-  it('still anonymizes the DB row even if Clerk deletion fails', async () => {
-    findUniqueMock.mockResolvedValue({ clerkId: 'clerk_real_id' })
-    updateMock.mockResolvedValue({})
+  it('anonymizes the row and clears the Stripe pointers', async () => {
+    await DELETE({ user: dbUser } as never)
+
+    expect(updateMock).toHaveBeenCalledWith({ where: { id: 'user_1' }, data: anonymizedFields })
+  })
+
+  it('removes every device row in the same transaction as the anonymization', async () => {
+    await DELETE({ user: dbUser } as never)
+
+    expect(deviceDeleteManyMock).toHaveBeenCalledWith({ where: { userId: 'user_1' } })
+    expect(transactionMock).toHaveBeenCalledOnce()
+    expect(transactionMock.mock.calls[0][0]).toHaveLength(2)
+  })
+
+  it('keeps the financial and campaign audit trail', async () => {
+    await DELETE({ user: dbUser } as never)
+
+    expect(payoutDeleteManyMock).not.toHaveBeenCalled()
+    expect(applicationDeleteManyMock).not.toHaveBeenCalled()
+    expect(submissionDeleteManyMock).not.toHaveBeenCalled()
+  })
+
+  it('returns 502 and leaves the row untouched when Clerk deletion fails', async () => {
     deleteUserMock.mockRejectedValue(new Error('Clerk API down'))
+
+    const res = await DELETE({ user: dbUser } as never)
+    const body = await res.json()
+
+    expect(res.status).toBe(502)
+    expect(body.success).toBe(false)
+    expect(body.error).toMatch(/again/i)
+    expect(transactionMock).not.toHaveBeenCalled()
+    expect(updateMock).not.toHaveBeenCalled()
+    expect(deviceDeleteManyMock).not.toHaveBeenCalled()
+  })
+
+  it('treats an already-deleted Clerk identity as success and finishes the DB half', async () => {
+    deleteUserMock.mockRejectedValue(Object.assign(new Error('not found'), { status: 404 }))
 
     const res = await DELETE({ user: dbUser } as never)
 
     expect(res.status).toBe(200)
     expect(updateMock).toHaveBeenCalledOnce()
+  })
+
+  it('returns 409 with an actionable, non-leaky message while a payout is in flight', async () => {
+    payoutCountMock.mockResolvedValue(1)
+
+    const res = await DELETE({ user: dbUser } as never)
+    const body = await res.json()
+
+    expect(res.status).toBe(409)
+    expect(body.success).toBe(false)
+    expect(body.error).toMatch(/payout/i)
+    expect(payoutCountMock).toHaveBeenCalledWith({
+      where: { creatorId: 'user_1', status: { in: ['PENDING', 'PROCESSING'] } },
+    })
+    expect(deleteUserMock).not.toHaveBeenCalled()
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it('reports a failure when the database half fails after the identity is gone', async () => {
+    transactionMock.mockRejectedValue(new Error('db down'))
+
+    const res = await DELETE({ user: dbUser } as never)
+    const body = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(body.success).toBe(false)
   })
 
   it('returns 404 if the profile no longer exists', async () => {
@@ -147,6 +242,7 @@ describe('DELETE /api/v1/me', () => {
     const res = await DELETE({ user: dbUser } as never)
 
     expect(res.status).toBe(404)
-    expect(updateMock).not.toHaveBeenCalled()
+    expect(deleteUserMock).not.toHaveBeenCalled()
+    expect(transactionMock).not.toHaveBeenCalled()
   })
 })
