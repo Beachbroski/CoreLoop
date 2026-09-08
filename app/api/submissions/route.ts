@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
+import { contentUrlSchema } from '@creatordocks/shared'
 import { requireTesterApiUser } from '@/lib/admin-api-guard'
 import { creatorWriteBlockedResponse } from '@/lib/creator-web-mode'
 import prisma from '@/lib/prisma'
@@ -7,7 +8,12 @@ import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-sec
 
 const createSchema = z.object({
   applicationId: z.string().min(1),
-  contentUrl: z.string().url(),
+  // Same rule as POST /api/v1/submissions. Until now this was a bare
+  // `z.string().url()`, which accepts `javascript:`, `data:` and any host --
+  // the H-3 hardening (commit cacff54) reached the mobile namespace only, so
+  // the web route stayed open. The brand dashboard renders this value as an
+  // href, which is what made it worth more than a validation nit.
+  contentUrl: contentUrlSchema,
   caption: z.string().trim().max(2000).optional().or(z.literal('')),
   notes: z.string().trim().max(2000).optional().or(z.literal('')),
 })

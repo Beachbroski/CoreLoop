@@ -1,7 +1,11 @@
 import prisma from '@/lib/prisma'
-import { isAllowedContentUrl } from '@/lib/content-url'
 import { withMobileApi } from '@/lib/mobile-api-guard'
-import { createSubmissionRequestSchema, listSubmissionsQuerySchema, submissionSchema } from '@creatordocks/shared'
+import {
+  createSubmissionRequestSchema,
+  isAllowedContentUrl,
+  listSubmissionsQuerySchema,
+  submissionSchema,
+} from '@creatordocks/shared'
 
 const applicationSummarySelect = {
   id: true,

@@ -2,9 +2,11 @@ import { z } from 'zod'
 
 /**
  * Submission content must be an UploadThing URL produced by our own uploader,
- * never an arbitrary link. This lives in the shared package (rather than in a
- * single app's lib) so BOTH the web and /api/v1 surfaces inherit it from the
- * request schema and no route can forget the check.
+ * never an arbitrary link. This module is the SINGLE source of truth for that
+ * rule — web routes, the /api/v1 mobile API and the Expo app all import it from
+ * here. Do not re-implement it in an app-local lib: a second copy was added
+ * under lib/content-url.ts, drifted (it never grew the length cap), and only
+ * one of the two got hardened. Extend this file instead.
  *
  * Two distinct risks it closes:
  *  1. `z.string().url()` accepts `javascript:`, `data:` and `vbscript:` URLs.

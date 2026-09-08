@@ -25,22 +25,48 @@ const waitlistSchema = z.object({
 
 type WaitlistSubmissionWithMeta = NonNullable<Awaited<ReturnType<typeof findWaitlistSubmissionByEmail>>>
 
-function makeBaseReferralCode(seed: string) {
-  const compact = seed.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
-  return (compact.slice(0, 6) || 'CREATOR').padEnd(6, 'X')
+/**
+ * Crockford base32: the digits and letters minus I, L, O and U, so no two
+ * characters in the set can be misheard or mistyped for one another. Its
+ * length divides 256 exactly, which is what lets a random byte be folded into
+ * an index with `%` without skewing the distribution.
+ */
+const REFERRAL_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+
+/**
+ * 10 characters of a 32-symbol alphabet is a 50-bit space (~1.1e15 codes).
+ * Even at a million signups the chance that any two collide is under 1 in
+ * 2,000, and the lookup below plus the unique index absorb the ones that do --
+ * while the code stays short enough to read aloud. It also matches the length
+ * codes have had until now, so nothing downstream sees a size change.
+ */
+const REFERRAL_CODE_LENGTH = 10
+const REFERRAL_CODE_ATTEMPTS = 8
+
+/**
+ * Referral codes are public by design -- creators post their link and the code
+ * rides in `?ref=CODE` -- so they carry no personal data at all. They used to
+ * open with six characters of the name or email address, which for most people
+ * is their real name, and closed with a `Math.random()` suffix that made the
+ * rest guessable; guessing a code lets someone attribute a referral to a
+ * person. Everything here now comes from the platform CSPRNG.
+ */
+function randomReferralCode() {
+  const bytes = crypto.getRandomValues(new Uint8Array(REFERRAL_CODE_LENGTH))
+  return Array.from(bytes, byte => REFERRAL_CODE_ALPHABET[byte % REFERRAL_CODE_ALPHABET.length]).join('')
 }
 
-async function generateReferralCode(seed: string) {
-  const base = makeBaseReferralCode(seed)
-
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase()
-    const code = `${base}${suffix}`
+async function generateReferralCode() {
+  for (let attempt = 0; attempt < REFERRAL_CODE_ATTEMPTS; attempt += 1) {
+    const code = randomReferralCode()
     const existing = await prisma.waitlistSubmission.findUnique({ where: { referralCode: code } })
     if (!existing) return code
   }
 
-  return `${base}${crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase()}`
+  // Eight taken codes in a row means the lookup is lying to us (or the table is
+  // implausibly full); hand the last word to the unique index, which the
+  // callers' P2002 retry already handles.
+  return randomReferralCode()
 }
 
 function isUniqueConstraintError(err: unknown) {
@@ -74,6 +100,31 @@ async function findWaitlistSubmissionByEmail(email: string) {
         select: { referrals: true },
       },
     },
+  })
+}
+
+/**
+ * What we may tell an unauthenticated caller about an email that is ALREADY on
+ * the list: that it is on the list, and nothing else.
+ *
+ * `POST /api/waitlist` is public and takes an arbitrary email, so before this
+ * existed anyone could enumerate the waitlist -- submitting a stranger's
+ * address returned their name, social handle, niche, follower range, referral
+ * code and link, status, referral count and who referred them. The referral
+ * link is the sensitive one: it is the credential that attributes signups.
+ *
+ * A returning creator therefore no longer sees their link echoed back on the
+ * page. That is the intended trade: proving you own an address requires a
+ * round trip through it, and their original confirmation email already carries
+ * the link. Follow-up worth doing: a "resend my referral link" action that
+ * emails it rather than rendering it (deliberately not auto-resending here --
+ * that would turn this endpoint into an email-bomb vector).
+ */
+function existingSubmissionResponse(submission: { profileCompletedAt: Date | null }) {
+  return Response.json({
+    success: true,
+    existing: true,
+    profileComplete: Boolean(submission.profileCompletedAt),
   })
 }
 
@@ -191,14 +242,7 @@ export async function POST(req: Request) {
 
     if (parsed.data.step === 'email') {
       const existing = await findWaitlistSubmissionByEmail(email)
-      if (existing) {
-        return Response.json({
-          success: true,
-          existing: true,
-          profileComplete: Boolean(existing.profileCompletedAt),
-          data: waitlistResponseData(existing, req),
-        })
-      }
+      if (existing) return existingSubmissionResponse(existing)
 
       let referredById: string | undefined
       try {
@@ -212,7 +256,7 @@ export async function POST(req: Request) {
           const created = await prisma.waitlistSubmission.create({
             data: {
               email,
-              referralCode: await generateReferralCode(email),
+              referralCode: await generateReferralCode(),
               referredById,
             },
             include: {
@@ -241,14 +285,7 @@ export async function POST(req: Request) {
           if (!isUniqueConstraintError(err)) throw err
 
           const duplicate = await findWaitlistSubmissionByEmail(email)
-          if (duplicate) {
-            return Response.json({
-              success: true,
-              existing: true,
-              profileComplete: Boolean(duplicate.profileCompletedAt),
-              data: waitlistResponseData(duplicate, req),
-            })
-          }
+          if (duplicate) return existingSubmissionResponse(duplicate)
         }
       }
 
@@ -271,6 +308,13 @@ export async function POST(req: Request) {
     }
 
     if (existing) {
+      // A completed profile is only editable by someone who can prove they own
+      // the address, and this endpoint has no such proof -- so a second write
+      // is refused rather than allowed to overwrite a stranger's name, handle
+      // and niche. The response is identical to the success case on purpose:
+      // it must not become an oracle for which addresses are registered.
+      if (existing.profileCompletedAt) return existingSubmissionResponse(existing)
+
       const updated = await prisma.waitlistSubmission.update({
         where: { id: existing.id },
         data: profileData,
@@ -284,6 +328,9 @@ export async function POST(req: Request) {
         },
       })
 
+      // The caller just completed this row in the same funnel, so returning its
+      // referral link is theirs to see -- but only because we got here via the
+      // not-yet-completed branch above.
       return Response.json({
         success: true,
         existing: true,
@@ -304,7 +351,7 @@ export async function POST(req: Request) {
         const created = await prisma.waitlistSubmission.create({
           data: {
             email,
-            referralCode: await generateReferralCode(parsed.data.name || email),
+            referralCode: await generateReferralCode(),
             referredById,
             ...profileData,
           },

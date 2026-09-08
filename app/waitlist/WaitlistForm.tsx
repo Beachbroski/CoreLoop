@@ -32,7 +32,13 @@ type WaitlistResponse = {
   success: boolean
   existing: boolean
   profileComplete: boolean
-  data: {
+  /**
+   * Absent when the email was already on the list. The server withholds the
+   * row rather than echoing a stranger's profile back to whoever typed their
+   * address (this endpoint is public and unauthenticated), so every read here
+   * must tolerate `undefined`.
+   */
+  data?: {
     id: string
     name: string | null
     email: string
@@ -65,6 +71,7 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
   const [leadState, setLeadState] = useState<WaitlistResponse['data'] | null>(null)
   const [successState, setSuccessState] = useState<WaitlistResponse['data'] | null>(null)
   const [existingSubmission, setExistingSubmission] = useState(false)
+  const [alreadyJoined, setAlreadyJoined] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -186,9 +193,23 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
         })
 
         resetTurnstile()
-        setLeadState(parsed.data)
         setExistingSubmission(parsed.existing)
-        setFormData(current => ({ ...current, email: parsed.data.email }))
+
+        if (!parsed.data) {
+          // Already on the list. We are told only that much, so acknowledge it
+          // and point at the confirmation email rather than rendering a link we
+          // cannot prove belongs to whoever is at the keyboard.
+          if (parsed.profileComplete) {
+            setAlreadyJoined(true)
+          } else {
+            // Signed up but never finished the profile -- let them continue.
+            setStep('profile')
+          }
+          return
+        }
+
+        setLeadState(parsed.data)
+        setFormData(current => ({ ...current, email: parsed.data?.email ?? current.email }))
 
         if (!parsed.existing) {
           track('waitlist_submitted', {
@@ -221,8 +242,14 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
         niche: formData.niche,
         follower_range: formData.followerRange,
       })
-      setSuccessState(parsed.data)
       setExistingSubmission(parsed.existing)
+      if (parsed.data) {
+        setSuccessState(parsed.data)
+      } else {
+        // The profile was already completed, so the server declined to
+        // overwrite it and told us nothing about the row.
+        setAlreadyJoined(true)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to join the waitlist.')
       resetTurnstile()
@@ -241,6 +268,28 @@ export function WaitlistForm({ compact = false }: WaitlistFormProps) {
     } catch {
       setCopied(false)
     }
+  }
+
+  if (alreadyJoined) {
+    return (
+      <div className="dashboard-panel waitlist-success-panel">
+        <div className="subtle-grid" style={{ gap: 10 }}>
+          <span className="eyebrow">Already joined</span>
+          <h2 style={{ margin: 0, fontSize: 'clamp(2rem, 5vw, 3rem)', letterSpacing: '-0.06em', lineHeight: 0.98 }}>
+            You&rsquo;re already on the list.
+          </h2>
+          <p className="page-copy" style={{ margin: 0 }}>
+            That email is signed up and your spot is safe. Your referral code and link are in the confirmation
+            email we sent when you joined &mdash; check your inbox, including spam.
+          </p>
+          <p className="page-copy" style={{ margin: 0 }}>
+            Can&rsquo;t find it? Email{' '}
+            <a className="apple-link" href="mailto:support@creatordocks.com">support@creatordocks.com</a> and
+            we&rsquo;ll resend it.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   if (successState) {

@@ -1,3 +1,4 @@
+import { isAllowedContentUrl } from '@creatordocks/shared'
 import { Suspense } from 'react'
 import type { Application, Campaign, Submission } from '@prisma/client'
 import Link from 'next/link'
@@ -78,9 +79,15 @@ async function SubmissionsContent({ viewAsId }: { viewAsId?: string }) {
               </div>
             </div>
             <div className="chip-row" style={{ justifyContent: 'flex-end' }}>
-              <a href={submission.contentUrl} target="_blank" rel="noopener noreferrer" className="apple-link">
-                View content
-              </a>
+              {isAllowedContentUrl(submission.contentUrl) ? (
+                <a href={submission.contentUrl} target="_blank" rel="noopener noreferrer" className="apple-link">
+                  View content
+                </a>
+              ) : (
+                <span className="apple-link" style={{ opacity: 0.6 }} title="This submission predates upload validation">
+                  Content unavailable
+                </span>
+              )}
               <span className="status-pill" style={{ background: status.bg, color: status.color }}>
                 {status.label}
               </span>

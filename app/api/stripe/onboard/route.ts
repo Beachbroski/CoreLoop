@@ -6,6 +6,8 @@ import { getSiteUrl } from '@/lib/site-url'
 import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-security'
 
 export async function POST(_req: Request) {
+  let clerkUserId: string | null = null
+
   try {
     if (!isTrustedOrigin(_req)) {
       return Response.json({ error: 'Invalid request origin' }, { status: 403 })
@@ -16,6 +18,7 @@ export async function POST(_req: Request) {
 
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    clerkUserId = userId
 
     const user = await prisma.user.findUnique({ where: { clerkId: userId } })
     if (!user) return Response.json({ error: 'User not found' }, { status: 404 })
@@ -65,12 +68,11 @@ export async function POST(_req: Request) {
 
     return Response.json({ url: accountLink.url })
   } catch (err) {
-    console.error('[POST /api/stripe/onboard]', err)
-    const message =
-      err instanceof Error && err.message
-        ? err.message
-        : 'Unable to start Stripe onboarding right now.'
+    console.error('[POST /api/stripe/onboard]', `user=${clerkUserId ?? 'unknown'}`, err)
 
-    return Response.json({ error: message }, { status: 500 })
+    return Response.json(
+      { error: 'Unable to start Stripe onboarding right now. Please try again shortly.' },
+      { status: 500 },
+    )
   }
 }

@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { contentUrlSchema, isAllowedContentUrl, MAX_CONTENT_URL_LENGTH } from './content-url'
 import { createSubmissionRequestSchema, resubmitSubmissionRequestSchema } from './submission'
 
+const ALLOWED_PREFIX = 'https://abc.ufs.sh/f/'
+
+/** Build an allow-listed URL whose total length is exactly `total` characters. */
+function urlOfLength(total: number): string {
+  return ALLOWED_PREFIX + 'x'.repeat(total - ALLOWED_PREFIX.length)
+}
+
 describe('isAllowedContentUrl', () => {
   it('accepts UploadThing hosts over https', () => {
     expect(isAllowedContentUrl('https://abc123.ufs.sh/f/somekey')).toBe(true)
@@ -24,15 +31,32 @@ describe('isAllowedContentUrl', () => {
     expect(isAllowedContentUrl('https://ufs.sh.evil.com/f/key')).toBe(false)
     expect(isAllowedContentUrl('https://notutfs.io/f/key')).toBe(false)
     expect(isAllowedContentUrl('https://tiktok.com/@creator/video/1')).toBe(false)
+    // A suffix match must be on a dot boundary, and the bare apex of the
+    // subdomain host is not itself a file host.
+    expect(isAllowedContentUrl('https://myufs.sh/f/key')).toBe(false)
+    expect(isAllowedContentUrl('https://ufs.sh/f/key')).toBe(false)
+    // Userinfo cannot be used to smuggle an allowed host past the check.
+    expect(isAllowedContentUrl('https://utfs.io@evil.com/f/key')).toBe(false)
   })
 
   it('rejects http (downgrade) even on an allowed host', () => {
     expect(isAllowedContentUrl('http://abc123.ufs.sh/f/key')).toBe(false)
   })
 
-  it('rejects malformed and oversized input', () => {
+  it('rejects malformed input', () => {
     expect(isAllowedContentUrl('')).toBe(false)
     expect(isAllowedContentUrl('not a url')).toBe(false)
+  })
+
+  it('rejects non-string input defensively', () => {
+    expect(isAllowedContentUrl(null as unknown as string)).toBe(false)
+    expect(isAllowedContentUrl(undefined as unknown as string)).toBe(false)
+    expect(isAllowedContentUrl(123 as unknown as string)).toBe(false)
+  })
+
+  it('caps URL length at MAX_CONTENT_URL_LENGTH', () => {
+    expect(isAllowedContentUrl(urlOfLength(MAX_CONTENT_URL_LENGTH))).toBe(true)
+    expect(isAllowedContentUrl(urlOfLength(MAX_CONTENT_URL_LENGTH + 1))).toBe(false)
     expect(isAllowedContentUrl(`https://abc.ufs.sh/f/${'x'.repeat(MAX_CONTENT_URL_LENGTH)}`)).toBe(false)
   })
 })
@@ -63,5 +87,10 @@ describe('submission request schemas enforce the allowlist', () => {
   it('is reachable directly as contentUrlSchema', () => {
     expect(contentUrlSchema.safeParse('https://abc.ufs.sh/f/key').success).toBe(true)
     expect(contentUrlSchema.safeParse('javascript:alert(1)').success).toBe(false)
+  })
+
+  it('rejects an oversized contentUrl through the schema', () => {
+    expect(contentUrlSchema.safeParse(urlOfLength(MAX_CONTENT_URL_LENGTH + 1)).success).toBe(false)
+    expect(contentUrlSchema.safeParse(`https://utfs.io/f/${'a'.repeat(4000)}`).success).toBe(false)
   })
 })

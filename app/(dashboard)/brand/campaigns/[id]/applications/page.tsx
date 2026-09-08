@@ -1,3 +1,4 @@
+import { isAllowedContentUrl } from '@creatordocks/shared'
 import { Suspense } from 'react'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -113,9 +114,15 @@ async function ApplicationsContent({ id, viewAsId }: { id: string; viewAsId?: st
                       return (
                         <div key={submission.id} className="glass-card" style={{ boxShadow: 'var(--shadow-sm)' }}>
                           <div className="split-row" style={{ marginBottom: 12 }}>
-                            <a href={submission.contentUrl} target="_blank" rel="noopener noreferrer" className="apple-link">
-                              View content
-                            </a>
+                            {isAllowedContentUrl(submission.contentUrl) ? (
+                              <a href={submission.contentUrl} target="_blank" rel="noopener noreferrer" className="apple-link">
+                                View content
+                              </a>
+                            ) : (
+                              <span className="apple-link" style={{ opacity: 0.6 }} title="This submission predates upload validation">
+                                Content unavailable
+                              </span>
+                            )}
                             <span className="status-pill" style={{ background: submissionStatus.bg, color: submissionStatus.color }}>
                               {submissionStatus.label}
                             </span>

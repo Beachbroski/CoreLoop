@@ -1,7 +1,6 @@
 import prisma from '@/lib/prisma'
-import { isAllowedContentUrl } from '@/lib/content-url'
 import { withMobileApi } from '@/lib/mobile-api-guard'
-import { resubmitSubmissionRequestSchema, submissionSchema } from '@creatordocks/shared'
+import { isAllowedContentUrl, resubmitSubmissionRequestSchema, submissionSchema } from '@creatordocks/shared'
 
 type RouteContext = { params: Promise<{ id: string }> }
 

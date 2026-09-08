@@ -9,10 +9,13 @@ export const GET = withMobileApi<RouteContext>(
   async ({ context }) => {
     const { id } = await context.params
 
-    // Only ACTIVE campaigns are ever visible to the mobile app — a DRAFT or
-    // CANCELLED campaign returns 404 rather than leaking its existence/status.
+    // Only ACTIVE, not-yet-expired campaigns are ever visible to the mobile
+    // app — a DRAFT/CANCELLED campaign or one past its deadline returns 404
+    // rather than leaking its existence/status. `gte` mirrors the feed
+    // (app/api/v1/campaigns/route.ts) and POST /api/v1/applications exactly,
+    // so a campaign reachable here can still be applied to.
     const campaign = await prisma.campaign.findFirst({
-      where: { id, status: 'ACTIVE' },
+      where: { id, status: 'ACTIVE', deadline: { gte: new Date() } },
       select: {
         id: true,
         title: true,
