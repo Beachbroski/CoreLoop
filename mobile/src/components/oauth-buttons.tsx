@@ -11,6 +11,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isSessionExistsError } from '@/lib/clerk-errors';
 import { isUserCancellation, isUserCancelledError } from '@/lib/sso-cancellation';
+import { AppleSignInButton } from './apple-sign-in-button';
 import { ThemedText } from './themed-text';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -74,6 +75,11 @@ export function OAuthButtons({ onError }: { onError: (message: string) => void }
   const { startSSOFlow } = useSSO();
   const router = useRouter();
   const [pendingStrategy, setPendingStrategy] = useState<OAuthStrategy | null>(null);
+  // Apple runs its own native flow rather than an SSO strategy, so its pending
+  // state lives outside `pendingStrategy` — but every button still has to go
+  // inert while it is up, or a second provider can be started behind the sheet.
+  const [applePending, setApplePending] = useState(false);
+  const anyPending = pendingStrategy !== null || applePending;
 
   async function onPress(strategy: OAuthStrategy) {
     setPendingStrategy(strategy);
@@ -109,13 +115,17 @@ export function OAuthButtons({ onError }: { onError: (message: string) => void }
 
   return (
     <View style={styles.container}>
+      {/* First in the stack on purpose. Guideline 4.8 wants the privacy-
+          preserving option offered as prominently as the others, and reviewers
+          look for it above the fold. */}
+      <AppleSignInButton onError={onError} disabled={pendingStrategy !== null} onPendingChange={setApplePending} />
       {PROVIDERS.map(({ strategy, label }) => (
         <ProviderButton
           key={strategy}
           strategy={strategy}
           label={label}
           isPending={pendingStrategy === strategy}
-          disabled={pendingStrategy !== null}
+          disabled={anyPending}
           onPress={onPress}
         />
       ))}

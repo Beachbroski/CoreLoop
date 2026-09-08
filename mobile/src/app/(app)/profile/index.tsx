@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
@@ -12,6 +13,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { SettingsRow } from '@/components/settings-row';
 import { Skeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
+import { LEGAL_LINKS } from '@/constants/links';
 import { Gradients, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatRoleLabel } from '@/lib/format-role';
@@ -56,6 +58,16 @@ export default function ProfileScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  async function openLegalLink(url: string) {
+    setLinkError(null);
+    try {
+      await WebBrowser.openBrowserAsync(url);
+    } catch {
+      setLinkError("Couldn't open that link. Please try again.");
+    }
+  }
 
   // Stop pushes to this identity before the session ends (needs a token, so it
   // must run before signOut), then drop every cached query. The QueryClient is
@@ -76,31 +88,39 @@ export default function ProfileScreen() {
   }
 
   function confirmDelete() {
-    Alert.alert('Delete your account?', "Your profile, applications, and submissions will be permanently deleted. This can't be undone.", [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Continue',
-        style: 'destructive',
-        onPress: () =>
-          Alert.alert('Are you absolutely sure?', 'This is permanent. There is no way to recover a deleted account.', [
-            { text: 'Keep my account', style: 'cancel' },
-            {
-              text: 'Delete forever',
-              style: 'destructive',
-              onPress: () => {
-                setDeleteError(null);
-                deleteAccount(undefined, {
-                  onSuccess: async () => {
-                    queryClient.clear();
-                    await signOut();
+    Alert.alert(
+      'Delete your account?',
+      'Your name, photo, and login are removed and every signed-in session ends immediately. Campaign, application, submission, and payout records are kept in anonymized form for financial record-keeping — see our privacy policy for details.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () =>
+            Alert.alert(
+              'Are you absolutely sure?',
+              "There's no way to sign back in or recover your profile once this finishes. Anonymized records of your campaign activity are kept, as described in the privacy policy.",
+              [
+                { text: 'Keep my account', style: 'cancel' },
+                {
+                  text: 'Delete forever',
+                  style: 'destructive',
+                  onPress: () => {
+                    setDeleteError(null);
+                    deleteAccount(undefined, {
+                      onSuccess: async () => {
+                        queryClient.clear();
+                        await signOut();
+                      },
+                      onError: () => setDeleteError("Couldn't delete your account. Please try again."),
+                    });
                   },
-                  onError: () => setDeleteError("Couldn't delete your account. Please try again."),
-                });
-              },
-            },
-          ]),
-      },
-    ]);
+                },
+              ],
+            ),
+        },
+      ],
+    );
   }
 
   return (
@@ -154,6 +174,12 @@ export default function ProfileScreen() {
 
             <View style={styles.settings}>
               <SettingsRow label="App version" trailing={Constants.expoConfig?.version ?? '—'} />
+              <SettingsRow label="Privacy policy" onPress={() => openLegalLink(LEGAL_LINKS.privacyPolicy)} />
+              <SettingsRow label="Terms of use" onPress={() => openLegalLink(LEGAL_LINKS.termsOfUse)} />
+              <SettingsRow label="Support" onPress={() => openLegalLink(LEGAL_LINKS.support)} />
+            </View>
+
+            <View style={styles.settings}>
               <SettingsRow
                 label={signingOut ? 'Signing out…' : 'Sign out'}
                 onPress={signOutAndUnregister}
@@ -162,6 +188,7 @@ export default function ProfileScreen() {
               <SettingsRow label="Delete account" destructive onPress={confirmDelete} disabled={deleting} />
             </View>
 
+            {linkError ? <ThemedText themeColor="danger">{linkError}</ThemedText> : null}
             {signOutError ? <ThemedText themeColor="danger">{signOutError}</ThemedText> : null}
             {deleteError ? <ThemedText themeColor="danger">{deleteError}</ThemedText> : null}
           </>

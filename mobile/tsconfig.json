@@ -3,6 +3,12 @@
   "compilerOptions": {
     "strict": true,
     "types": ["jest"],
+    // `app.config.ts` is loaded by Expo's config loader, which compiles that
+    // one entry file and then hands its `require` calls to plain Node
+    // resolution — and Node does not try `.ts` for an extensionless specifier.
+    // Naming the extension is what lets the config import a real, unit-tested
+    // module instead of carrying an untested inline copy of the same rules.
+    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": [
         "./src/*"

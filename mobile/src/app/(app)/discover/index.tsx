@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,6 +10,8 @@ import {
   TextInput,
   View,
   useWindowDimensions,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 
 import { CampaignTile } from '@/components/campaign-tile';
@@ -64,7 +67,6 @@ function StaleDataBanner({ message, onRetry }: { message: string; onRetry: () =>
 }
 
 export default function DiscoverScreen() {
-  const { data, isLoading, isRefetching, isError, refetch } = useCampaigns();
   const theme = useTheme();
   const { width: screenWidth } = useWindowDimensions();
 
@@ -72,12 +74,30 @@ export default function DiscoverScreen() {
   const [category, setCategory] = useState<string>(ALL_CATEGORIES);
   const [searchFocused, setSearchFocused] = useState(false);
 
+  const selectedNiche = category === ALL_CATEGORIES ? undefined : category;
+
+  // The displayed feed is scoped to the selected niche server-side: a niche
+  // with results past the first page used to look empty, because the old code
+  // fetched one unfiltered page and matched chips against whatever landed in
+  // it. Passing `niche` into the query means the server does the filtering and
+  // `onEndReached` below can page through the WHOLE niche, not just page one.
+  const { data, isLoading, isRefetching, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useCampaigns({ niche: selectedNiche });
+
+  // Chip labels come from an always-unfiltered feed, independent of the
+  // selection above — deriving them from the filtered feed instead would
+  // collapse the chip row down to just the chosen niche the moment one is
+  // picked. React Query dedupes this against the call above whenever "All" is
+  // selected (same query key, no extra request).
+  const { data: unfilteredData } = useCampaigns();
+
   const campaigns = useMemo(() => data?.data ?? [], [data]);
+  const allCampaigns = useMemo(() => unfilteredData?.data ?? campaigns, [unfilteredData, campaigns]);
 
   const categories = useMemo(() => {
-    const niches = Array.from(new Set(campaigns.map((campaign) => campaign.niche))).sort();
+    const niches = Array.from(new Set(allCampaigns.map((campaign) => campaign.niche))).sort();
     return [ALL_CATEGORIES, ...niches];
-  }, [campaigns]);
+  }, [allCampaigns]);
 
   // A refetch can narrow the feed to niches that no longer include the selected
   // category. The chip row hides itself at two options or fewer, so the stale
@@ -131,6 +151,22 @@ export default function DiscoverScreen() {
         columnCount,
       ),
     [filtered, columnWidth, columnCount],
+  );
+
+  // ScrollView has no onEndReached of its own — a masonry layout can't sit in a
+  // FlatList, since column height depends on every tile's aspect ratio up
+  // front. This reads the same signal FlatList computes internally: within one
+  // screen-height of the bottom, request the next page.
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!hasNextPage || isFetchingNextPage) return;
+      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      const distanceToBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+      if (distanceToBottom < layoutMeasurement.height) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
   );
 
   // A failed refetch keeps the last good `data` in place, so the full-screen
@@ -194,6 +230,8 @@ export default function DiscoverScreen() {
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          onScroll={handleScroll}
+          scrollEventThrottle={200}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.accent} />
           }>
@@ -233,6 +271,12 @@ export default function DiscoverScreen() {
                   </View>
                 ))}
               </View>
+
+              {isFetchingNextPage && (
+                <View style={styles.paginationFooter}>
+                  <ActivityIndicator color={theme.accent} />
+                </View>
+              )}
             </>
           )}
         </ScrollView>
@@ -304,5 +348,9 @@ const styles = StyleSheet.create({
   column: {
     flex: 1,
     gap: GUTTER,
+  },
+  paginationFooter: {
+    paddingVertical: Spacing.four,
+    alignItems: 'center',
   },
 });

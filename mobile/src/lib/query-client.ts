@@ -18,6 +18,25 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
   return failureCount < 2;
 }
 
+/**
+ * Mutations are never retried. Not "retried less" — never.
+ *
+ * Every mutation this app sends is a non-idempotent POST/PATCH/DELETE:
+ * `POST /applications`, `POST /submissions`, the resubmit, the withdraw. The
+ * failure that matters is not the one where the server never got the request —
+ * it is the one where the server got it, wrote the row, and the *response* was
+ * lost to a dropped connection or a gateway 502. A retry then sends the same
+ * application a second time: a duplicate submission, or a second application
+ * that comes back "you have already applied" and reads to the creator as the
+ * app rejecting them for something they did once.
+ *
+ * There is no client-side way to tell that case apart from a request that never
+ * landed, so the rule (W3-4) is the blunt one: retry idempotent GETs only.
+ * Queries keep `shouldRetry`; a failed mutation surfaces to the screen, which
+ * offers the creator a button and lets them decide.
+ */
+export const MUTATION_RETRY = false;
+
 /** React Native's only "the user is looking at us again" signal. */
 export function isForeground(status: AppStateStatus): boolean {
   return status === 'active';
@@ -70,7 +89,7 @@ export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: { retry: shouldRetry },
-      mutations: { retry: shouldRetry },
+      mutations: { retry: MUTATION_RETRY },
     },
   });
 }

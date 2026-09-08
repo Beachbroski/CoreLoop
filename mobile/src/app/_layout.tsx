@@ -4,6 +4,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useColorScheme } from 'react-native';
 
 import { VersionGate } from '@/components/version-gate';
+import { AppErrorBoundary, type AppErrorBoundaryProps } from '@/components/app-error-boundary';
 import { Colors } from '@/constants/theme';
 import { createQueryClient } from '@/lib/query-client';
 import { secureTokenCache } from '@/lib/token-cache';
@@ -50,4 +51,13 @@ export default function RootLayout() {
       </QueryClientProvider>
     </ClerkProvider>
   );
+}
+
+/**
+ * expo-router only installs a boundary for a route that exports one by this
+ * exact name, so this re-export is load-bearing, not decorative: without it an
+ * uncaught render error anywhere above the tab shell closes the app.
+ */
+export function ErrorBoundary(props: AppErrorBoundaryProps) {
+  return <AppErrorBoundary {...props} message="Something went wrong while starting CreatorDocks." />;
 }

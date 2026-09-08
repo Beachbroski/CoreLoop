@@ -4,6 +4,7 @@ import { SymbolView } from 'expo-symbols';
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, View, type ColorValue } from 'react-native';
 
+import { AppErrorBoundary, type AppErrorBoundaryProps } from '@/components/app-error-boundary';
 import { ErrorState } from '@/components/error-state';
 import { Logo } from '@/components/logo';
 import { Screen } from '@/components/screen';
@@ -230,3 +231,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
 });
+
+/** Keeps a crash inside one tab from taking down the whole app. See the root layout. */
+export function ErrorBoundary(props: AppErrorBoundaryProps) {
+  return <AppErrorBoundary {...props} />;
+}

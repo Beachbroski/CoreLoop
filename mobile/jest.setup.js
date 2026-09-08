@@ -48,6 +48,22 @@ jest.mock('expo-image', () => {
   return { Image: (props) => <Image {...props} /> };
 });
 
+// Apple's sign-in sheet is `ASAuthorizationAppleIDButton` plus a native
+// authorization controller — neither exists in Node. `isAvailableAsync`
+// resolves true so the button renders; what the *flow* then returns is data,
+// so tests set that on `useSignInWithApple` themselves.
+jest.mock('expo-apple-authentication', () => {
+  const { Pressable } = require('react-native');
+  return {
+    isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+    signInAsync: jest.fn(),
+    AppleAuthenticationButton: (props) => <Pressable accessibilityRole="button" {...props} />,
+    AppleAuthenticationButtonType: { SIGN_IN: 0, CONTINUE: 1, SIGN_UP: 2 },
+    AppleAuthenticationButtonStyle: { WHITE: 0, WHITE_OUTLINE: 1, BLACK: 2 },
+    AppleAuthenticationScope: { FULL_NAME: 0, EMAIL: 1 },
+  };
+});
+
 /* ----------------------------------------------------------- navigation -- */
 
 // Must be `mock`-prefixed: jest hoists `jest.mock` factories above the file's
@@ -102,6 +118,7 @@ jest.mock('@clerk/clerk-expo', () => ({
   })),
   useUser: jest.fn(() => ({ isLoaded: true, isSignedIn: true, user: { id: 'clerk_test_user' } })),
   useSSO: jest.fn(() => ({ startSSOFlow: jest.fn() })),
+  useSignInWithApple: jest.fn(() => ({ startAppleAuthenticationFlow: jest.fn() })),
   useSignIn: jest.fn(() => ({ isLoaded: true, signIn: {}, setActive: jest.fn() })),
   useSignUp: jest.fn(() => ({ isLoaded: true, signUp: {}, setActive: jest.fn() })),
   ClerkProvider: ({ children }) => children,
