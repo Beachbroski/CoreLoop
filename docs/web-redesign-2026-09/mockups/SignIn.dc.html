@@ -1,0 +1,149 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><script src="./support.js"></script></head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap">
+  <style>
+    body { margin: 0; }
+    a {
+      color: #ff503d;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: transparent;
+      text-underline-offset: 3px;
+      transition: color 120ms ease, text-decoration-color 120ms ease;
+    }
+    a:hover { text-decoration-color: currentColor; }
+    :focus-visible { outline: 2px solid #ff503d; outline-offset: 2px; }
+    .cd-press:active { transform: scale(0.98); }
+    @media (prefers-reduced-motion: reduce) {
+      a { transition: none; }
+      .cd-press:active { transform: none; }
+    }
+  </style>
+</helmet>
+
+<div style="width: 1440px; min-height: 900px; background: #07080b; color: #f7f8fa; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; display: flex; align-items: stretch;">
+
+  <!-- ================================================================
+       LEFT 45% (648px) — bare canvas: mark, headline, lead, sub-line,
+       and one real campaign tile (ferrous-brunch, baked spec).
+       ================================================================ -->
+  <div style="width: 648px; box-sizing: border-box; padding: 64px 56px 64px 64px; background: #07080b; display: flex; flex-direction: column; gap: 32px;">
+
+    <!-- Brand mark — Option B (the slip mark), 26px + wordmark -->
+    <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #f7f8fa; align-self: flex-start;">
+      <svg width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="CreatorDocks" style="display: block; flex: 0 0 auto;">
+        <rect width="26" height="26" rx="6" fill="#ff503d"></rect>
+        <path d="M5 4.5 H21 V18.6 L18.3 21.1 L15.7 18.6 L13 21.1 L10.3 18.6 L7.7 21.1 L5 18.6 Z M6.6 8.2 H16.6 V10.4 H6.6 Z M14 12.6 H19.4 V14.8 H14 Z" fill="#ffffff" fill-rule="evenodd"></path>
+      </svg>
+      <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 105, 'wght' 600; font-size: 17px; line-height: 1.35; letter-spacing: -0.005em;">CreatorDocks</span>
+    </a>
+
+    <!-- Headline + lead + sub-line -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <h1 style="margin: 0; max-width: 528px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 112, 'wght' 650; font-size: 52px; line-height: 1; letter-spacing: -0.03em; color: #f7f8fa; text-wrap: balance;">Sign in to your campaigns.</h1>
+
+      <p style="margin: 0; max-width: 500px; font-size: 19px; line-height: 1.6; letter-spacing: -0.005em; color: #9ba1ae;">Your briefs, the creators who applied, and every hold still on your card.</p>
+
+      <div style="display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; padding-top: 4px;">
+        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #9ba1ae;">No account yet? <a href="/waitlist" style="color: #ff503d;">Request access</a></p>
+        <span aria-hidden="true" style="width: 1px; height: 13px; background: rgba(255,255,255,0.10); display: block; align-self: center;"></span>
+        <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Open mode: &ldquo;Create one&rdquo;, /sign-up</span>
+      </div>
+    </div>
+
+    <!-- One real campaign tile. Artwork is the baked ferrous-brunch spec
+         (palette 1 "violet night", pattern orbs, 4:3 at 384x288).
+         No price pill here: the page's single saturated coral surface is
+         the Continue button, and the rate is carried as a money pair. -->
+    <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.10); width: 384px;">
+      <div style="position:relative;overflow:hidden;width:100%;height:288px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:60.04%;top:59.65%;width:248.8px;height:248.8px;margin-left:-124.4px;margin-top:-124.4px;border-radius:50%;background:#ffffff;opacity:0.1;"></span><span aria-hidden="true" style="position:absolute;left:58.48%;top:58.09%;width:245.09px;height:245.09px;margin-left:-122.54px;margin-top:-122.54px;border-radius:50%;background:#ffffff;opacity:0.1;"></span></div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 18px; height: 18px; border-radius: 999px; background: #3b0f8f; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 9px; line-height: 1;">FC</span>
+          <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Ferrous Coffee &mdash; Bushwick, NY</span>
+        </div>
+
+        <h2 style="margin: 0; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Saturday brunch reels</h2>
+
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #3b0f8f; display: block;"></span>Food</span>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">2 spots<span aria-hidden="true" style="width: 1px; height: 11px; background: rgba(255,255,255,0.10); display: block;"></span><span style="color: #ff503d;">3d left</span></span>
+        </div>
+
+        <div style="padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.10); font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;"><span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; color: #f7f8fa;">$400.00</span> held &middot; <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; color: #2dd4a8;">$340.00</span> to Ana Reyes</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================================================================
+       RIGHT 55% (792px) — full-height bg-element panel, 1px left border,
+       static faithful rendering of the Clerk form at 400px, centered.
+       ================================================================ -->
+  <div style="width: 792px; box-sizing: border-box; border-left: 1px solid rgba(255,255,255,0.10); background: #12141b; min-height: 900px; display: flex; align-items: center; justify-content: center; padding: 48px 0;">
+
+    <div style="width: 400px; display: flex; flex-direction: column; gap: 40px;">
+
+      <!-- The form -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button class="cd-press" type="button" style="box-sizing: border-box; width: 100%; height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid rgba(255,255,255,0.36); border-radius: 6px; background: transparent; color: #f7f8fa; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 500; line-height: 1; cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="display: block; flex: 0 0 auto;">
+              <path fill="#4285f4" d="M23.06 12.25c0-.85-.08-1.67-.22-2.45H12v4.63h6.2a5.3 5.3 0 0 1-2.3 3.48v2.89h3.72c2.18-2 3.44-4.96 3.44-8.55z"></path>
+              <path fill="#34a853" d="M12 24c3.1 0 5.7-1.03 7.62-2.8l-3.72-2.89c-1.03.69-2.35 1.1-3.9 1.1-3 0-5.54-2.02-6.45-4.74H1.7v2.98A11.5 11.5 0 0 0 12 24z"></path>
+              <path fill="#fbbc05" d="M5.55 14.67a6.9 6.9 0 0 1 0-4.42V7.27H1.7a11.5 11.5 0 0 0 0 10.38l3.85-2.98z"></path>
+              <path fill="#ea4335" d="M12 4.75c1.69 0 3.2.58 4.4 1.72l3.3-3.3C17.7 1.2 15.1 0 12 0 7.5 0 3.62 2.58 1.7 6.34l3.85 2.98C6.46 6.77 9 4.75 12 4.75z"></path>
+            </svg>
+            Continue with Google
+          </button>
+
+          <button class="cd-press" type="button" style="box-sizing: border-box; width: 100%; height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid rgba(255,255,255,0.36); border-radius: 6px; background: transparent; color: #f7f8fa; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 500; line-height: 1; cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="display: block; flex: 0 0 auto;">
+              <path fill="#f7f8fa" d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 0 1 0-5.18c.27 0 .52.04.76.12v-3.2a5.9 5.9 0 0 0-.76-.05A5.77 5.77 0 0 0 4.1 15.4a5.77 5.77 0 0 0 5.76 5.77 5.77 5.77 0 0 0 5.77-5.77V9.01a7.35 7.35 0 0 0 4.29 1.37V7.3a4.29 4.29 0 0 1-3.32-1.48z"></path>
+            </svg>
+            Continue with TikTok
+          </button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span aria-hidden="true" style="flex: 1 1 auto; height: 1px; background: rgba(255,255,255,0.10); display: block;"></span>
+          <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">or</span>
+          <span aria-hidden="true" style="flex: 1 1 auto; height: 1px; background: rgba(255,255,255,0.10); display: block;"></span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label for="signin-email" style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #f7f8fa;">Email address</label>
+          <input id="signin-email" type="text" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.36); border-radius: 6px; background: #1b1e27; color: #f7f8fa; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 15px;">
+        </div>
+
+        <button class="cd-press" type="button" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 18px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: #d64131; color: #ffffff; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; line-height: 1; cursor: pointer;">Continue</button>
+
+        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #9ba1ae;">Don&rsquo;t have an account? <a href="/waitlist" style="color: #ff503d;">Request access</a> <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">&middot; Open mode: &ldquo;Sign up&rdquo;, /sign-up</span></p>
+      </div>
+
+      <!-- Focus state, shown as an inset annotation panel -->
+      <div style="box-sizing: border-box; width: 100%; padding: 16px 16px 18px; background: #171a22; border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+          <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Focus state</span>
+          <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">2px #ff503d outline &middot; 2px offset</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label for="signin-email-focus" style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #f7f8fa;">Email address</label>
+          <input id="signin-email-focus" type="text" value="hello@ferrouscoffee.com" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 12px; border: 1px solid #ff503d; outline: 2px solid #ff503d; outline-offset: 2px; border-radius: 6px; background: #1b1e27; color: #f7f8fa; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 15px;">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

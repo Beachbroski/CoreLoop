@@ -1,0 +1,105 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><script src="./support.js"></script></head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap">
+  <style>
+    body { margin: 0; }
+    a {
+      color: #ff503d;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: transparent;
+      text-underline-offset: 3px;
+      transition: color 120ms ease, text-decoration-color 120ms ease;
+    }
+    a:hover { text-decoration-color: currentColor; }
+    :focus-visible { outline: 2px solid #ff503d; outline-offset: 2px; }
+    .cd-press:active { transform: scale(0.98); }
+    @media (prefers-reduced-motion: reduce) {
+      a { transition: none; }
+      .cd-press:active { transform: none; }
+    }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 900px; background: #07080b; color: #f7f8fa; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; overflow: hidden;">
+  <header style="height: 68px; display: flex; align-items: center; background: transparent; border-bottom: 1px solid transparent; border-radius: 0;">
+    <div style="width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 40px;">
+      <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #f7f8fa;">
+        <svg width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="CreatorDocks" style="display: block; flex: 0 0 auto;">
+          <rect width="26" height="26" rx="6" fill="#ff503d"></rect>
+          <path d="M5 4.5 H21 V18.6 L18.3 21.1 L15.7 18.6 L13 21.1 L10.3 18.6 L7.7 21.1 L5 18.6 Z M6.6 8.2 H16.6 V10.4 H6.6 Z M14 12.6 H19.4 V14.8 H14 Z" fill="#ffffff" fill-rule="evenodd"></path>
+        </svg>
+        <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 105, 'wght' 600; font-size: 17px; line-height: 1.35; letter-spacing: -0.005em;">CreatorDocks</span>
+      </a>
+      <nav style="display: flex; align-items: center; gap: 28px; flex: 1;">
+        <a href="#how-it-runs" style="font-size: 15px; line-height: 1.6; color: #9ba1ae; text-decoration: none;">How it runs</a>
+        <a href="#who" style="font-size: 15px; line-height: 1.6; color: #9ba1ae; text-decoration: none;">Who it&rsquo;s for</a>
+        <a href="#pricing" style="font-size: 15px; line-height: 1.6; color: #9ba1ae; text-decoration: none;">What it costs</a>
+        <a href="/get-the-app" style="font-size: 15px; line-height: 1.6; color: #9ba1ae; text-decoration: none;">For creators</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="/sign-in" style="font-size: 15px; line-height: 1.6; color: #9ba1ae; text-decoration: none;">Sign in</a>
+        <a class="cd-press" href="/waitlist" style="height: 40px; padding: 0 18px; display: inline-flex; align-items: center; border-radius: 6px; background: #d64131; color: #ffffff; font-size: 15px; font-weight: 600; line-height: 1; text-decoration: none;">Request access</a>
+      </div>
+    </div>
+  </header>
+
+  <section style="padding: 64px 0 96px;">
+    <div style="width: 1200px; margin: 0 auto;">
+      <div style="display: grid; grid-template-columns: repeat(12, 78px); gap: 24px; align-items: start;">
+        <div style="grid-column: 1 / span 7; display: flex; flex-direction: column; gap: 32px;">
+          <h1 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 118, 'wght' 700; font-size: 88px; line-height: 0.94; letter-spacing: -0.035em; color: #f7f8fa;">Nothing is<br>charged until<br>the content<br>is good.</h1>
+          <p style="margin: 0; font-size: 19px; line-height: 1.6; letter-spacing: -0.005em; color: #9ba1ae; max-width: 46ch;">Posting a brief is free. Creators near you apply with a pitch and their own rate. Accepting holds that rate on your card; approving charges it. Our 15% comes out of that rate, never on top.</p>
+          <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <a class="cd-press" href="/waitlist" style="height: 48px; padding: 0 22px; display: inline-flex; align-items: center; border-radius: 6px; background: #d64131; color: #ffffff; font-size: 17px; font-weight: 600; line-height: 1; text-decoration: none;">Request access</a>
+          <a class="cd-press" href="#how-it-runs" style="height: 48px; padding: 0 22px; display: inline-flex; align-items: center; border-radius: 6px; border: 1px solid rgba(255,255,255,0.36); background: transparent; color: #f7f8fa; font-size: 17px; font-weight: 600; line-height: 1; text-decoration: none;">See how it runs</a>
+          <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; max-width: 176px;">Open mode label: &ldquo;Create your brand account&rdquo;, /sign-up</span>
+        </div>
+          <div style="display: flex; align-items: center; gap: 14px; font-size: 15px; line-height: 1.6; color: #9ba1ae;"><span>Cafes</span><span aria-hidden="true" style="width: 1px; height: 14px; background: #ff503d; display: block;"></span><span>Gyms</span><span aria-hidden="true" style="width: 1px; height: 14px; background: #ff503d; display: block;"></span><span>Salons</span><span aria-hidden="true" style="width: 1px; height: 14px; background: #ff503d; display: block;"></span><span>Boutiques</span><span aria-hidden="true" style="width: 1px; height: 14px; background: #ff503d; display: block;"></span><span>Home services</span></div>
+        </div>
+        <div style="grid-column: 8 / span 5; justify-self: end;">
+    <div style="width: 380px; box-sizing: border-box; background: #171a22; border: 1px solid rgba(255,255,255,0.10); border-radius: 14px; overflow: hidden;">
+      <div style="padding: 20px 20px 16px;">
+        <div style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Saturday brunch reels</div>
+        <div style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; margin-top: 4px;">Ferrous Coffee &middot; Bushwick</div>
+        <p style="margin: 8px 0 0; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">One accepted application on one brief. 2 spots, 6 applicants, one slot still open. Ana Reyes accepted at <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$400.00</span>. Marcus Ilagan asks <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$425.00</span> &middot; <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$361.25</span> to him.</p>
+      </div>
+      <div style="position: relative;">
+        <div style="position:relative;overflow:hidden;width:100%;height:213px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:60.04%;top:59.65%;width:184.01px;height:184.01px;margin-left:-92px;margin-top:-92px;border-radius:50%;background:#ffffff;opacity:0.1;"></span><span aria-hidden="true" style="position:absolute;left:58.48%;top:58.09%;width:181.26px;height:181.26px;margin-left:-90.63px;margin-top:-90.63px;border-radius:50%;background:#ffffff;opacity:0.1;"></span></div>
+        <span style="position: absolute; right: 12px; bottom: 12px; height: 26px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1;">$400</span>
+      </div>
+      <dl style="margin: 0; padding: 4px 20px 0;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+        <dt style="font-size: 15px; line-height: 1.6; color: #9ba1ae;">Accepted rate</dt>
+        <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$400.00</dd>
+      </div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+        <dt style="font-size: 15px; line-height: 1.6; color: #9ba1ae;">Authorized on your card</dt>
+        <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$400.00</dd>
+      </div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+        <dt style="font-size: 15px; line-height: 1.6; color: #9ba1ae;">Captured when you approve</dt>
+        <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$400.00</dd>
+      </div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+        <dt style="font-size: 15px; line-height: 1.6; color: #9ba1ae;">Platform fee (15%)</dt>
+        <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #9ba1ae;">&minus;$60.00</dd>
+      </div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0;">
+        <dt style="font-size: 15px; line-height: 1.6; font-weight: 600; color: #f7f8fa;">Ana Reyes receives</dt>
+        <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #2dd4a8;">$340.00</dd>
+      </div>
+      </dl>
+      <p style="margin: 0; padding: 12px 20px 20px; border-top: 1px solid rgba(255,255,255,0.10); font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Nothing is captured until you approve the content.</p>
+    </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+</body>
+</html>

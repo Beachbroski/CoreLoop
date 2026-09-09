@@ -387,7 +387,7 @@ A wave that fails any of these is **reverted at the package level** (`git checko
 | `backdrop-filter` / `backdrop-blur` | glassmorphism (baseline: 9 in `globals.css`, 1 in `clerk-appearance.ts:15`) |
 | `radial-gradient` | the orb / pale radial hero (baseline: 5) |
 | `filter:\s*blur\(` | floating blurred orbs |
-| `border-radius:\s*(2[4-9]\|[3-9][0-9])px` and `rounded-\[(2[4-9]\|[3-9][0-9])px\]` | the 28–40px template radius (baseline: 8 in `globals.css`, `rounded-[28px]` in `clerk-appearance.ts:15`) |
+| `border-radius:\s*(1[89]\|2[0-9]\|3[0-9]\|40)px` and `rounded-\[(1[89]\|2[0-9]\|3[0-9]\|40)px\]` | the 18–40px template radius (baseline: 8 in `globals.css`, `rounded-[28px]` in `clerk-appearance.ts:15`). **Exempt:** generated cover-art decor (`components/ui/cover-art.tsx` and the mockup bake), whose stripe pill radius is algorithmic |
 | `style={{` | inline styles (ratcheting to 0; baseline 367) |
 | `#[0-9a-fA-F]{3,8}` outside `app/styles/tokens.css` and `**/opengraph-image.tsx` and `app/icon.tsx` | hardcoded colour (baseline 30 in scope) |
 | `!important` | cascade war (F2) |

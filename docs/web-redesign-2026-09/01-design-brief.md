@@ -636,7 +636,7 @@ A reviewer agent runs these against the **redesign-owned file list** (`scripts/d
 2. **No blur.** `grep -rn "filter:\s*blur\|blur(" app/` → 0 hits.
 3. **No orbs / radial washes.** `grep -rn "radial-gradient" app/` → 0 hits.
 4. **Gradients are rationed.** `grep -rn "linear-gradient" app/ components/` → hits only in `components/ui/cover-art.tsx` and the art strip's edge mask. **Max one gradient-bearing element per viewport** outside cover art.
-5. **Radii are from the scale.** `grep -rnE "border-radius:\s*(1[89]|2[0-9]|3[0-9]|40)px" app/` → 0 hits. `grep -rn "999px\|9999px" app/` → only `.avatar` and `.status-dot`.
+5. **Radii are from the scale.** `grep -rnE "border-radius:\s*(1[89]|2[0-9]|3[0-9]|40)px" app/ components/` → 0 hits **in authored CSS**. `grep -rn "999px\|9999px" app/ components/` → only `.avatar` and `.status-dot`. **Exemption:** the decor spans that `components/ui/cover-art.tsx` generates (orb circles, ring outlines, the rotated stripe pill whose radius is `height × 0.16 / 2`) are the mobile algorithm's output and are exempt — they are set via the component's own computed style, never hand-authored, and the gate skips that file's decor rules by construction.
 6. **No shadows on dark surfaces below level 3.** `grep -rn "box-shadow" app/` → every hit is `--cd-elev-2` (light theme), `--cd-elev-3`, or the focus ring.
 7. **No shouting labels.** `grep -rn "text-transform:\s*uppercase" app/` → 0. `grep -rnE "letter-spacing:\s*0?\.0[3-9]em|letter-spacing:\s*\.[1-9]" app/` → 0.
 8. **No eyebrows.** `grep -rn "eyebrow" app/` → 0 hits; the class must not exist in the stylesheet.

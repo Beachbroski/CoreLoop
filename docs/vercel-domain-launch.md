@@ -48,8 +48,7 @@ Add these variables in Vercel before the real launch:
 - `RESEND_API_KEY`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `UPLOADTHING_APP_ID`
-- `UPLOADTHING_SECRET`
+- `UPLOADTHING_TOKEN`
 
 Notes:
 

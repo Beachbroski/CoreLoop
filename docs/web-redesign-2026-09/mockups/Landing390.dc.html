@@ -1,0 +1,501 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><script src="./support.js"></script></head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap">
+  <style>
+    body { margin: 0; }
+    a {
+      color: #ff503d;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: transparent;
+      text-underline-offset: 3px;
+      transition: color 120ms ease, text-decoration-color 120ms ease;
+    }
+    a:hover { text-decoration-color: currentColor; }
+    :focus-visible { outline: 2px solid #ff503d; outline-offset: 2px; }
+    .cd-press:active { transform: scale(0.98); }
+    @media (prefers-reduced-motion: reduce) {
+      a { transition: none; }
+      .cd-press:active { transform: none; }
+    }
+  </style>
+</helmet>
+<div style="width: 390px; min-height: 10160px; background: #07080b; color: #f7f8fa; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; overflow: hidden;">
+  <header style="height: 68px; display: flex; align-items: center; background: transparent; border-bottom: 1px solid transparent; border-radius: 0;">
+    <div style="width: 358px; margin: 0 16px; display: flex; align-items: center; gap: 12px;">
+      <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #f7f8fa; flex: 1 1 auto;">
+        <svg width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="CreatorDocks" style="display: block; flex: 0 0 auto;">
+          <rect width="26" height="26" rx="6" fill="#ff503d"></rect>
+          <path d="M5 4.5 H21 V18.6 L18.3 21.1 L15.7 18.6 L13 21.1 L10.3 18.6 L7.7 21.1 L5 18.6 Z M6.6 8.2 H16.6 V10.4 H6.6 Z M14 12.6 H19.4 V14.8 H14 Z" fill="#ffffff" fill-rule="evenodd"></path>
+        </svg>
+        <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 105, 'wght' 600; font-size: 17px; line-height: 1.35; letter-spacing: -0.005em;">CreatorDocks</span>
+      </a>
+      <a class="cd-press" href="/waitlist" style="flex: 0 0 auto; height: 40px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 6px; background: #d64131; color: #ffffff; font-size: 15px; font-weight: 600; line-height: 1; text-decoration: none;">Request access</a>
+      <button type="button" aria-label="Open menu" style="flex: 0 0 auto; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid rgba(255,255,255,0.36); background: transparent; color: #f7f8fa; padding: 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <section style="padding: 24px 16px 48px;">
+    <h1 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 118, 'wght' 700; font-size: 44px; line-height: 0.94; letter-spacing: -0.035em; color: #f7f8fa; text-wrap: balance;">Nothing is charged until the content is good.</h1>
+    <p style="margin: 24px 0 0; font-size: 19px; line-height: 1.6; letter-spacing: -0.005em; color: #9ba1ae; max-width: 62ch; text-wrap: pretty;">Posting a brief is free. Creators near you apply with a pitch and their own rate. Accepting holds that rate on your card; approving charges it. Our 15% comes out of that rate, never on top.</p>
+    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 28px;">
+      <a class="cd-press" href="/waitlist" style="height: 48px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: #d64131; color: #ffffff; font-size: 17px; font-weight: 600; line-height: 1; text-decoration: none;">Request access</a>
+      <a class="cd-press" href="#how-it-runs" style="height: 48px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid rgba(255,255,255,0.36); background: transparent; color: #f7f8fa; font-size: 17px; font-weight: 600; line-height: 1; text-decoration: none;">See how it runs</a>
+      <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Open mode label: &ldquo;Create your brand account&rdquo;, /sign-up</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 28px; font-size: 15px; line-height: 1.6; color: #9ba1ae;"><span>Cafes</span><span style="display: inline-flex; align-items: center; gap: 10px;"><span aria-hidden="true" style="width: 1px; height: 14px; background: #ff503d; display: block;"></span><span>Gyms</span></span><span style="display: inline-flex; align-items: center; gap: 10px;"><span aria-hidden="true" style="width: 1px; height: 14px; background: #ff503d; display: block;"></span><span>Salons</span></span><span style="display: inline-flex; align-items: center; gap: 10px;"><span aria-hidden="true" style="width: 1px; height: 14px; background: #ff503d; display: block;"></span><span>Boutiques</span></span><span style="display: inline-flex; align-items: center; gap: 10px;"><span aria-hidden="true" style="width: 1px; height: 14px; background: #ff503d; display: block;"></span><span>Home services</span></span></div>
+    <div style="width: 358px; box-sizing: border-box; background: #171a22; border: 1px solid rgba(255,255,255,0.10); border-radius: 14px; overflow: hidden; margin-top: 32px;">
+      <div style="padding: 18px 18px 14px;">
+        <div style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Saturday brunch reels</div>
+        <div style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; margin-top: 4px;">Ferrous Coffee &middot; Bushwick</div>
+        <p style="margin: 8px 0 0; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">One accepted application on one brief. 2 spots, 6 applicants, one slot still open. Ana Reyes accepted at <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$400.00</span>. Marcus Ilagan asks <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$425.00</span> &middot; <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$361.25</span> to him.</p>
+      </div>
+      <div style="position: relative;">
+        <div style="position:relative;overflow:hidden;width:100%;height:201px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:60.04%;top:59.65%;width:173.64px;height:173.64px;margin-left:-86.82px;margin-top:-86.82px;border-radius:50%;background:#ffffff;opacity:0.1;"></span><span aria-hidden="true" style="position:absolute;left:58.48%;top:58.09%;width:171.05px;height:171.05px;margin-left:-85.53px;margin-top:-85.53px;border-radius:50%;background:#ffffff;opacity:0.1;"></span></div>
+        <span style="position: absolute; right: 12px; bottom: 12px; height: 26px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1;">$400</span>
+      </div>
+      <dl style="margin: 0; padding: 4px 18px 0;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+          <dt style="font-size: 15px; line-height: 1.6; color: #9ba1ae;">Accepted rate</dt>
+          <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$400.00</dd>
+        </div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+          <dt style="font-size: 15px; line-height: 1.6; color: #9ba1ae;">Authorized on your card</dt>
+          <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$400.00</dd>
+        </div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+          <dt style="font-size: 15px; line-height: 1.6; color: #9ba1ae;">Captured when you approve</dt>
+          <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$400.00</dd>
+        </div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+          <dt style="font-size: 15px; line-height: 1.6; color: #9ba1ae;">Platform fee (15%)</dt>
+          <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #9ba1ae;">&minus;$60.00</dd>
+        </div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0;">
+          <dt style="font-size: 15px; line-height: 1.6; font-weight: 600; color: #f7f8fa;">Ana Reyes receives</dt>
+          <dd style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #2dd4a8;">$340.00</dd>
+        </div>
+      </dl>
+      <p style="margin: 0; padding: 12px 18px 18px; border-top: 1px solid rgba(255,255,255,0.10); font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Nothing is captured until you approve the content.</p>
+    </div>
+  </section>
+
+  <section id="pricing" style="background: #12141b; border-top: 1px solid rgba(255,255,255,0.10); border-bottom: 1px solid rgba(255,255,255,0.10); border-radius: 0; padding: 48px 16px;">
+    <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 112, 'wght' 650; font-size: 32px; line-height: 1.00; letter-spacing: -0.03em; color: #f7f8fa; text-wrap: balance;">What it costs you</h2>
+    <div style="display: flex; flex-direction: column; margin-top: 28px;">
+        <div style=" padding-bottom: 28px;">
+          <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+            <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 28px; line-height: 1.00; letter-spacing: -0.02em; color: #f7f8fa;">$0</span>
+            <span style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">to post</span>
+          </div>
+          <p style="margin: 12px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">Posting a brief costs nothing, and closing one without hiring anybody costs nothing.</p>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.10); padding-top: 28px; padding-bottom: 0;">
+          <p style="margin: 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">You set the budget. Creators name the rate they want. The 15% is the only part that never changes.</p>
+          <table style="width: 100%; border-collapse: collapse; border-radius: 0; margin-top: 16px;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.10);">
+            <th style="width: 56%; text-align: left; padding: 0 12px 8px 0; font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">Brief</th>
+            <th style="width: 22%; text-align: right; padding: 0 12px 8px; font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">You accept</th>
+            <th style="width: 22%; text-align: right; padding: 0 0 8px 12px; font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">Creator receives</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.10);">
+            <th scope="row" style="text-align: left; vertical-align: baseline; padding: 10px 12px 10px 0; font-size: 15px; line-height: 1.4; font-weight: 400; color: #f7f8fa;">Holiday hours announcement<span style="display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Ferrous Coffee</span></th>
+            <td style="text-align: right; vertical-align: baseline; padding: 10px 12px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$250.00</td>
+            <td style="text-align: right; vertical-align: baseline; padding: 10px 0 10px 12px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #2dd4a8;">$212.50</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.10);">
+            <th scope="row" style="text-align: left; vertical-align: baseline; padding: 10px 12px 10px 0; font-size: 15px; line-height: 1.4; font-weight: 400; color: #f7f8fa;">Saturday brunch reels<span style="display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Ferrous Coffee</span></th>
+            <td style="text-align: right; vertical-align: baseline; padding: 10px 12px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$400.00</td>
+            <td style="text-align: right; vertical-align: baseline; padding: 10px 0 10px 12px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #2dd4a8;">$340.00</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.10);">
+            <th scope="row" style="text-align: left; vertical-align: baseline; padding: 10px 12px 10px 0; font-size: 15px; line-height: 1.4; font-weight: 400; color: #f7f8fa;">Winter drop lookbook<span style="display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Norr Boutique</span></th>
+            <td style="text-align: right; vertical-align: baseline; padding: 10px 12px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #f7f8fa;">$900.00</td>
+            <td style="text-align: right; vertical-align: baseline; padding: 10px 0 10px 12px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1.4; color: #2dd4a8;">$765.00</td>
+          </tr>
+        </tbody>
+      </table>
+          <p style="margin: 12px 0 0; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">The 15% comes out of the rate you accept, never on top of it.</p>
+        </div>
+    </div>
+  </section>
+
+  <section id="how-it-runs" style="padding: 48px 16px 0;">
+    <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 112, 'wght' 650; font-size: 32px; line-height: 1.00; letter-spacing: -0.03em; color: #f7f8fa; text-wrap: balance;">How it runs</h2>
+    <p style="margin: 16px 0 0; font-size: 19px; line-height: 1.6; letter-spacing: -0.005em; color: #9ba1ae; max-width: 62ch; text-wrap: pretty;">Three steps. The money only moves at the third one, and you are the one who moves it.</p>
+    <div style="display: flex; flex-direction: column; gap: 0; margin-top: 32px;">
+        <div style="display: flex; align-items: stretch; gap: 16px;">
+          <div aria-hidden="true" style="flex: 0 0 8px; display: flex; flex-direction: column; align-items: center;">
+            <span style="width: 1px; height: 6px; background: transparent; display: block; flex: 0 0 auto;"></span>
+            <span style="width: 8px; height: 8px; border-radius: 4px; background: #ff503d; display: block; flex: 0 0 auto;"></span>
+            <span style="width: 1px; flex: 1 1 auto; background: #ff503d; display: block;"></span>
+          </div>
+          <div style="flex: 1 1 auto; padding-bottom: 32px;">
+            <h3 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 600; font-size: 22px; line-height: 1.25; letter-spacing: -0.015em; color: #f7f8fa;"><span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 17px; color: #9ba1ae; margin-right: 12px;">1</span>Post a brief</h3>
+            <p style="margin: 10px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">Say what you need, what you can spend and when you need it. It goes out to creators in your city inside the iPhone app. Posting is free and you can close it at any time.</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: stretch; gap: 16px;">
+          <div aria-hidden="true" style="flex: 0 0 8px; display: flex; flex-direction: column; align-items: center;">
+            <span style="width: 1px; height: 6px; background: #ff503d; display: block; flex: 0 0 auto;"></span>
+            <span style="width: 8px; height: 8px; border-radius: 4px; background: #ff503d; display: block; flex: 0 0 auto;"></span>
+            <span style="width: 1px; flex: 1 1 auto; background: #ff503d; display: block;"></span>
+          </div>
+          <div style="flex: 1 1 auto; padding-bottom: 32px;">
+            <h3 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 600; font-size: 22px; line-height: 1.25; letter-spacing: -0.015em; color: #f7f8fa;"><span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 17px; color: #9ba1ae; margin-right: 12px;">2</span>Read who applies</h3>
+            <p style="margin: 10px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">Creators apply with a pitch and the rate they want, so you are comparing real people and real numbers rather than a rate card. Accepting one authorizes that rate on your card.</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: stretch; gap: 16px;">
+          <div aria-hidden="true" style="flex: 0 0 8px; display: flex; flex-direction: column; align-items: center;">
+            <span style="width: 1px; height: 6px; background: #ff503d; display: block; flex: 0 0 auto;"></span>
+            <span style="width: 8px; height: 8px; border-radius: 4px; background: #ff503d; display: block; flex: 0 0 auto;"></span>
+            
+          </div>
+          <div style="flex: 1 1 auto; ">
+            <h3 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 600; font-size: 22px; line-height: 1.25; letter-spacing: -0.015em; color: #f7f8fa;"><span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 17px; color: #9ba1ae; margin-right: 12px;">3</span>Approve, and only then pay</h3>
+            <p style="margin: 10px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">The creator delivers in the app. You approve, ask for a revision, or decline. Approving captures the hold: $400.00 off your card, $340.00 to Ana Reyes. Declining charges nothing.</p>
+          </div>
+        </div>
+    </div>
+  </section>
+
+  <section id="who" style="padding-top: 48px;">
+    <div style="width: 390px; overflow: hidden;">
+      <div style="display: flex; gap: 12px; width: 1459px; margin-left: -48px;">
+        <div style="flex: 0 0 213px; position: relative;"><div style="position:relative;overflow:hidden;width:100%;height:160px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:60.04%;top:59.65%;width:138.22px;height:138.22px;margin-left:-69.11px;margin-top:-69.11px;border-radius:50%;background:#ffffff;opacity:0.1;"></span><span aria-hidden="true" style="position:absolute;left:58.48%;top:58.09%;width:136.16px;height:136.16px;margin-left:-68.08px;margin-top:-68.08px;border-radius:50%;background:#ffffff;opacity:0.1;"></span></div><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$400</span></div>
+        <div style="flex: 0 0 160px; position: relative;"><div style="position:relative;overflow:hidden;width:100%;height:160px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:74%;top:74.39%;width:158.71px;height:158.71px;margin-left:-79.36px;margin-top:-79.36px;border-radius:50%;background:#ffffff;opacity:0.11;"></span><span aria-hidden="true" style="position:absolute;left:72.44%;top:72.83%;width:156.65px;height:156.65px;margin-left:-78.32px;margin-top:-78.32px;border-radius:50%;background:#ffffff;opacity:0.12;"></span></div><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$275</span></div>
+        <div style="flex: 0 0 213px; position: relative;"><div style="position:relative;overflow:hidden;width:100%;height:160px;border-radius:10px;background-image:linear-gradient(135deg, #14b8a6 0%, #134e4a 100%);"><span aria-hidden="true" style="position:absolute;left:80.68%;top:81.07%;width:167.53px;height:167.53px;margin-left:-83.77px;margin-top:-83.77px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.12;"></span><span aria-hidden="true" style="position:absolute;left:82.24%;top:82.64%;width:169.59px;height:169.59px;margin-left:-84.8px;margin-top:-84.8px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.13;"></span><span aria-hidden="true" style="position:absolute;left:83.81%;top:59.91%;width:138.57px;height:138.57px;margin-left:-69.28px;margin-top:-69.28px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.1;"></span></div><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$650</span></div>
+        <div style="flex: 0 0 128px; position: relative;"><div style="position:relative;overflow:hidden;width:100%;height:160px;border-radius:10px;background-image:linear-gradient(135deg, #ff6a58 0%, #c22514 100%);"><span aria-hidden="true" style="position:absolute;left:70.58%;top:69.41%;width:152.14px;height:152.14px;margin-left:-76.07px;margin-top:-76.07px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.11;"></span><span aria-hidden="true" style="position:absolute;left:69.02%;top:67.85%;width:150.08px;height:150.08px;margin-left:-75.04px;margin-top:-75.04px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.12;"></span><span aria-hidden="true" style="position:absolute;left:73.71%;top:22.15%;width:88.73px;height:88.73px;margin-left:-44.36px;margin-top:-44.36px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.07;"></span></div><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$500</span></div>
+        <div style="flex: 0 0 160px; position: relative;"><div style="position:relative;overflow:hidden;width:100%;height:160px;border-radius:10px;background-image:linear-gradient(135deg, #ff6a58 0%, #c22514 100%);"><span aria-hidden="true" style="position:absolute;left:21.2%;top:20.02%;width:86.95px;height:86.95px;margin-left:-43.47px;margin-top:-43.47px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.07;"></span><span aria-hidden="true" style="position:absolute;left:22.76%;top:21.59%;width:89.01px;height:89.01px;margin-left:-44.5px;margin-top:-44.5px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.07;"></span><span aria-hidden="true" style="position:absolute;left:24.32%;top:39.23%;width:111.26px;height:111.26px;margin-left:-55.63px;margin-top:-55.63px;border-radius:50%;border:11.2px solid #ffffff;background:transparent;opacity:0.09;"></span></div><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$350</span></div>
+        <div style="flex: 0 0 213px; position: relative;"><div style="position:relative;overflow:hidden;width:100%;height:160px;border-radius:10px;background-image:linear-gradient(135deg, #14b8a6 0%, #134e4a 100%);"><span aria-hidden="true" style="position:absolute;left:26.32%;top:26.71%;width:95.77px;height:95.77px;margin-left:-47.89px;margin-top:-47.89px;border-radius:50%;background:#ffffff;opacity:0.07;"></span><span aria-hidden="true" style="position:absolute;left:27.88%;top:28.27%;width:97.84px;height:97.84px;margin-left:-48.92px;margin-top:-48.92px;border-radius:50%;background:#ffffff;opacity:0.08;"></span></div><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$900</span></div>
+        <div style="flex: 0 0 160px; position: relative;"><div style="position:relative;overflow:hidden;width:100%;height:160px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:4.18%;top:3%;width:154.75px;height:25.6px;margin-left:-77.38px;margin-top:-12.8px;border-radius:12.8px;background:#ffffff;transform:rotate(-24deg);opacity:0.05;"></span><span aria-hidden="true" style="position:absolute;left:5.74%;top:4.57%;width:159.7px;height:25.6px;margin-left:-79.85px;margin-top:-12.8px;border-radius:12.8px;background:#ffffff;transform:rotate(-24deg);opacity:0.05;"></span></div><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$300</span></div>
+        <div style="flex: 0 0 128px; position: relative;"><div style="position:relative;overflow:hidden;width:100%;height:160px;border-radius:10px;background-image:linear-gradient(135deg, #ff6a58 0%, #c22514 100%);"><span aria-hidden="true" style="position:absolute;left:33.28%;top:32.89%;width:102.9px;height:102.9px;margin-left:-51.45px;margin-top:-51.45px;border-radius:50%;background:#ffffff;opacity:0.08;"></span><span aria-hidden="true" style="position:absolute;left:31.72%;top:31.33%;width:100.84px;height:100.84px;margin-left:-50.42px;margin-top:-50.42px;border-radius:50%;background:#ffffff;opacity:0.08;"></span></div><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$250</span></div>
+      </div>
+    </div>
+    <div style="padding: 40px 16px 0;">
+      <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 112, 'wght' 650; font-size: 32px; line-height: 1.00; letter-spacing: -0.03em; color: #f7f8fa; text-wrap: balance;">Who this is for</h2>
+      <p style="margin: 16px 0 0; font-size: 19px; line-height: 1.6; letter-spacing: -0.005em; color: #9ba1ae; max-width: 62ch; text-wrap: pretty;">Operators who need a few good clips a month and have never hired a creator before. Every tile below is a brief exactly as a creator sees it in the app: the artwork, the rate, the spots left, the deadline.</p>
+      <div style="display: flex; flex-direction: column; gap: 24px; margin-top: 32px;">
+          <article style="width: 358px;">
+            <div style="position: relative;">
+              <div style="position:relative;overflow:hidden;width:100%;height:269px;border-radius:10px;background-image:linear-gradient(135deg, #14b8a6 0%, #134e4a 100%);"><span aria-hidden="true" style="position:absolute;left:80.68%;top:81.07%;width:281.66px;height:281.66px;margin-left:-140.83px;margin-top:-140.83px;border-radius:50%;border:18.83px solid #ffffff;background:transparent;opacity:0.12;"></span><span aria-hidden="true" style="position:absolute;left:82.24%;top:82.64%;width:285.13px;height:285.13px;margin-left:-142.57px;margin-top:-142.57px;border-radius:50%;border:18.83px solid #ffffff;background:transparent;opacity:0.13;"></span><span aria-hidden="true" style="position:absolute;left:83.81%;top:59.91%;width:232.97px;height:232.97px;margin-left:-116.48px;margin-top:-116.48px;border-radius:50%;border:18.83px solid #ffffff;background:transparent;opacity:0.1;"></span></div>
+              <span style="position: absolute; right: 10px; bottom: 10px; height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1;">$650</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 999px; background: #134e4a; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 9px; line-height: 1;">IO</span>
+                <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Iron &amp; Oak Strength &mdash; Sacramento, CA</span>
+              </div>
+              <h3 style="margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">6am class energy, 3 clips</h3>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: #134e4a; display: block;"></span>Fitness</span>
+                <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-align: right;">1 spot<span aria-hidden="true" style="width: 1px; height: 11px; background: rgba(255,255,255,0.10); display: block;"></span><span style="color: #9ba1ae;">9d left</span></span>
+              </div>
+            </div>
+          </article>
+          <article style="width: 358px;">
+            <div style="position: relative;">
+              <div style="position:relative;overflow:hidden;width:100%;height:358px;border-radius:10px;background-image:linear-gradient(135deg, #ff6a58 0%, #c22514 100%);"><span aria-hidden="true" style="position:absolute;left:21.2%;top:20.02%;width:194.54px;height:194.54px;margin-left:-97.27px;margin-top:-97.27px;border-radius:50%;border:25.06px solid #ffffff;background:transparent;opacity:0.07;"></span><span aria-hidden="true" style="position:absolute;left:22.76%;top:21.59%;width:199.16px;height:199.16px;margin-left:-99.58px;margin-top:-99.58px;border-radius:50%;border:25.06px solid #ffffff;background:transparent;opacity:0.07;"></span><span aria-hidden="true" style="position:absolute;left:24.32%;top:39.23%;width:248.95px;height:248.95px;margin-left:-124.47px;margin-top:-124.47px;border-radius:50%;border:25.06px solid #ffffff;background:transparent;opacity:0.09;"></span></div>
+              <span style="position: absolute; right: 10px; bottom: 10px; height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1;">$350</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 999px; background: #c22514; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 9px; line-height: 1;">TB</span>
+                <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Terrapin Bikes &mdash; Asheville, NC</span>
+              </div>
+              <h3 style="margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Weekend trail loop</h3>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: #c22514; display: block;"></span>Lifestyle</span>
+                <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-align: right;">2 spots<span aria-hidden="true" style="width: 1px; height: 11px; background: rgba(255,255,255,0.10); display: block;"></span><span style="color: #9ba1ae;">New</span></span>
+              </div>
+            </div>
+          </article>
+          <article style="width: 358px;">
+            <div style="position: relative;">
+              <div style="position:relative;overflow:hidden;width:100%;height:358px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:74%;top:74.39%;width:355.12px;height:355.12px;margin-left:-177.56px;margin-top:-177.56px;border-radius:50%;background:#ffffff;opacity:0.11;"></span><span aria-hidden="true" style="position:absolute;left:72.44%;top:72.83%;width:350.5px;height:350.5px;margin-left:-175.25px;margin-top:-175.25px;border-radius:50%;background:#ffffff;opacity:0.12;"></span></div>
+              <span style="position: absolute; left: 10px; top: 10px; height: 24px; padding: 0 9px; display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; border: 1px solid #ff503d; background: rgba(7,8,11,0.55); color: #ffffff; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: #ff503d; display: block;"></span>Ends in 6h</span><span style="position: absolute; right: 10px; bottom: 10px; height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1;">$275</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 999px; background: #3b0f8f; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 9px; line-height: 1;">WN</span>
+                <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Wildflower Nail Studio &mdash; Portland, OR</span>
+              </div>
+              <h3 style="margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Fall set showcase</h3>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: #3b0f8f; display: block;"></span>Beauty</span>
+                <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-align: right;">3 spots<span aria-hidden="true" style="width: 1px; height: 11px; background: rgba(255,255,255,0.10); display: block;"></span><span style="color: #9ba1ae;">Ends in 6h</span></span>
+              </div>
+            </div>
+          </article>
+          <article style="width: 358px;">
+            <div style="position: relative;">
+              <div style="position:relative;overflow:hidden;width:100%;height:269px;border-radius:10px;background-image:linear-gradient(135deg, #14b8a6 0%, #134e4a 100%);"><span aria-hidden="true" style="position:absolute;left:26.32%;top:26.71%;width:161.02px;height:161.02px;margin-left:-80.51px;margin-top:-80.51px;border-radius:50%;background:#ffffff;opacity:0.07;"></span><span aria-hidden="true" style="position:absolute;left:27.88%;top:28.27%;width:164.49px;height:164.49px;margin-left:-82.24px;margin-top:-82.24px;border-radius:50%;background:#ffffff;opacity:0.08;"></span></div>
+              <span style="position: absolute; right: 10px; bottom: 10px; height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1;">$900</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 999px; background: #134e4a; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 9px; line-height: 1;">NB</span>
+                <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Norr Boutique &mdash; Minneapolis, MN</span>
+              </div>
+              <h3 style="margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Winter drop lookbook</h3>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: #134e4a; display: block;"></span>Fashion</span>
+                <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-align: right;">2 spots<span aria-hidden="true" style="width: 1px; height: 11px; background: rgba(255,255,255,0.10); display: block;"></span><span style="color: #9ba1ae;">14d left</span></span>
+              </div>
+            </div>
+          </article>
+          <article style="width: 358px;">
+            <div style="position: relative;">
+              <div style="position:relative;overflow:hidden;width:100%;height:448px;border-radius:10px;background-image:linear-gradient(135deg, #ff6a58 0%, #c22514 100%);"><span aria-hidden="true" style="position:absolute;left:70.58%;top:69.41%;width:425.99px;height:425.99px;margin-left:-212.99px;margin-top:-212.99px;border-radius:50%;border:31.36px solid #ffffff;background:transparent;opacity:0.11;"></span><span aria-hidden="true" style="position:absolute;left:69.02%;top:67.85%;width:420.21px;height:420.21px;margin-left:-210.11px;margin-top:-210.11px;border-radius:50%;border:31.36px solid #ffffff;background:transparent;opacity:0.12;"></span><span aria-hidden="true" style="position:absolute;left:73.71%;top:22.15%;width:248.43px;height:248.43px;margin-left:-124.22px;margin-top:-124.22px;border-radius:50%;border:31.36px solid #ffffff;background:transparent;opacity:0.07;"></span></div>
+              <span style="position: absolute; right: 10px; bottom: 10px; height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1;">$500</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 999px; background: #c22514; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 9px; line-height: 1;">CD</span>
+                <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Casa Duarte Home Services &mdash; Mesa, AZ</span>
+              </div>
+              <h3 style="margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Before/after AC tune-up</h3>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: #c22514; display: block;"></span>Lifestyle</span>
+                <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-align: right;">1 spot<span aria-hidden="true" style="width: 1px; height: 11px; background: rgba(255,255,255,0.10); display: block;"></span><span style="color: #9ba1ae;">5d left</span></span>
+              </div>
+            </div>
+          </article>
+          <article style="width: 358px;">
+            <div style="position: relative;">
+              <div style="position:relative;overflow:hidden;width:100%;height:269px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:60.04%;top:59.65%;width:232.39px;height:232.39px;margin-left:-116.19px;margin-top:-116.19px;border-radius:50%;background:#ffffff;opacity:0.1;"></span><span aria-hidden="true" style="position:absolute;left:58.48%;top:58.09%;width:228.92px;height:228.92px;margin-left:-114.46px;margin-top:-114.46px;border-radius:50%;background:#ffffff;opacity:0.1;"></span></div>
+              <span style="position: absolute; right: 10px; bottom: 10px; height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; line-height: 1;">$400</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 999px; background: #3b0f8f; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 9px; line-height: 1;">FC</span>
+                <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Ferrous Coffee &mdash; Bushwick, NY</span>
+              </div>
+              <h3 style="margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Saturday brunch reels</h3>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: #3b0f8f; display: block;"></span>Food</span>
+                <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-align: right;">2 spots<span aria-hidden="true" style="width: 1px; height: 11px; background: rgba(255,255,255,0.10); display: block;"></span><span style="color: #ff503d;">3d left</span></span>
+              </div>
+            </div>
+          </article>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding: 48px 16px 0;">
+    <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 112, 'wght' 650; font-size: 32px; line-height: 1.00; letter-spacing: -0.03em; color: #f7f8fa; text-wrap: balance;">Why not an agency</h2>
+    <p style="margin: 16px 0 0; font-size: 19px; line-height: 1.6; letter-spacing: -0.005em; color: #9ba1ae; max-width: 62ch; text-wrap: pretty;">The difference is in the terms, not in a feature list, so here are the terms.</p>
+    <div style="display: flex; flex-direction: column; margin-top: 24px;">
+        <div style=" padding: 24px 0;">
+          <h3 style="margin: 0 0 14px; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Cost to start</h3>
+          <dl style="margin: 0; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid #ff503d; padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">CreatorDocks</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #f7f8fa;">Nothing. Posting a brief is free, and it stays free if nobody is right for the job.</dd>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid rgba(255,255,255,0.10); padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">A local agency</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #9ba1ae;">A retainer or a minimum spend, agreed before any work starts.</dd>
+            </div>
+          </dl>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.10); padding: 24px 0;">
+          <h3 style="margin: 0 0 14px; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Commitment</h3>
+          <dl style="margin: 0; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid #ff503d; padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">CreatorDocks</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #f7f8fa;">One brief at a time. Post one in March, none in April, two in May.</dd>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid rgba(255,255,255,0.10); padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">A local agency</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #9ba1ae;">A three or six month contract, signed before the first shoot.</dd>
+            </div>
+          </dl>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.10); padding: 24px 0;">
+          <h3 style="margin: 0 0 14px; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Who picks the creator</h3>
+          <dl style="margin: 0; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid #ff503d; padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">CreatorDocks</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #f7f8fa;">You do. Creators apply with a pitch and their own rate, and you read every one of them.</dd>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid rgba(255,255,255,0.10); padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">A local agency</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #9ba1ae;">An account manager assigns somebody from their roster.</dd>
+            </div>
+          </dl>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.10); padding: 24px 0;">
+          <h3 style="margin: 0 0 14px; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">When money moves</h3>
+          <dl style="margin: 0; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid #ff503d; padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">CreatorDocks</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #f7f8fa;">Held when you accept, charged when you approve. Decline and nothing is charged.</dd>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid rgba(255,255,255,0.10); padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">A local agency</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #9ba1ae;">Invoiced on a schedule, usually before you have seen the work.</dd>
+            </div>
+          </dl>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.10); padding: 24px 0;">
+          <h3 style="margin: 0 0 14px; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">If the content is wrong</h3>
+          <dl style="margin: 0; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid #ff503d; padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">CreatorDocks</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #f7f8fa;">Ask for a revision and the hold stays in place, or decline and nothing is charged.</dd>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid rgba(255,255,255,0.10); padding-left: 12px;">
+              <dt style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #9ba1ae;">A local agency</dt>
+              <dd style="margin: 0; font-size: 17px; line-height: 1.65; color: #9ba1ae;">A change request, another round of hours, and another line on the invoice.</dd>
+            </div>
+          </dl>
+        </div>
+    </div>
+  </section>
+
+  <section style="padding-top: 48px; overflow: hidden;">
+    <div style="padding: 0 16px;">
+      <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 112, 'wght' 650; font-size: 32px; line-height: 1.00; letter-spacing: -0.03em; color: #f7f8fa; text-wrap: balance;">Creators are on iPhone</h2>
+      <p style="margin: 16px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch; text-wrap: pretty;">The other half of this is an app. Creators browse the briefs posted near them, apply with the rate they want, deliver the files, and get paid through Stripe the moment you approve. Same artwork, same numbers, same words on both sides of the deal.</p>
+      <p style="margin: 14px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae;"><a href="/get-the-app">Get the app</a></p>
+    </div>
+    <div style="width: 375px; margin-left: 16px; margin-top: 28px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 0 0 12px;">
+        <span style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #f7f8fa;">Fresh drops</span>
+        <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">6 live</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="width: 167px;">
+              <div style="position: relative;">
+                <div style="position:relative;overflow:hidden;width:100%;height:167px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:74%;top:74.39%;width:165.65px;height:165.65px;margin-left:-82.83px;margin-top:-82.83px;border-radius:50%;background:#ffffff;opacity:0.11;"></span><span aria-hidden="true" style="position:absolute;left:72.44%;top:72.83%;width:163.5px;height:163.5px;margin-left:-81.75px;margin-top:-81.75px;border-radius:50%;background:#ffffff;opacity:0.12;"></span></div>
+                <span style="position: absolute; left: 8px; top: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; border: 1px solid #ff503d; background: rgba(7,8,11,0.55); color: #ffffff; font-size: 11px; line-height: 1.45; letter-spacing: 0.005em;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 999px; background: #ff503d; display: block;"></span>Ends in 6h</span><span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$275</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="flex: 0 0 auto; width: 14px; height: 14px; border-radius: 999px; background: #3b0f8f; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 7px; line-height: 1;">WN</span>
+                  <span style="font-size: 11px; line-height: 1.35; color: #9ba1ae; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Wildflower Nail Studio</span>
+                </div>
+                <div style="font-size: 13px; line-height: 1.3; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Fall set showcase</div>
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 11px; line-height: 1.35; color: #9ba1ae;">
+                  <span>Beauty</span><span>Ends in 6h</span>
+                </div>
+              </div>
+            </div>
+            <div style="width: 167px;">
+              <div style="position: relative;">
+                <div style="position:relative;overflow:hidden;width:100%;height:125.25px;border-radius:10px;background-image:linear-gradient(135deg, #14b8a6 0%, #134e4a 100%);"><span aria-hidden="true" style="position:absolute;left:80.68%;top:81.07%;width:131.15px;height:131.15px;margin-left:-65.57px;margin-top:-65.57px;border-radius:50%;border:8.77px solid #ffffff;background:transparent;opacity:0.12;"></span><span aria-hidden="true" style="position:absolute;left:82.24%;top:82.64%;width:132.76px;height:132.76px;margin-left:-66.38px;margin-top:-66.38px;border-radius:50%;border:8.77px solid #ffffff;background:transparent;opacity:0.13;"></span><span aria-hidden="true" style="position:absolute;left:83.81%;top:59.91%;width:108.47px;height:108.47px;margin-left:-54.24px;margin-top:-54.24px;border-radius:50%;border:8.77px solid #ffffff;background:transparent;opacity:0.1;"></span></div>
+                <span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$650</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="flex: 0 0 auto; width: 14px; height: 14px; border-radius: 999px; background: #134e4a; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 7px; line-height: 1;">IO</span>
+                  <span style="font-size: 11px; line-height: 1.35; color: #9ba1ae; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Iron &amp; Oak Strength</span>
+                </div>
+                <div style="font-size: 13px; line-height: 1.3; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">6am class energy, 3 clips</div>
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 11px; line-height: 1.35; color: #9ba1ae;">
+                  <span>Fitness</span><span>9d left</span>
+                </div>
+              </div>
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="width: 167px;">
+              <div style="position: relative;">
+                <div style="position:relative;overflow:hidden;width:100%;height:125.25px;border-radius:10px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:60.04%;top:59.65%;width:108.2px;height:108.2px;margin-left:-54.1px;margin-top:-54.1px;border-radius:50%;background:#ffffff;opacity:0.1;"></span><span aria-hidden="true" style="position:absolute;left:58.48%;top:58.09%;width:106.59px;height:106.59px;margin-left:-53.29px;margin-top:-53.29px;border-radius:50%;background:#ffffff;opacity:0.1;"></span></div>
+                <span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$400</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="flex: 0 0 auto; width: 14px; height: 14px; border-radius: 999px; background: #3b0f8f; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 7px; line-height: 1;">FC</span>
+                  <span style="font-size: 11px; line-height: 1.35; color: #9ba1ae; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Ferrous Coffee</span>
+                </div>
+                <div style="font-size: 13px; line-height: 1.3; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Saturday brunch reels</div>
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 11px; line-height: 1.35; color: #9ba1ae;">
+                  <span>Food</span><span>3d left</span>
+                </div>
+              </div>
+            </div>
+            <div style="width: 167px;">
+              <div style="position: relative;">
+                <div style="position:relative;overflow:hidden;width:100%;height:208.75px;border-radius:10px;background-image:linear-gradient(135deg, #ff6a58 0%, #c22514 100%);"><span aria-hidden="true" style="position:absolute;left:70.58%;top:69.41%;width:198.49px;height:198.49px;margin-left:-99.25px;margin-top:-99.25px;border-radius:50%;border:14.61px solid #ffffff;background:transparent;opacity:0.11;"></span><span aria-hidden="true" style="position:absolute;left:69.02%;top:67.85%;width:195.8px;height:195.8px;margin-left:-97.9px;margin-top:-97.9px;border-radius:50%;border:14.61px solid #ffffff;background:transparent;opacity:0.12;"></span><span aria-hidden="true" style="position:absolute;left:73.71%;top:22.15%;width:115.76px;height:115.76px;margin-left:-57.88px;margin-top:-57.88px;border-radius:50%;border:14.61px solid #ffffff;background:transparent;opacity:0.07;"></span></div>
+                <span style="position: absolute; right: 8px; bottom: 8px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 4px; background: rgba(7,8,11,0.55); color: #ffffff; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 13px; line-height: 1;">$500</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="flex: 0 0 auto; width: 14px; height: 14px; border-radius: 999px; background: #c22514; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 7px; line-height: 1;">CD</span>
+                  <span style="font-size: 11px; line-height: 1.35; color: #9ba1ae; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Casa Duarte Home Services</span>
+                </div>
+                <div style="font-size: 13px; line-height: 1.3; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">Before/after AC tune-up</div>
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 11px; line-height: 1.35; color: #9ba1ae;">
+                  <span>Lifestyle</span><span>5d left</span>
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding: 32px 16px 0;">
+      <div aria-hidden="true" style="height: 1px; background: #ff503d;"></div>
+    </div>
+  </section>
+
+  <section id="faq" style="padding: 48px 16px 0;">
+    <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 112, 'wght' 650; font-size: 32px; line-height: 1.00; letter-spacing: -0.03em; color: #f7f8fa; text-wrap: balance;">Before your first brief</h2>
+    <dl style="margin: 24px 0 0;">
+        <div style=" padding: 22px 0;">
+          <dt style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">What does it cost?</dt>
+          <dd style="margin: 10px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">Nothing to post and nothing monthly. We take a 15% platform fee out of the rate you agreed, never on top of it. Accept at $400.00 and $400.00 is what leaves your card; $340.00 goes to the creator.</dd>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.10); padding: 22px 0;">
+          <dt style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">How do payments work?</dt>
+          <dd style="margin: 10px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">Accepting a creator authorizes their rate on your card &mdash; held, not charged. When they deliver you approve, ask for a revision, or decline. Only approving captures the money and pays the creator. Payments run on Stripe.</dd>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.10); padding: 22px 0;">
+          <dt style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">How are creators vetted?</dt>
+          <dd style="margin: 10px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">By hand. Creators apply, we read every profile before inviting them, and each one finishes Stripe payout onboarding &mdash; identity and bank details verified &mdash; before any brand can accept them.</dd>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.10); padding: 22px 0;">
+          <dt style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #f7f8fa;">When can I start?</dt>
+          <dd style="margin: 10px 0 0; font-size: 17px; line-height: 1.65; color: #9ba1ae; max-width: 68ch;">Access is invite-led while we build up creators city by city, so there is no self-serve signup yet. Request access with your email and we will open your account and help you write the first brief.</dd>
+        </div>
+    </dl>
+  </section>
+
+  <section style="margin-top: 48px; background: #d64131; border-radius: 0; padding: 48px 16px;">
+    <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 112, 'wght' 650; font-size: 32px; line-height: 1.00; letter-spacing: -0.03em; color: #ffffff; text-wrap: balance;">Post one brief and see who answers.</h2>
+    <p style="margin: 20px 0 0; font-size: 17px; line-height: 1.65; color: #ffffff;">Posting is free, and nothing is charged until you approve the content.</p>
+    <a class="cd-press" href="/waitlist" style="margin-top: 24px; height: 48px; padding: 0 22px; display: inline-flex; align-items: center; border-radius: 6px; background: #ffffff; color: #d64131; font-size: 17px; font-weight: 600; line-height: 1; text-decoration: none;">Request access</a>
+    <p style="margin: 16px 0 0; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #ffffff;">Open mode label: &ldquo;Post your first brief&rdquo;, /sign-up</p>
+  </section>
+
+  <footer style="border-top: 1px solid rgba(255,255,255,0.10); padding: 28px 16px 40px; background: #07080b;">
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 105, 'wght' 600; font-size: 17px; letter-spacing: -0.005em; color: #f7f8fa;">CreatorDocks</span>
+        <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae;">Brooklyn, NY</span>
+      </div>
+      <nav style="display: flex; flex-direction: column; gap: 12px;">
+        <a href="/get-the-app" style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-decoration: none;">For creators</a>
+        <a href="/support" style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-decoration: none;">Support</a>
+        <a href="/privacy" style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-decoration: none;">Privacy</a>
+        <a href="/terms" style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-decoration: none;">Terms</a>
+        <a href="mailto:support@creatordocks.com" style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #9ba1ae; text-decoration: none;">support@creatordocks.com</a>
+      </nav>
+    </div>
+  </footer>
+</div>
+</x-dc>
+</body>
+</html>

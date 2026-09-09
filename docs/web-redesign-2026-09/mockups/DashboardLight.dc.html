@@ -1,0 +1,276 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><script src="./support.js"></script></head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap">
+  <style>
+    body { margin: 0; }
+    a {
+      color: #bf3524;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: transparent;
+      text-underline-offset: 3px;
+      transition: color 120ms ease, text-decoration-color 120ms ease;
+    }
+    a:hover { text-decoration-color: currentColor; }
+    :focus-visible { outline: 2px solid #bf3524; outline-offset: 2px; }
+    .cd-press:active { transform: scale(0.98); }
+    @media (prefers-reduced-motion: reduce) {
+      a { transition: none; }
+      .cd-press:active { transform: none; }
+    }
+  </style>
+</helmet>
+<div style="width: 1440px; min-height: 1400px; background: #f5f7fb; color: #101828; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; display: flex; align-items: stretch;">
+
+  <!-- ============================================================
+       SIDEBAR — 264px, --cd-bg (the canvas), right hairline, no radius,
+       no shadow, not a card. Light carries elevation in shadow, so the
+       lit surface is the main column, not the rail. No "System feel" panel.
+       ============================================================ -->
+  <aside style="width: 264px; flex: 0 0 264px; box-sizing: border-box; display: flex; flex-direction: column; background: #f5f7fb; border-right: 1px solid rgba(15,23,42,0.08); border-radius: 0;">
+
+    <div style="display: flex; align-items: center; gap: 10px; padding: 20px 16px 4px;">
+      <!-- Brand mark, Option B (the slip mark). Fill is --cd-brand-coral, theme-independent. -->
+      <svg width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="CreatorDocks" style="display: block; flex: 0 0 auto;">
+        <rect width="26" height="26" rx="6" fill="#ff503d"></rect>
+        <path d="M5 4.5 H21 V18.6 L18.3 21.1 L15.7 18.6 L13 21.1 L10.3 18.6 L7.7 21.1 L5 18.6 Z M6.6 8.2 H16.6 V10.4 H6.6 Z M14 12.6 H19.4 V14.8 H14 Z" fill="#ffffff" fill-rule="evenodd"></path>
+      </svg>
+      <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 105, 'wght' 600; font-size: 17px; line-height: 1.35; letter-spacing: -0.005em; color: #101828;">CreatorDocks</span>
+    </div>
+    <div style="padding: 0 16px 12px; font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Brand workspace</div>
+
+    <nav aria-label="Brand workspace" style="display: flex; flex-direction: column; gap: 2px; padding: 8px;">
+      <a href="#" aria-current="page" style="position: relative; height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 6px; background: #eef2f8; color: #101828; font-size: 15px; line-height: 1.6; text-decoration: none;"><span aria-hidden="true" style="position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; background: #bf3524;"></span>Dashboard</a>
+      <a href="#" style="height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 6px; color: #636d82; font-size: 15px; line-height: 1.6; text-decoration: none;">Campaigns</a>
+      <a href="#" style="height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 6px; color: #636d82; font-size: 15px; line-height: 1.6; text-decoration: none;">Applications</a>
+      <a href="#" style="height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 6px; color: #636d82; font-size: 15px; line-height: 1.6; text-decoration: none;">Submissions</a>
+      <a href="#" style="height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 6px; color: #636d82; font-size: 15px; line-height: 1.6; text-decoration: none;">Metrics</a>
+      <a href="#" style="height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 6px; color: #636d82; font-size: 15px; line-height: 1.6; text-decoration: none;">Settings</a>
+    </nav>
+
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 14px; padding: 16px; border-top: 1px solid rgba(15,23,42,0.08);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span aria-hidden="true" style="width: 36px; height: 36px; flex: 0 0 36px; border-radius: 999px; background: #c22514; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 14px; line-height: 1;">FC</span>
+        <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+          <span style="font-size: 15px; line-height: 1.4; color: #101828;">Ferrous Coffee</span>
+          <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Brand owner</span>
+        </div>
+      </div>
+      <div role="radiogroup" aria-label="Theme" style="display: flex; gap: 2px; padding: 2px; border: 1px solid rgba(15,23,42,0.08); border-radius: 6px;">
+        <span role="radio" aria-checked="true" tabindex="0" style="flex: 1; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #eef2f8; color: #101828; font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600;">System</span>
+        <span role="radio" aria-checked="false" tabindex="-1" style="flex: 1; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: transparent; color: #636d82; font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600;">Light</span>
+        <span role="radio" aria-checked="false" tabindex="-1" style="flex: 1; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: transparent; color: #636d82; font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600;">Dark</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ============================================================
+       MAIN COLUMN — light gets its own recipe, not a recolour of
+       dark. Dark carries elevation in lightness, so the rail is the
+       lifted surface there; light caps out at white, so here the
+       rail drops to --cd-bg and the main column is the lit surface
+       (--cd-bg-element), with the one panel above it at level 2.
+       ============================================================ -->
+  <main style="flex: 1; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 32px; background: #ffffff;">
+
+    <!-- AdminViewBanner — warning band, full column width, --cd-radius-3 -->
+    <div role="status" style="box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 12px 20px; border-radius: 10px; border-top: 2px solid #8d5b12; background: rgba(200,129,26,0.12); color: #8d5b12;">
+      <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em;">You are viewing this workspace as <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px;">ferrous@ferrouscoffee.com</span></span>
+      <span style="flex: 0 0 auto; display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 4px; background: rgba(200,129,26,0.12); color: #8d5b12; font-size: 13px; line-height: 1; font-weight: 600;">Read-only</span>
+    </div>
+
+    <!-- Page header -->
+    <header style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <h1 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 105, 'wght' 600; font-size: 32px; line-height: 1.1; letter-spacing: -0.025em; color: #101828;">Dashboard</h1>
+        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #636d82;">Ferrous Coffee</p>
+      </div>
+      <button class="cd-press" type="button" style="flex: 0 0 auto; height: 40px; padding: 0 18px; border: 0; border-radius: 6px; background: #d83e2a; color: #ffffff; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; line-height: 1; cursor: pointer;">New campaign</button>
+    </header>
+
+    <!-- Money strip — the one object on the page. Level 2 in light:
+         --cd-bg-raised (#ffffff) + --cd-elev-2, because lightness is capped
+         at white and shadow is what carries elevation here. -->
+    <section aria-label="Money" style="display: flex; align-items: stretch; box-sizing: border-box; border: 1px solid rgba(15,23,42,0.08); border-radius: 10px; background: #ffffff; box-shadow: 0 1px 2px rgba(15,23,42,0.06), 0 8px 24px -8px rgba(15,23,42,0.10);">
+      <div style="flex: 1; min-width: 0; box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Committed</span>
+        <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 40px; line-height: 1; letter-spacing: -0.02em; color: #101828;">$950.00</span>
+        <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Accepted rates across 3 campaigns</span>
+      </div>
+      <div style="flex: 1; min-width: 0; box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; gap: 8px; border-left: 1px solid rgba(15,23,42,0.08);">
+        <span style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Still owed</span>
+        <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 40px; line-height: 1; letter-spacing: -0.02em; color: #101828;">$700.00</span>
+        <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Held on your card, not yet charged</span>
+      </div>
+      <div style="flex: 1; min-width: 0; box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; gap: 8px; border-left: 1px solid rgba(15,23,42,0.08);">
+        <span style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Charged</span>
+        <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 40px; line-height: 1; letter-spacing: -0.02em; color: #101828;">$250.00</span>
+        <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">incl. <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$37.50</span> platform fees</span>
+      </div>
+      <div style="flex: 1; min-width: 0; box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; gap: 8px; border-left: 1px solid rgba(15,23,42,0.08);">
+        <span style="font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">To creators</span>
+        <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 600; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 40px; line-height: 1; letter-spacing: -0.02em; color: #101828;">$212.50</span>
+        <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Released to Lucia Marchetti</span>
+      </div>
+    </section>
+
+    <!-- Needs you -->
+    <section style="display: flex; flex-direction: column; gap: 12px;">
+      <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 600; font-size: 22px; line-height: 1.25; letter-spacing: -0.015em; color: #101828;">Needs you</h2>
+      <div style="box-sizing: border-box; border-top: 1px solid rgba(15,23,42,0.08); border-radius: 0;">
+
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid rgba(15,23,42,0.08);">
+          <span aria-hidden="true" style="width: 36px; height: 36px; flex: 0 0 36px; border-radius: 999px; background: #3b0f8f; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 14px; line-height: 1;">MI</span>
+          <div style="flex: 0 0 240px; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #101828;">Marcus Ilagan</span>
+            <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Saturday brunch reels</span>
+          </div>
+          <span style="flex: 0 0 180px; font-size: 15px; line-height: 1.6; color: #101828;">Application pending</span>
+          <span style="flex: 1; min-width: 0; text-align: right; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Accepting holds <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; color: #101828;">$425.00</span> &middot; <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$361.25</span> to Marcus</span>
+          <button class="cd-press" type="button" style="flex: 0 0 auto; height: 32px; padding: 0 14px; border: 1px solid rgba(15,23,42,0.48); border-radius: 6px; background: transparent; color: #101828; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; line-height: 1; cursor: pointer;">Review</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid rgba(15,23,42,0.08);">
+          <span aria-hidden="true" style="width: 36px; height: 36px; flex: 0 0 36px; border-radius: 999px; background: #0b3aa2; color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 14px; line-height: 1;">DP</span>
+          <div style="flex: 0 0 240px; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #101828;">Deshawn Pope</span>
+            <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">New cold brew tasting</span>
+          </div>
+          <span style="flex: 0 0 180px; font-size: 15px; line-height: 1.6; color: #101828;">Submission to review</span>
+          <span style="flex: 1; min-width: 0; text-align: right; font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Approving pays <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; color: #101828;">$300.00</span> &middot; <span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;">$255.00</span> to Deshawn</span>
+          <button class="cd-press" type="button" style="flex: 0 0 auto; height: 32px; padding: 0 14px; border: 1px solid rgba(15,23,42,0.48); border-radius: 6px; background: transparent; color: #101828; font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; line-height: 1; cursor: pointer;">Review</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Campaigns — a rule, not an object: --cd-radius-0, full-bleed in
+         the column, sticky header row over a hairline, 1px row rules,
+         no outer border and no fill. -->
+    <section style="display: flex; flex-direction: column; gap: 12px;">
+      <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 600; font-size: 22px; line-height: 1.25; letter-spacing: -0.015em; color: #101828;">Campaigns</h2>
+      <div style="box-sizing: border-box;">
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+          <thead>
+            <tr>
+              <th scope="col" style="position: sticky; top: 0; z-index: 1; background: #ffffff; text-align: left; padding: 10px 16px 10px 0; border-bottom: 1px solid rgba(15,23,42,0.08); font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Campaign</th>
+              <th scope="col" style="position: sticky; top: 0; z-index: 1; background: #ffffff; text-align: right; width: 110px; padding: 10px 16px; border-bottom: 1px solid rgba(15,23,42,0.08); font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Budget</th>
+              <th scope="col" style="position: sticky; top: 0; z-index: 1; background: #ffffff; text-align: left; width: 120px; padding: 10px 16px; border-bottom: 1px solid rgba(15,23,42,0.08); font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Deadline</th>
+              <th scope="col" style="position: sticky; top: 0; z-index: 1; background: #ffffff; text-align: right; width: 100px; padding: 10px 16px; border-bottom: 1px solid rgba(15,23,42,0.08); font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Applicants</th>
+              <th scope="col" style="position: sticky; top: 0; z-index: 1; background: #ffffff; text-align: left; width: 132px; padding: 10px 16px; border-bottom: 1px solid rgba(15,23,42,0.08); font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">Status</th>
+              <th scope="col" style="position: sticky; top: 0; z-index: 1; background: #ffffff; text-align: right; width: 96px; padding: 10px 0 10px 16px; border-bottom: 1px solid rgba(15,23,42,0.08); font-size: 13px; line-height: 1.2; letter-spacing: 0.01em; font-weight: 600; color: #636d82;">&nbsp;</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr style="height: 72px; border-bottom: 1px solid rgba(15,23,42,0.08);">
+              <td style="padding: 0 16px 0 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 56px; flex: 0 0 56px;">
+                    <div style="position:relative;overflow:hidden;width:100%;height:40px;border-radius:6px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:60.04%;top:59.65%;width:34.56px;height:34.56px;margin-left:-17.28px;margin-top:-17.28px;border-radius:50%;background:#ffffff;opacity:0.1;"></span><span aria-hidden="true" style="position:absolute;left:58.48%;top:58.09%;width:34.04px;height:34.04px;margin-left:-17.02px;margin-top:-17.02px;border-radius:50%;background:#ffffff;opacity:0.1;"></span></div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                    <span style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #101828;">Saturday brunch reels</span>
+                    <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Food</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 0 16px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">$400.00</td>
+              <td style="padding: 0 16px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #bf3524;">3d left</td>
+              <td style="padding: 0 16px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">6</td>
+              <td style="padding: 0 16px;"><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 4px; background: rgba(13,159,110,0.10); color: #0a7551; font-size: 13px; line-height: 1; font-weight: 600;">Active</span></td>
+              <td style="padding: 0 0 0 16px; text-align: right;"><a href="#" style="font-size: 15px; line-height: 1.6; color: #bf3524; text-decoration: none;">Manage</a></td>
+            </tr>
+
+            <tr style="height: 72px; border-bottom: 1px solid rgba(15,23,42,0.08);">
+              <td style="padding: 0 16px 0 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 56px; flex: 0 0 56px;">
+                    <div style="position:relative;overflow:hidden;width:100%;height:40px;border-radius:6px;background-image:linear-gradient(135deg, #7c3aed 0%, #3b0f8f 100%);"><span aria-hidden="true" style="position:absolute;left:4.18%;top:3%;width:38.69px;height:6.4px;margin-left:-19.34px;margin-top:-3.2px;border-radius:3.2px;background:#ffffff;transform:rotate(-24deg);opacity:0.05;"></span><span aria-hidden="true" style="position:absolute;left:5.74%;top:4.57%;width:39.93px;height:6.4px;margin-left:-19.96px;margin-top:-3.2px;border-radius:3.2px;background:#ffffff;transform:rotate(-24deg);opacity:0.05;"></span></div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                    <span style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #101828;">New cold brew tasting</span>
+                    <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Food</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 0 16px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">$300.00</td>
+              <td style="padding: 0 16px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #636d82;">12d left</td>
+              <td style="padding: 0 16px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">4</td>
+              <td style="padding: 0 16px;"><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 4px; background: rgba(19,113,255,0.10); color: #005be4; font-size: 13px; line-height: 1; font-weight: 600;">In progress</span></td>
+              <td style="padding: 0 0 0 16px; text-align: right;"><a href="#" style="font-size: 15px; line-height: 1.6; color: #bf3524; text-decoration: none;">Manage</a></td>
+            </tr>
+
+            <tr style="height: 72px; border-bottom: 1px solid rgba(15,23,42,0.08);">
+              <td style="padding: 0 16px 0 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 56px; flex: 0 0 56px;">
+                    <div style="position:relative;overflow:hidden;width:100%;height:40px;border-radius:6px;background-image:linear-gradient(135deg, #ff6a58 0%, #c22514 100%);"><span aria-hidden="true" style="position:absolute;left:33.28%;top:32.89%;width:25.72px;height:25.72px;margin-left:-12.86px;margin-top:-12.86px;border-radius:50%;background:#ffffff;opacity:0.08;"></span><span aria-hidden="true" style="position:absolute;left:31.72%;top:31.33%;width:25.21px;height:25.21px;margin-left:-12.6px;margin-top:-12.6px;border-radius:50%;background:#ffffff;opacity:0.08;"></span></div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                    <span style="font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; color: #101828;">Holiday hours announcement</span>
+                    <span style="font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;">Lifestyle</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 0 16px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">$250.00</td>
+              <td style="padding: 0 16px; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #636d82;">Closed</td>
+              <td style="padding: 0 16px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">1</td>
+              <td style="padding: 0 16px;"><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 4px; background: #eef2f8; color: #636d82; font-size: 13px; line-height: 1; font-weight: 600;">Complete</span></td>
+              <td style="padding: 0 0 0 16px; text-align: right;"><a href="#" style="font-size: 15px; line-height: 1.6; color: #bf3524; text-decoration: none;">Manage</a></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pipeline -->
+    <section style="display: flex; flex-direction: column; gap: 12px;">
+      <h2 style="margin: 0; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 100, 'wght' 600; font-size: 22px; line-height: 1.25; letter-spacing: -0.015em; color: #101828;">Pipeline</h2>
+      <div style="box-sizing: border-box; border-top: 1px solid rgba(15,23,42,0.08); border-radius: 0; padding: 20px 0 0; display: flex; flex-direction: column; gap: 16px;">
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="flex: 0 0 104px; font-size: 15px; line-height: 1.6; color: #101828;">Applied</span>
+            <span style="flex: 0 1 560px; height: 10px; border-radius: 4px; background: rgba(224,64,44,0.06); display: block;"><span aria-hidden="true" style="display: block; width: 100%; height: 10px; border-radius: 4px; background: #bf3524;"></span></span>
+            <span style="flex: 0 0 32px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">11</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="flex: 0 0 104px; font-size: 15px; line-height: 1.6; color: #101828;">Accepted</span>
+            <span style="flex: 0 1 560px; height: 10px; border-radius: 4px; background: rgba(224,64,44,0.06); display: block;"><span aria-hidden="true" style="display: block; width: 27.27%; height: 10px; border-radius: 4px; background: #bf3524;"></span></span>
+            <span style="flex: 0 0 32px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">3</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="flex: 0 0 104px; font-size: 15px; line-height: 1.6; color: #101828;">Delivered</span>
+            <span style="flex: 0 1 560px; height: 10px; border-radius: 4px; background: rgba(224,64,44,0.06); display: block;"><span aria-hidden="true" style="display: block; width: 18.18%; height: 10px; border-radius: 4px; background: #bf3524;"></span></span>
+            <span style="flex: 0 0 32px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">2</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="flex: 0 0 104px; font-size: 15px; line-height: 1.6; color: #101828;">Approved</span>
+            <span style="flex: 0 1 560px; height: 10px; border-radius: 4px; background: rgba(224,64,44,0.06); display: block;"><span aria-hidden="true" style="display: block; width: 9.09%; height: 10px; border-radius: 4px; background: #bf3524;"></span></span>
+            <span style="flex: 0 0 32px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">1</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="flex: 0 0 104px; font-size: 15px; line-height: 1.6; color: #101828;">Paid</span>
+            <span style="flex: 0 1 560px; height: 10px; border-radius: 4px; background: rgba(224,64,44,0.06); display: block;"><span aria-hidden="true" style="display: block; width: 9.09%; height: 10px; border-radius: 4px; background: #bf3524;"></span></span>
+            <span style="flex: 0 0 32px; text-align: right; font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 15px; color: #101828;">1</span>
+          </div>
+        </div>
+
+        <p style="margin: 0; padding-top: 16px; border-top: 1px solid rgba(15,23,42,0.08); font-size: 13px; line-height: 1.45; letter-spacing: 0.005em; color: #636d82;"><span style="font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif; font-variation-settings: 'wdth' 88, 'wght' 500; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; color: #101828;">$700.00</span> still owed on accepted work.</p>
+
+      </div>
+    </section>
+
+  </main>
+
+</div>
+</x-dc>
+</body>
+</html>

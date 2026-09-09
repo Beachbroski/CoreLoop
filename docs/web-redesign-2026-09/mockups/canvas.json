@@ -1,0 +1,102 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 6480,
+      "title": "Landing \u00b7 hero B"
+    },
+    {
+      "file": "HeroA.dc.html",
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Hero \u00b7 variant A"
+    },
+    {
+      "file": "MainLight.dc.html",
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 6480,
+      "title": "Landing \u00b7 light (exploration)"
+    },
+    {
+      "file": "Landing390.dc.html",
+      "x": 0,
+      "y": 6640,
+      "w": 390,
+      "h": 10160,
+      "title": "Landing \u00b7 390"
+    },
+    {
+      "file": "Dashboard.dc.html",
+      "x": 470,
+      "y": 6640,
+      "w": 1440,
+      "h": 1400,
+      "title": "Dashboard \u00b7 dark"
+    },
+    {
+      "file": "DashboardLight.dc.html",
+      "x": 1990,
+      "y": 6640,
+      "w": 1440,
+      "h": 1400,
+      "title": "Dashboard \u00b7 light"
+    },
+    {
+      "file": "SignIn.dc.html",
+      "x": 0,
+      "y": 16920,
+      "w": 1440,
+      "h": 900,
+      "title": "Sign in"
+    },
+    {
+      "file": "Tokens.dc.html",
+      "x": 1520,
+      "y": 16920,
+      "w": 1200,
+      "h": 11600,
+      "title": "Tokens & type"
+    },
+    {
+      "file": "SignInLight.dc.html",
+      "x": 2800,
+      "y": 16920,
+      "w": 1440,
+      "h": 900,
+      "title": "Sign in \u00b7 light (exploration)"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "light-exploration",
+      "x": 3040,
+      "y": -150,
+      "w": 520,
+      "text": "Light exploration, not an approved direction.\nThe plan currently forces dark on marketing and auth; these two artboards ask whether that should change. Structurally they are their dark twins: only colour values differ, plus a shadow where dark used a lighter fill, because light caps at white."
+    },
+    {
+      "id": "rate-varies",
+      "x": 0,
+      "y": -150,
+      "w": 520,
+      "text": "The rate is no longer a fixed example.\nThe hero lead carries no amount, the cost band shows three real briefs at $250, $400 and $900 with the fee and the net beside each, and the slip is captioned as one application on a brief where another creator asked a different rate."
+    },
+    {
+      "id": "signin-light-note",
+      "x": 2800,
+      "y": 16770,
+      "w": 520,
+      "text": "Same exploration as the light landing above. The form panel is lifted by shadow rather than by a lighter fill, and the focus specimen is stepped by fill so the two levels stay distinct."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}
