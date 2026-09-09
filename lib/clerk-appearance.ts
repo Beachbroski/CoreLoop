@@ -1,3 +1,18 @@
+import type { Appearance } from '@clerk/types'
+
+/**
+ * Both exports are `satisfies Appearance` rather than bare object literals.
+ *
+ * That is load-bearing, not decoration. These objects are passed as
+ * `appearance={authClerkAppearance}` — a variable, not a fresh literal at the
+ * call site — so TypeScript's excess-property check never ran on them. A block
+ * of keys sat under a misspelled parent (`options`) for months: Clerk silently
+ * ignored it, and the sign-in and sign-up screens rendered with no terms,
+ * privacy or help link at all. Nothing failed; the links simply were not there.
+ *
+ * `satisfies` moves that check to the definition site, where a wrong key name
+ * or a wrongly-nested block is a compile error.
+ */
 export const baseClerkAppearance = {
   variables: {
     colorPrimary: '#0071e3',
@@ -15,14 +30,16 @@ export const baseClerkAppearance = {
     card: 'shadow-none border border-[rgba(15,23,42,0.08)] rounded-[28px] backdrop-blur-xl',
     formButtonPrimary: 'rounded-full font-medium',
   },
-}
+} satisfies Appearance
 
 export const authClerkAppearance = {
   ...baseClerkAppearance,
-  options: {
-    elevation: 'flush',
+  layout: {
     socialButtonsPlacement: 'top',
     socialButtonsVariant: 'blockButton',
+    // Clerk renders these as the legal footer on its own sign-in/sign-up cards.
+    // They are the only place terms and privacy are presented at web sign-up,
+    // and App Review expects a reachable privacy link (Guideline 5.1.1(i)).
     privacyPageUrl: '/privacy',
     termsPageUrl: '/terms',
     helpPageUrl: '/support',
@@ -48,4 +65,4 @@ export const authClerkAppearance = {
     formResendCodeLink: 'font-semibold text-[#0071e3]',
     otpCodeFieldInput: 'rounded-[18px] border border-transparent bg-[#f5f5f7]',
   },
-} as const
+} satisfies Appearance
