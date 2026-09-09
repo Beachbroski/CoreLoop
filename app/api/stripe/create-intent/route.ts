@@ -11,6 +11,39 @@ const schema = z.object({
   applicationId: z.string().min(1),
 })
 
+/**
+ * The bounds `proposedRate` is written under (`z.number().int().min(100)
+ * .max(10_000_000)` in both POST /api/applications and POST /api/v1/applications).
+ * Re-checked here on purpose: this route is the last thing standing between a
+ * stored row and a real hold on a real card, and `Application.proposedRate` is a
+ * plain `Int` column with no database-level check constraint. A row that arrived
+ * by any other route — a backfill, a migration, a future write path — must not be
+ * able to reach Stripe with a zero, negative, fractional or absurd amount.
+ */
+const MIN_AUTHORIZABLE_CENTS = 100
+const MAX_AUTHORIZABLE_CENTS = 10_000_000
+
+/**
+ * Returns a user-facing reason the amount cannot be authorized, or null when it
+ * is fundable. Kept total so a new bad shape fails closed rather than falling
+ * through to Stripe.
+ */
+function describeUnfundableAmount(amountCents: unknown): string | null {
+  if (typeof amountCents !== 'number' || !Number.isInteger(amountCents)) {
+    return 'This application does not have a valid rate and cannot be funded'
+  }
+  if (amountCents <= 0) {
+    return 'This application does not have a valid rate and cannot be funded'
+  }
+  if (amountCents < MIN_AUTHORIZABLE_CENTS) {
+    return `This application's rate is below the ${MIN_AUTHORIZABLE_CENTS} cent minimum and cannot be funded`
+  }
+  if (amountCents > MAX_AUTHORIZABLE_CENTS) {
+    return 'This application\'s rate exceeds the maximum amount that can be authorized'
+  }
+  return null
+}
+
 export async function POST(req: Request) {
   try {
     if (!isTrustedOrigin(req)) {
@@ -67,7 +100,28 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Creator has not connected Stripe' }, { status: 400 })
     }
 
+    // Runs before the existing-intent branch as well as before the create call:
+    // an application with an unfundable rate must not have an intent created,
+    // validated or handed back for it.
+    const unfundableReason = describeUnfundableAmount(application.proposedRate)
+    if (unfundableReason) {
+      return Response.json({ error: unfundableReason }, { status: 422 })
+    }
+
     const platformFee = calculatePlatformFee(application.proposedRate)
+
+    // The platform's cut can never be the whole charge or more than it: that
+    // would leave the creator with nothing (or Stripe rejecting the charge).
+    if (
+      !Number.isInteger(platformFee) ||
+      platformFee < 0 ||
+      platformFee >= application.proposedRate
+    ) {
+      return Response.json(
+        { error: 'This application cannot be funded: the platform fee is not valid for its rate' },
+        { status: 422 },
+      )
+    }
 
     if (application.paymentIntentId) {
       try {

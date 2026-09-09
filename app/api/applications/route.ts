@@ -123,9 +123,18 @@ export async function GET() {
     const applications = await prisma.application.findMany({
       where: { creatorId: user.id },
       include: {
+        // One `select` per selection node: Prisma rejects `select` and `include`
+        // together on the same node at query-serialization time (a runtime
+        // `PrismaClientValidationError`, not a type error), so the brand relation
+        // is nested *inside* the campaign select rather than beside it.
         campaign: {
-          select: { id: true, title: true, budget: true, niche: true },
-          include: { brand: { select: { name: true, avatarUrl: true } } },
+          select: {
+            id: true,
+            title: true,
+            budget: true,
+            niche: true,
+            brand: { select: { name: true, avatarUrl: true } },
+          },
         },
       },
       orderBy: { createdAt: 'desc' },

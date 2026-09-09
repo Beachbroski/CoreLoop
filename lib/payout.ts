@@ -2,6 +2,8 @@ import prisma from './prisma'
 import { stripe } from './stripe'
 import { calculatePlatformFee } from './utils'
 import { validatePaymentIntentForApplication } from './stripe-payments'
+import { sendPayoutPaidEmail } from './email'
+import { sendPayoutPaidPush } from './push'
 
 export async function releasePayout(submissionId: string, paymentIntentId: string): Promise<void> {
   const submission = await prisma.submission.findUniqueOrThrow({
@@ -61,7 +63,23 @@ export async function releasePayout(submissionId: string, paymentIntentId: strin
   const amount = submission.application.proposedRate
   const platformFee = updatedIntent.application_fee_amount ?? calculatePlatformFee(amount)
 
-  await prisma.$transaction(async (tx) => {
+  const nextStatus = capturedIntent.status === 'succeeded' ? 'PAID' : 'PROCESSING'
+
+  // Who tells the creator they were paid depends on who actually moves the row
+  // into PAID, and there are two writers. A manual capture that settles
+  // immediately — the normal case — is written PAID right here, and the
+  // `payment_intent.succeeded` webhook that follows finds the row already PAID
+  // and stays silent. Only when the capture has not settled yet do we write
+  // PROCESSING and leave the transition, and therefore the notification, to the
+  // webhook. Gating both sides on the transition is what stops a creator being
+  // told twice; notifying from both writers is what stops them never being told
+  // at all, which is what happens if only the webhook speaks.
+  const transitionedToPaid = await prisma.$transaction(async (tx) => {
+    const before = await tx.payout.findUnique({
+      where: { submissionId },
+      select: { status: true },
+    })
+
     await tx.payout.upsert({
       where: { submissionId },
       update: {
@@ -71,7 +89,7 @@ export async function releasePayout(submissionId: string, paymentIntentId: strin
         stripeTransferId: capturedIntent.latest_charge
           ? String(capturedIntent.latest_charge)
           : null,
-        status: capturedIntent.status === 'succeeded' ? 'PAID' : 'PROCESSING',
+        status: nextStatus,
       },
       create: {
         submissionId,
@@ -81,7 +99,7 @@ export async function releasePayout(submissionId: string, paymentIntentId: strin
         stripeTransferId: capturedIntent.latest_charge
           ? String(capturedIntent.latest_charge)
           : null,
-        status: capturedIntent.status === 'succeeded' ? 'PAID' : 'PROCESSING',
+        status: nextStatus,
       },
     })
 
@@ -104,5 +122,33 @@ export async function releasePayout(submissionId: string, paymentIntentId: strin
         data: { status: 'COMPLETE' },
       })
     }
+
+    return nextStatus === 'PAID' && before?.status !== 'PAID'
   })
+
+  if (!transitionedToPaid) return
+
+  // The card is captured and the row is committed by the time we get here, so a
+  // dead mailer must not fail this call: throwing would surface to the brand as
+  // "approval failed" for money that has already moved. Both channels are
+  // attempted independently — losing the email should not also cost the push —
+  // and a failure is logged rather than raised.
+  const netAmountCents = amount - platformFee
+  const notifications = await Promise.allSettled([
+    sendPayoutPaidEmail(submission.application.creator.email, {
+      campaignTitle: submission.application.campaign.title,
+      netAmountCents,
+      platformFeeCents: platformFee,
+    }),
+    sendPayoutPaidPush(submission.creatorId, { netAmount: netAmountCents }),
+  ])
+
+  for (const result of notifications) {
+    if (result.status === 'rejected') {
+      console.error('[releasePayout] payout notification failed', {
+        submissionId,
+        reason: result.reason,
+      })
+    }
+  }
 }
