@@ -1,4 +1,5 @@
 import { auth } from '@clerk/nextjs/server'
+import type { Application } from '@prisma/client'
 import { z } from 'zod'
 import { requireTesterApiUser } from '@/lib/admin-api-guard'
 import prisma from '@/lib/prisma'
@@ -13,6 +14,60 @@ import {
 const updateSchema = z.object({
   status: z.enum(['ACCEPTED', 'REJECTED']),
 })
+
+/**
+ * The only creator columns this handler reads: `stripeAccountId` to gate and
+ * validate the payout destination, `email` to notify, `id` to push to.
+ *
+ * It is an allow-list rather than `creator: true` on purpose. The full User row
+ * carries `clerkId`, `bio` and the raw `stripeAccountId` — the same fields the
+ * `/api/v1` contract deliberately never exposes — and a brand reviewing an
+ * application must not receive any of them.
+ */
+const creatorReviewSelect = { id: true, email: true, stripeAccountId: true } as const
+
+/**
+ * Projects a row loaded with relations back down to the plain Application
+ * columns, so every branch of this handler answers with the same shape the
+ * update path returns. The `Application` return type is deliberate: adding a
+ * column to the model breaks the build here rather than silently drifting.
+ */
+function toApplicationRow(application: Application): Application {
+  return {
+    id: application.id,
+    campaignId: application.campaignId,
+    creatorId: application.creatorId,
+    pitch: application.pitch,
+    proposedRate: application.proposedRate,
+    status: application.status,
+    paymentIntentId: application.paymentIntentId,
+    createdAt: application.createdAt,
+    updatedAt: application.updatedAt,
+  }
+}
+
+/**
+ * Runs one notification and swallows its failure, the same log-and-swallow the
+ * payment-intent cancel below uses.
+ *
+ * Notifications fire *after* the review transaction has committed, so the
+ * decision is already durable by the time they run. Letting a Resend or Expo
+ * outage throw would reach the outer catch and answer 500 for a review that in
+ * fact succeeded: the brand UI (ApplicationActions.tsx) shows "Failed to accept
+ * application", the brand retries, and the retry now finds `status !== PENDING`
+ * and gets a 409 — on REJECT, after the payment intent has already been
+ * cancelled. A creator missing an email is recoverable; that is not.
+ *
+ * Each notification is wrapped separately so a dead email provider does not
+ * also suppress the push, and vice versa.
+ */
+async function notifyQuietly(label: string, send: () => Promise<unknown>): Promise<void> {
+  try {
+    await send()
+  } catch (err) {
+    console.warn(`[PATCH /api/applications/[id]] unable to send ${label}`, err)
+  }
+}
 
 export async function PATCH(
   req: Request,
@@ -50,21 +105,28 @@ export async function PATCH(
 
     const application = await prisma.application.findUnique({
       where: { id },
-      include: { campaign: true, creator: true },
+      include: { campaign: true, creator: { select: creatorReviewSelect } },
     })
     if (!application) return Response.json({ error: 'Application not found' }, { status: 404 })
     if (application.campaign.brandId !== user.id) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const body = await req.json()
+    // `.catch(() => null)` rather than a bare `await req.json()`: a malformed or
+    // empty body throws, and an unguarded throw here escapes to the outer catch
+    // and answers 500 — for exactly the bad input the next three lines are
+    // written to answer 400. Handing `null` to safeParse lets the schema below
+    // produce that 400, the same way /api/v1/applications does.
+    const body = await req.json().catch(() => null)
     const parsed = updateSchema.safeParse(body)
     if (!parsed.success) {
       return Response.json({ error: parsed.error.issues[0].message }, { status: 400 })
     }
 
     if (application.status === parsed.data.status) {
-      return Response.json({ success: true, data: application })
+      // A no-op review still answers 200, but with the same flat Application row
+      // the update path returns (route.ts:155) — never the joined relations.
+      return Response.json({ success: true, data: toApplicationRow(application) })
     }
 
     if (application.status !== 'PENDING') {
@@ -144,12 +206,21 @@ export async function PATCH(
       return nextApplication
     })
 
+    const campaignTitle = application.campaign.title
     if (parsed.data.status === 'ACCEPTED') {
-      await sendApplicationAcceptedEmail(application.creator.email, { campaignTitle: application.campaign.title })
-      await sendApplicationAcceptedPush(application.creator.id, { campaignTitle: application.campaign.title })
+      await notifyQuietly('acceptance email', () =>
+        sendApplicationAcceptedEmail(application.creator.email, { campaignTitle }),
+      )
+      await notifyQuietly('acceptance push', () =>
+        sendApplicationAcceptedPush(application.creator.id, { campaignTitle }),
+      )
     } else {
-      await sendApplicationRejectedEmail(application.creator.email, { campaignTitle: application.campaign.title })
-      await sendApplicationRejectedPush(application.creator.id, { campaignTitle: application.campaign.title })
+      await notifyQuietly('rejection email', () =>
+        sendApplicationRejectedEmail(application.creator.email, { campaignTitle }),
+      )
+      await notifyQuietly('rejection push', () =>
+        sendApplicationRejectedPush(application.creator.id, { campaignTitle }),
+      )
     }
 
     return Response.json({ success: true, data: updated })

@@ -89,18 +89,168 @@ function buildReferralLink(referralCode: string, req: Request) {
   }
 }
 
+/**
+ * What this endpoint may say about the person who referred a signup.
+ *
+ * It used to be `{ id, name, referralCode }`, and `waitlistResponseData` echoed
+ * that object to whoever signed up quoting the code. Referral codes are public
+ * by design -- creators post their link -- so anyone could be "referred by"
+ * anyone, and the response handed the referrer's internal row id together with
+ * their referral credential to a stranger. That pair is exactly the claim
+ * secret minted below, so the receiver could forge a claim over the referrer's
+ * row, overwrite it, and read the referrer's OWN referrer out of the answer to
+ * mint the next forgery: it chained.
+ *
+ * A third party's row id and referral code have no business leaving the server.
+ * The page renders one thing about the referrer -- "Joined through X's referral
+ * code" -- so the name is the only field that survives.
+ */
+const REFERRED_BY_SELECT = { select: { name: true } } as const
+
+/** Every read of a waitlist row this endpoint answers with goes through here. */
+const WAITLIST_ROW_INCLUDE = {
+  referredBy: REFERRED_BY_SELECT,
+  _count: {
+    select: { referrals: true },
+  },
+} as const
+
 async function findWaitlistSubmissionByEmail(email: string) {
   return prisma.waitlistSubmission.findUnique({
     where: { email },
-    include: {
-      referredBy: {
-        select: { id: true, name: true, referralCode: true },
-      },
-      _count: {
-        select: { referrals: true },
-      },
-    },
+    include: WAITLIST_ROW_INCLUDE,
   })
+}
+
+/**
+ * How a caller proves, with no session to prove it for them, that a waitlist
+ * row is theirs.
+ *
+ * The funnel is two requests: step='email' creates the row, step='profile'
+ * completes it. The second one therefore has to be allowed to write to a row
+ * that already exists -- and nothing in it identifies the sender, because the
+ * endpoint is public and an email address is something anyone can type. That
+ * is what let a stranger finish (and read the referral credential of) any row
+ * whose owner left after step 1.
+ *
+ * So creating a row now hands the browser a claim: that row's id joined to its
+ * referral code, in a cookie scoped to this endpoint. Neither half is enough on
+ * its own -- the referral code is public by design (creators post their link),
+ * and the id is a cuid whose random tail is short -- but the pair is only ever
+ * disclosed together to the one caller that created the row.
+ *
+ * That last sentence is the whole security argument, so every response in this
+ * file was walked against it. An id/referralCode pair leaves the server in
+ * exactly two places, and both are the row the caller just proved is theirs:
+ * `createdSubmissionResponse` (the row this request created, alongside the
+ * Set-Cookie that mints the claim for it) and the update branch of step
+ * 'profile' (reached only past `hasWaitlistClaim`). Everything else --
+ * an address already on the list, a finished profile, a failed claim check, a
+ * lost creation race -- answers with `existingSubmissionResponse`, which is
+ * three booleans. The one path that used to break the rule was the referrer
+ * object echoed by `waitlistResponseData`; see REFERRED_BY_SELECT above.
+ *
+ * It is a bearer token, not an identity: whoever holds the cookie holds the
+ * row. That is the same trust level as the confirmation email already carries,
+ * and it is the strongest proof available until creators have accounts.
+ */
+const WAITLIST_CLAIM_COOKIE = 'waitlist_claim'
+
+/**
+ * 30 days, not 30 minutes.
+ *
+ * Half an hour only covers people who finish step 2 in one sitting; anyone who
+ * submitted their address and came back that evening lost the claim, and with
+ * it any way to finish their own signup -- the profile step then answers them
+ * exactly as it answers a stranger, so the row is stranded and the signup is
+ * gone for good. That is a permanent loss traded against a narrow window.
+ *
+ * The cookie is HttpOnly (script on the page cannot read it), SameSite=Lax (it
+ * does not ride cross-site requests) and Path=/api/waitlist (nothing else on
+ * the origin ever sees it), and it is a write capability over one unfinished
+ * waitlist row -- not a session. The realistic risk of the long lifetime is a
+ * shared browser whose next user finishes someone's abandoned signup; the
+ * realistic cost of the short one is losing real signups every day. 30 days
+ * takes the trade the funnel needs.
+ */
+const WAITLIST_CLAIM_MAX_AGE_SECONDS = 30 * 24 * 60 * 60
+
+function waitlistClaimValue(submission: { id: string; referralCode: string }) {
+  return `${submission.id}.${submission.referralCode}`
+}
+
+function decodeCookieValue(raw: string) {
+  // Cookie headers are attacker-controlled: a stray '%' is a malformed escape
+  // that throws, and a throw here would be a 500 on an otherwise fine request.
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return raw
+  }
+}
+
+function readWaitlistClaim(req: Request) {
+  const header = req.headers.get('cookie')
+  if (!header) return null
+
+  for (const pair of header.split(';')) {
+    const separator = pair.indexOf('=')
+    if (separator === -1) continue
+    if (pair.slice(0, separator).trim() !== WAITLIST_CLAIM_COOKIE) continue
+
+    return decodeCookieValue(pair.slice(separator + 1).trim())
+  }
+
+  return null
+}
+
+/**
+ * Constant time in the length-matched case, so the claim cannot be recovered a
+ * character at a time by timing repeated guesses against the same row.
+ */
+function secretsMatch(a: string, b: string) {
+  if (a.length !== b.length) return false
+
+  let difference = 0
+  for (let index = 0; index < a.length; index += 1) {
+    difference |= a.charCodeAt(index) ^ b.charCodeAt(index)
+  }
+
+  return difference === 0
+}
+
+/** True only for a caller holding the claim minted for THIS row. */
+function hasWaitlistClaim(req: Request, submission: { id: string; referralCode: string }) {
+  const claim = readWaitlistClaim(req)
+  return claim !== null && secretsMatch(claim, waitlistClaimValue(submission))
+}
+
+function isSecureRequest(req: Request) {
+  if (req.headers.get('x-forwarded-proto') === 'https') return true
+
+  try {
+    return new URL(req.url).protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function waitlistClaimCookie(submission: { id: string; referralCode: string }, req: Request) {
+  const attributes = [
+    `${WAITLIST_CLAIM_COOKIE}=${encodeURIComponent(waitlistClaimValue(submission))}`,
+    // Scoped to this endpoint: nothing else needs it, so nothing else gets it.
+    'Path=/api/waitlist',
+    // The page never reads the claim -- it rides along with the fetch -- so
+    // script that gets injected into the page must not be able to lift it.
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${WAITLIST_CLAIM_MAX_AGE_SECONDS}`,
+    // Browsers drop a Secure cookie on plain http, which would silently break
+    // the funnel on local dev; every deployed origin is https and does get it.
+    ...(isSecureRequest(req) ? ['Secure'] : []),
+  ]
+
+  return attributes.join('; ')
 }
 
 /**
@@ -128,6 +278,27 @@ function existingSubmissionResponse(submission: { profileCompletedAt: Date | nul
   })
 }
 
+/**
+ * The full row, plus the claim that lets this caller -- and only this caller --
+ * come back and finish it. Only ever returned for a row we just created, or to
+ * a caller that presented the claim for one.
+ */
+function createdSubmissionResponse(
+  created: WaitlistSubmissionWithMeta,
+  req: Request,
+  profileComplete: boolean,
+) {
+  return Response.json(
+    {
+      success: true,
+      existing: false,
+      profileComplete,
+      data: waitlistResponseData(created, req),
+    },
+    { headers: { 'Set-Cookie': waitlistClaimCookie(created, req) } },
+  )
+}
+
 function waitlistResponseData(submission: WaitlistSubmissionWithMeta, req: Request) {
   return {
     id: submission.id,
@@ -142,27 +313,46 @@ function waitlistResponseData(submission: WaitlistSubmissionWithMeta, req: Reque
     referralLink: buildReferralLink(submission.referralCode, req),
     status: submission.status,
     referralCount: submission._count.referrals,
-    referredBy: submission.referredBy,
+    // Re-projected field by field rather than spread: the query select above is
+    // the first guard, and this is the one that holds even if a future include
+    // widens. A third party's row id and referral code never leave here.
+    referredBy: submission.referredBy ? { name: submission.referredBy.name } : null,
   }
 }
 
-async function resolveReferrer(referralCode: string | undefined, email: string) {
+/**
+ * The referrer to attribute this signup to, or undefined for none.
+ *
+ * An unknown code used to be a 400 saying so, which made this a free existence
+ * oracle for arbitrary codes: post any string, learn from the status whether
+ * someone holds it. Codes are 50 bits of CSPRNG so the space is not walkable,
+ * but the oracle also confirmed codes harvested elsewhere, and it cost a
+ * would-be creator their signup over a typo. An unknown code is now simply not
+ * a referral: the signup proceeds exactly as an unreferred one, so from the
+ * caller's side an unknown code and a valid code that referred nobody are the
+ * same request with the same status and the same body shape.
+ *
+ * What a caller can still observe is whether THEIR OWN completed signup came
+ * back with a referrer name attached -- the page renders it -- and that is the
+ * floor: the product exists to tell people who referred them. Reaching it costs
+ * an unused email address and a real row per probe, under the IP rate limit,
+ * versus the previous unlimited free probing of arbitrary codes.
+ *
+ * There is deliberately no self-referral check. Both callers run only after
+ * `findWaitlistSubmissionByEmail` returned null for this address, so no row
+ * with this email exists and no referrer found by code can be its owner; the
+ * check that used to sit here could not fire. A creator who already has a row
+ * cannot reach this code at all, referral code in hand or not.
+ */
+async function resolveReferrer(referralCode: string | undefined) {
   if (!referralCode) return undefined
 
   const referrer = await prisma.waitlistSubmission.findUnique({
     where: { referralCode },
-    select: { id: true, email: true },
+    select: { id: true },
   })
 
-  if (!referrer) {
-    throw new Error('Referral code not found. Double-check the code and try again.')
-  }
-
-  if (referrer.email === email) {
-    throw new Error('You cannot use your own referral code.')
-  }
-
-  return referrer.id
+  return referrer?.id
 }
 
 async function notifyReferralMilestone(referrerId: string | undefined) {
@@ -244,12 +434,7 @@ export async function POST(req: Request) {
       const existing = await findWaitlistSubmissionByEmail(email)
       if (existing) return existingSubmissionResponse(existing)
 
-      let referredById: string | undefined
-      try {
-        referredById = await resolveReferrer(referralCode, email)
-      } catch (err) {
-        return Response.json({ error: err instanceof Error ? err.message : 'Invalid referral code.' }, { status: 400 })
-      }
+      const referredById = await resolveReferrer(referralCode)
 
       for (let attempt = 0; attempt < 5; attempt += 1) {
         try {
@@ -259,14 +444,7 @@ export async function POST(req: Request) {
               referralCode: await generateReferralCode(),
               referredById,
             },
-            include: {
-              referredBy: {
-                select: { id: true, name: true, referralCode: true },
-              },
-              _count: {
-                select: { referrals: true },
-              },
-            },
+            include: WAITLIST_ROW_INCLUDE,
           })
 
           await sendWaitlistConfirmationEmail(created.email, {
@@ -275,12 +453,7 @@ export async function POST(req: Request) {
           })
           await notifyReferralMilestone(referredById)
 
-          return Response.json({
-            success: true,
-            existing: false,
-            profileComplete: false,
-            data: waitlistResponseData(created, req),
-          })
+          return createdSubmissionResponse(created, req, false)
         } catch (err) {
           if (!isUniqueConstraintError(err)) throw err
 
@@ -309,28 +482,31 @@ export async function POST(req: Request) {
 
     if (existing) {
       // A completed profile is only editable by someone who can prove they own
-      // the address, and this endpoint has no such proof -- so a second write
-      // is refused rather than allowed to overwrite a stranger's name, handle
-      // and niche. The response is identical to the success case on purpose:
-      // it must not become an oracle for which addresses are registered.
+      // the address, and no proof this endpoint can take is strong enough to
+      // justify rewriting a finished row -- so a second write is refused rather
+      // than allowed to overwrite a stranger's name, handle and niche. The
+      // response is identical to the success case on purpose: it must not
+      // become an oracle for which addresses are registered.
       if (existing.profileCompletedAt) return existingSubmissionResponse(existing)
+
+      // An unfinished row is not unowned. Every address that submitted step 1
+      // and stopped has a row sitting here with its referral credential in it,
+      // and the address is the only thing the caller had to know to reach it.
+      // So the write is allowed only for the caller that created the row,
+      // proven by the claim cookie minted at creation. Everyone else gets the
+      // same body the email step already returns for this address -- failing
+      // the claim check discloses nothing that typing the address did not.
+      if (!hasWaitlistClaim(req, existing)) return existingSubmissionResponse(existing)
 
       const updated = await prisma.waitlistSubmission.update({
         where: { id: existing.id },
         data: profileData,
-        include: {
-          referredBy: {
-            select: { id: true, name: true, referralCode: true },
-          },
-          _count: {
-            select: { referrals: true },
-          },
-        },
+        include: WAITLIST_ROW_INCLUDE,
       })
 
-      // The caller just completed this row in the same funnel, so returning its
-      // referral link is theirs to see -- but only because we got here via the
-      // not-yet-completed branch above.
+      // The caller presented the claim this row was created with, so the row --
+      // and the referral link this echoes -- is demonstrably theirs. Nobody
+      // reaches this line without it.
       return Response.json({
         success: true,
         existing: true,
@@ -339,12 +515,7 @@ export async function POST(req: Request) {
       })
     }
 
-    let referredById: string | undefined
-    try {
-      referredById = await resolveReferrer(referralCode, email)
-    } catch (err) {
-      return Response.json({ error: err instanceof Error ? err.message : 'Invalid referral code.' }, { status: 400 })
-    }
+    const referredById = await resolveReferrer(referralCode)
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       try {
@@ -355,14 +526,7 @@ export async function POST(req: Request) {
             referredById,
             ...profileData,
           },
-          include: {
-            referredBy: {
-              select: { id: true, name: true, referralCode: true },
-            },
-            _count: {
-              select: { referrals: true },
-            },
-          },
+          include: WAITLIST_ROW_INCLUDE,
         })
 
         await sendWaitlistConfirmationEmail(created.email, {
@@ -371,23 +535,18 @@ export async function POST(req: Request) {
         })
         await notifyReferralMilestone(referredById)
 
-        return Response.json({
-          success: true,
-          existing: false,
-          profileComplete: true,
-          data: waitlistResponseData(created, req),
-        })
+        return createdSubmissionResponse(created, req, true)
       } catch (err) {
         if (!isUniqueConstraintError(err)) throw err
 
         const duplicate = await findWaitlistSubmissionByEmail(email)
         if (duplicate) {
-          return Response.json({
-            success: true,
-            existing: true,
-            profileComplete: Boolean(duplicate.profileCompletedAt),
-            data: waitlistResponseData(duplicate, req),
-          })
+          // The address was taken between the lookup above and this insert, so
+          // the row belongs to whoever won that race -- not necessarily to this
+          // caller, who holds no claim for it. Echoing it here would hand out a
+          // stranger's referral credential by the same route the guard above
+          // closes, so answer exactly as the existing-address path does.
+          return existingSubmissionResponse(duplicate)
         }
       }
     }

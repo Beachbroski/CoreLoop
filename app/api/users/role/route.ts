@@ -1,4 +1,5 @@
 import { currentUser } from '@clerk/nextjs/server'
+import type { Role } from '@prisma/client'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
 import { isTesterEmailAllowed } from '@/lib/admin-config'
@@ -8,6 +9,75 @@ import { checkRateLimit, getRequestIp, isTrustedOrigin } from '@/lib/request-sec
 const schema = z.object({
   role: z.enum(['BRAND', 'CREATOR']),
 })
+
+/**
+ * The only User columns this endpoint returns. Mirrors `meResponseSchema` in
+ * packages/shared/src/user.ts so the legacy route and the /api/v1 contract
+ * agree on one rule: `clerkId` and `stripeAccountId` never leave the server.
+ */
+const PROFILE_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  avatarUrl: true,
+  bio: true,
+  role: true,
+  stripeOnboarded: true,
+} as const
+
+type RoleProfile = {
+  id: string
+  name: string | null
+  email: string
+  avatarUrl: string | null
+  bio: string | null
+  role: Role
+  stripeOnboarded: boolean
+}
+
+type ClerkUser = NonNullable<Awaited<ReturnType<typeof currentUser>>>
+type ClerkEmailAddress = ClerkUser['emailAddresses'][number]
+
+/** Clerk considers an address usable only once its verification reaches this. */
+const VERIFIED_STATUS = 'verified'
+
+const UNVERIFIED_EMAIL_MESSAGE =
+  'Verify your email address before choosing a role. An unverified address cannot be linked to an existing account.'
+
+/**
+ * Clerk's `emailAddresses` array is unordered and contains unverified
+ * addresses too, so index 0 is not "the account's email". Resolve the address
+ * Clerk itself marks primary, and only fall back to the first entry when the
+ * account has no primary — the same resolution lib/current-app-user.ts uses.
+ */
+function resolvePrimaryEmailAddress(clerkUser: ClerkUser): ClerkEmailAddress | null {
+  return (
+    clerkUser.emailAddresses.find(email => email.id === clerkUser.primaryEmailAddressId) ??
+    clerkUser.emailAddresses[0] ??
+    null
+  )
+}
+
+/**
+ * An unverified address proves nothing about who owns it: anyone can attach
+ * someone else's address to their own Clerk account. Attaching one must never
+ * be enough to claim an existing User row.
+ */
+function isVerified(emailAddress: ClerkEmailAddress | null): boolean {
+  return emailAddress?.verification?.status === VERIFIED_STATUS
+}
+
+function displayName(clerkUser: ClerkUser): string | null {
+  return `${clerkUser.firstName ?? ''} ${clerkUser.lastName ?? ''}`.trim() || null
+}
+
+function roleResponse(user: RoleProfile) {
+  return Response.json({
+    success: true,
+    data: user,
+    redirectTo: user.role === 'BRAND' ? '/brand' : '/creator',
+  })
+}
 
 export async function PATCH(req: Request) {
   try {
@@ -41,6 +111,7 @@ export async function PATCH(req: Request) {
 
     const existingUser = await prisma.user.findUnique({
       where: { clerkId: userId },
+      select: { id: true, role: true },
     })
 
     if (existingUser) {
@@ -66,60 +137,59 @@ export async function PATCH(req: Request) {
       const user = await prisma.user.update({
         where: { id: existingUser.id },
         data: { role: parsed.data.role },
+        select: PROFILE_SELECT,
       })
 
-      return Response.json({
-        success: true,
-        data: user,
-        redirectTo: user.role === 'BRAND' ? '/brand' : '/creator',
-      })
+      return roleResponse(user)
     }
 
     const clerkUser = await currentUser()
     if (!clerkUser) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const primaryEmail = clerkUser.emailAddresses[0]?.emailAddress
+    const primaryEmailAddress = resolvePrimaryEmailAddress(clerkUser)
+    const primaryEmail = primaryEmailAddress?.emailAddress
     if (!primaryEmail) {
       return Response.json({ error: 'Unable to determine account email' }, { status: 400 })
     }
 
     const matchedByEmail = await prisma.user.findUnique({
       where: { email: primaryEmail },
+      select: { id: true },
     })
 
     if (matchedByEmail) {
+      // Rebinding hands this Clerk identity an existing account, including its
+      // role. Only a verified address may do that.
+      if (!isVerified(primaryEmailAddress)) {
+        return Response.json({ error: UNVERIFIED_EMAIL_MESSAGE }, { status: 403 })
+      }
+
       const user = await prisma.user.update({
         where: { id: matchedByEmail.id },
         data: {
           clerkId: userId,
-          name: `${clerkUser.firstName ?? ''} ${clerkUser.lastName ?? ''}`.trim() || null,
+          name: displayName(clerkUser),
           avatarUrl: clerkUser.imageUrl,
           role: parsed.data.role,
         },
+        select: PROFILE_SELECT,
       })
 
-      return Response.json({
-        success: true,
-        data: user,
-        redirectTo: user.role === 'BRAND' ? '/brand' : '/creator',
-      })
+      return roleResponse(user)
     }
 
     const user = await prisma.user.create({
       data: {
         clerkId: userId,
         email: primaryEmail,
-        name: `${clerkUser.firstName ?? ''} ${clerkUser.lastName ?? ''}`.trim() || null,
+        name: displayName(clerkUser),
         avatarUrl: clerkUser.imageUrl,
         role: parsed.data.role,
       },
+      select: PROFILE_SELECT,
     })
 
-    return Response.json({
-      success: true,
-      data: user,
-      redirectTo: user.role === 'BRAND' ? '/brand' : '/creator',
-    })
+    return roleResponse(user)
   } catch (err) {
     console.error('[PATCH /api/users/role]', err)
     return Response.json({ error: 'Internal server error' }, { status: 500 })
