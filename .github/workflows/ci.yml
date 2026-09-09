@@ -71,6 +71,16 @@ jobs:
           fi
           echo "Schema/migration pairing OK (schema touched: $SCHEMA_TOUCHED, migrations added: $MIGRATION_ADDED)."
 
+      # ⚠️ Never run `npm audit fix` on this repo, with or without --force.
+      # Every fix npm's resolver proposes for the remaining advisories is a
+      # DOWNGRADE that breaks the project: the Metro/Expo chain resolves by
+      # taking expo to 40.0.1 (an SDK from 2020 — `npm audit fix` errors out on
+      # the peer conflict rather than doing it, but --force or
+      # --legacy-peer-deps would go through), and the Prisma CLI chain resolves
+      # by taking prisma 7 back to 6.19.3, which breaks the driver-adapter setup
+      # in prisma.config.ts. Fix advisories with a targeted `overrides` entry and
+      # a full gate run instead — see the `effect` override in package.json.
+      #
       # Hard gate at critical only. There are 24 high advisories open today
       # (mostly transitive), so gating on high would fail every run from day one
       # and train everyone to ignore CI. Criticals are zero, so this holds that
