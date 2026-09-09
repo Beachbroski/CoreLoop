@@ -14,6 +14,21 @@ import type { Appearance } from '@clerk/types'
  * or a wrongly-nested block is a compile error.
  */
 export const baseClerkAppearance = {
+  // `layout` is read from the ClerkProvider-level appearance, not from a
+  // component's own `appearance` prop. The type allows it in both places
+  // (Layout sits on Theme, which is what SignUpTheme resolves to), so putting
+  // it on <SignUp> compiles cleanly and then silently does nothing — verified
+  // in a browser: the config reached the client and Clerk ignored it.
+  layout: {
+    socialButtonsPlacement: 'top',
+    socialButtonsVariant: 'blockButton',
+    // The legal footer on Clerk's own cards. This is the only place terms and
+    // privacy are presented at web sign-up — there is no separate consent step
+    // — and App Review expects a reachable privacy link (Guideline 5.1.1(i)).
+    privacyPageUrl: '/privacy',
+    termsPageUrl: '/terms',
+    helpPageUrl: '/support',
+  },
   variables: {
     colorPrimary: '#0071e3',
     colorBackground: '#ffffff',
@@ -34,16 +49,6 @@ export const baseClerkAppearance = {
 
 export const authClerkAppearance = {
   ...baseClerkAppearance,
-  layout: {
-    socialButtonsPlacement: 'top',
-    socialButtonsVariant: 'blockButton',
-    // Clerk renders these as the legal footer on its own sign-in/sign-up cards.
-    // They are the only place terms and privacy are presented at web sign-up,
-    // and App Review expects a reachable privacy link (Guideline 5.1.1(i)).
-    privacyPageUrl: '/privacy',
-    termsPageUrl: '/terms',
-    helpPageUrl: '/support',
-  },
   elements: {
     ...baseClerkAppearance.elements,
     rootBox: 'w-full',
