@@ -11,6 +11,16 @@ const isPublicRoute = createRouteMatcher([
   '/privacy(.*)',
   '/terms(.*)',
   '/support(.*)',
+  // Stripe Connect return/refresh landings for the iOS app. Stripe reopens
+  // these in an in-app browser that carries no Clerk session, so protecting
+  // them would end payout setup on a sign-in wall the creator cannot pass.
+  // They hold no account data — each one only bounces to creatordocks://.
+  // The `(.*)` suffix matters as much as the entry: createRouteMatcher tests
+  // the pathname, so a bare '/stripe/return' would not match '/stripe/return/'
+  // — one trailing slash on Stripe's return trip and payout onboarding ends on
+  // a sign-in wall the in-app browser has no session to pass.
+  '/stripe/return(.*)',
+  '/stripe/refresh(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/sso-callback(.*)',

@@ -2,7 +2,11 @@ import prisma from '@/lib/prisma'
 import { withMobileApi } from '@/lib/mobile-api-guard'
 import { stripe } from '@/lib/stripe'
 import { getSiteUrl } from '@/lib/site-url'
-import { stripeOnboardResponseSchema } from '@creatordocks/shared'
+import {
+  STRIPE_REFRESH_PATH,
+  STRIPE_RETURN_PATH,
+  stripeOnboardResponseSchema,
+} from '@creatordocks/shared'
 
 export const POST = withMobileApi(
   { rateLimit: { limit: 5, windowMs: 60_000 }, role: 'CREATOR' },
@@ -27,14 +31,18 @@ export const POST = withMobileApi(
       await prisma.user.update({ where: { id: user.id }, data: { stripeAccountId } })
     }
 
-    // Reuses the web return/refresh destination for now — there's no app
-    // URL scheme to deep-link into yet. Revisit once the iOS app (W3)
-    // registers creatordocks:// and can own dedicated return/refresh pages
-    // (see docs/platform-split/04-payments-payouts.md, W4-1).
+    // W4-1. These used to point at `/creator/settings`, a Clerk-protected page:
+    // the creator finished Stripe inside the app's in-app browser, landed on a
+    // web sign-in wall, and never got back to the app. Both paths now go to
+    // public pages that immediately redirect to `creatordocks://`, which is
+    // what closes the browser sheet.
+    //
+    // Stripe requires https here, so the app cannot be named directly — the
+    // bounce page is the only way to get from a Connect link back into the app.
     const accountLink = await stripe.accountLinks.create({
       account: stripeAccountId,
-      refresh_url: `${siteUrl}/creator/settings`,
-      return_url: `${siteUrl}/creator/settings?onboarded=true`,
+      refresh_url: `${siteUrl}${STRIPE_REFRESH_PATH}`,
+      return_url: `${siteUrl}${STRIPE_RETURN_PATH}`,
       type: 'account_onboarding',
     })
 

@@ -67,6 +67,24 @@ describe('POST /api/v1/stripe/onboard', () => {
     )
   })
 
+  it('sends Stripe back to the public app-handoff pages, not a protected one', async () => {
+    // The W4-1 regression. These used to be `/creator/settings`, which is
+    // Clerk-protected: the creator finished Stripe inside the app's in-app
+    // browser, hit a web sign-in wall, and never got back to the app. Anything
+    // that is not a public bounce page silently breaks payout setup on iOS.
+    findUniqueMock.mockResolvedValue({ stripeAccountId: 'acct_existing', email: 'creator@example.com' })
+    accountLinksCreateMock.mockResolvedValue({ url: 'https://connect.stripe.com/setup/acct_existing' })
+
+    await POST(ctx() as never)
+
+    expect(accountLinksCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        return_url: 'https://creatordocks.com/stripe/return',
+        refresh_url: 'https://creatordocks.com/stripe/refresh',
+      }),
+    )
+  })
+
   it('returns 500 when the site URL is not configured', async () => {
     getSiteUrlMock.mockReturnValue(null)
 

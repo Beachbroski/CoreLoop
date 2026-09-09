@@ -21,7 +21,7 @@ import { formatCents } from '@/lib/format-money';
 import { usePayouts } from '@/lib/queries/use-payouts';
 import { useStripeOnboard } from '@/lib/queries/use-stripe-onboard';
 import { useStripeStatus } from '@/lib/queries/use-stripe-status';
-import type { Payout } from '@creatordocks/shared';
+import { STRIPE_RETURN_DEEP_LINK, type Payout } from '@creatordocks/shared';
 
 /**
  * Non-destructive refetch failure notice. React Query keeps the previously
@@ -93,11 +93,22 @@ function OnboardingPrompt() {
       // the creator tapping a button that appears to do nothing.
       onSuccess: async ({ url }) => {
         try {
-          await WebBrowser.openBrowserAsync(url);
+          // `openAuthSessionAsync`, not `openBrowserAsync`. Stripe finishes by
+          // sending the creator to our `/stripe/return` page, which redirects
+          // to STRIPE_RETURN_DEEP_LINK; only an auth session watches for that
+          // scheme and closes itself. With a plain browser the sheet stays
+          // open on a redirect the creator has to dismiss by hand, which reads
+          // as the app having hung at the end of payout setup.
+          await WebBrowser.openAuthSessionAsync(url, STRIPE_RETURN_DEEP_LINK);
         } catch {
           setError("Couldn't open Stripe. Please try again.");
           return;
         }
+        // Deliberately unconditional — not gated on a `success` result.
+        // Dismissing the sheet early still leaves whatever Stripe already
+        // saved, and the refresh path comes back as a cancellation while
+        // having created a real account. The server decides, by retrieving the
+        // live account; this only asks it to look again.
         refetchStatus();
       },
       onError: () => setError("Couldn't start payout setup. Please try again."),
