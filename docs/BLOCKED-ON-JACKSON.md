@@ -81,6 +81,21 @@ Nine further gaps have no recorded reason for being absent (creator home stats, 
 
 **One code fix falls out of this:** `lib/clerk-appearance.ts:22` nests the legal-link config under `options`, a key Clerk ignores, so no terms or privacy link appears at web sign-up. One-word go-ahead and I will move it to `layout`.
 
+## One Clerk Dashboard setting (2026-09-08)
+
+**Your sign-in and sign-up pages show no terms or privacy link.** The application side is fixed and verified — Clerk holds the config:
+
+```
+appearance.layout = { privacyPageUrl: '/privacy', termsPageUrl: '/terms', helpPageUrl: '/support' }
+displayConfig     = { privacyPolicyUrl: '', termsUrl: '', helpUrl: null }   <- Dashboard, empty
+```
+
+clerk-js resolves these as `layout.privacyPageUrl || displayConfig.privacyPolicyUrl`, and it still renders nothing, so the remaining lever is the **Clerk Dashboard** — set the privacy policy and terms URLs there (`https://www.creatordocks.com/privacy` and `/terms`). Those fields are empty strings today.
+
+This matters beyond tidiness: those links are the only place terms and privacy are presented at web sign-up — there is no separate consent step — and App Review expects a reachable privacy link (Guideline 5.1.1(i)).
+
+While you are in there, two related observations from the same session: the sign-up card renders **three social providers and no email/password form**, which is also Dashboard-driven — worth confirming that is intended, since it means nobody can sign up with an email address. And `branded: true` confirms the dev instance; the production instance will differ.
+
 ## Tier 3 — legal and business
 
 | # | Type | Item | Unblocks | Est. |
