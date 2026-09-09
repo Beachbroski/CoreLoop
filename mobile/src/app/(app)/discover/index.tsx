@@ -25,6 +25,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { balanceColumns } from '@/lib/masonry';
+import { isPullRefreshing } from '@/lib/pull-refresh';
 import { deadlineSignal, tileAspectRatio } from '@/lib/campaign-signals';
 import { useCampaigns } from '@/lib/queries/use-campaigns';
 
@@ -233,7 +234,14 @@ export default function DiscoverScreen() {
           onScroll={handleScroll}
           scrollEventThrottle={200}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.accent} />
+            // Not `isRefetching` on its own — see `isPullRefreshing`. Paging in
+            // more campaigns would otherwise spin this control at the top of
+            // the screen.
+            <RefreshControl
+              refreshing={isPullRefreshing({ isRefetching, isFetchingNextPage })}
+              onRefresh={refetch}
+              tintColor={theme.accent}
+            />
           }>
           {showEmpty ? (
             <EmptyState

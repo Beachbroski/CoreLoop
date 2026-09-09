@@ -68,6 +68,9 @@ function queryState(state: QueryState): CampaignsQuery {
     isError: false,
     error: null,
     refetch: jest.fn(),
+    isFetchingNextPage: false,
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
     ...state,
   } as unknown as CampaignsQuery;
 }
