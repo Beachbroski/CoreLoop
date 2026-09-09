@@ -70,6 +70,17 @@ Full map in `docs/platform-split/pii-inventory.md` — 80 elements, 33 gaps. Dec
 
 Nine further gaps have no recorded reason for being absent (creator home stats, platform filter, notification preferences, edit-profile, avatar, Clerk account management) — each needs a build-it-or-descope-it call, and a descope needs a written reason to satisfy W8-1.
 
+## Legal drafts are ready for your attorney (2026-09-08)
+
+`docs/legal/` — privacy policy and terms drafts, plus a README that is the working checklist. They are **not** live; applying them is a deliberate step after review.
+
+- **49 `[PLACEHOLDER]` markers** are yours to fill — entity name, minimum age, governing law, retention periods, contact addresses. The README lists every one.
+- **40 `[ATTORNEY]` markers** are decisions your lawyer makes — legal bases, liability cap, indemnity, warranties, arbitration, international transfers.
+- **3 `[UNVERIFIED]` markers** are questions no code read can settle: whether photo EXIF (including location) survives the upload path, and whether Clerk revokes sessions on `deleteUser`. Each names the test that would answer it. The EXIF one matters — it decides an App Store Location label.
+- The drafts admit four things the product cannot currently do: no media deletion, no waitlist deletion, no data export, no retention schedule. Closing those is engineering work; until then the documents tell the truth about it.
+
+**One code fix falls out of this:** `lib/clerk-appearance.ts:22` nests the legal-link config under `options`, a key Clerk ignores, so no terms or privacy link appears at web sign-up. One-word go-ahead and I will move it to `layout`.
+
 ## Tier 3 — legal and business
 
 | # | Type | Item | Unblocks | Est. |

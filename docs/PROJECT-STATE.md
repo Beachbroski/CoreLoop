@@ -153,7 +153,7 @@ cd mobile && npx expo start --dev-client
 
 ## 10. State as of 2026-09-07
 
-**All gates green**: web 347 tests, shared 48, mobile 377, TypeScript clean in all three workspaces (the only lint output is 6 pre-existing `<img>` warnings on dashboard pages).
+**All gates green**: web 363 tests, shared 48, mobile 377, TypeScript clean in all three workspaces (the only lint output is 6 pre-existing `<img>` warnings on dashboard pages).
 
 **Everything is uncommitted, on branch `fix/ios-design-audit`.** Nothing was pushed. Review with `git status --short` and `git diff`.
 
@@ -186,6 +186,20 @@ Changed today (audit findings in brackets):
   **Verdict: hold at `full`** — the app is not in the App Store and cannot be built, so every downstream W8-12 condition is unmeasurable by construction.
 
   The verification pass earned its place. The largest gap in the document was absent from all 121 original rows: **there is no surface at all for a non-iPhone creator** — no Android package is configured anywhere, so sunsetting creator web strands them, and the W8-12 "≥60% of active creators signed into the app" gate cannot reach 100%. The sharpest downgrade: Earnings is gated entirely behind Stripe onboarding (`earnings/index.tsx:154-155`), so a creator whose Stripe requirements come due loses sight of their whole payout history, which web shows unconditionally. Also found: `User.email` never syncs when a creator changes their email at Clerk, and creators holding live ACCEPTED obligations at the moment of a flag flip have no handling.
+- **Dependency advisories (`DEPS-01/02/03`).** The two headline bumps were already landed by a parallel session: `next` 16.2.6 → **16.3.4** (closing 9 advisories including a proxy bypass) and `@clerk/clerk-expo` → **^2.20.0** (authorization bypass). What remained was the interesting part.
+
+  **`npm audit fix` is unsafe on this repo and must never be run.** Every remaining fix its resolver proposes is a downgrade that breaks the project: the Metro/Expo chain resolves by taking `expo` to **40.0.1** — an SDK from 2020 — and the Prisma chain by taking `prisma` 7 back to **6.19.3**, which breaks the driver-adapter setup in `prisma.config.ts`. The command currently errors out on the peer conflict rather than doing it, but `--force` or `--legacy-peer-deps` would go straight through. A warning now sits beside the audit step in `.github/workflows/ci.yml`.
+
+  What was fixed instead: a targeted `overrides` entry pinning `effect` to `^3.20.0` (installed 3.22.1). `effect` was the only **runtime**-exposed high advisory — GHSA-38f7-945m-qr2g, AsyncLocalStorage context lost or contaminated across fibers under concurrent load, reached through UploadThing, whose upload route resolves the uploading user in middleware. That single override cleared the whole UploadThing chain (`uploadthing`, `@uploadthing/react`, `@uploadthing/expo`, `@uploadthing/shared`, `effect`): **20 high → 15, 49 total → 44**. Change is +3 lines in `package.json`, −10 net in the lockfile; `npm ci --dry-run` still passes, which matters because CI's first ever run depends on it.
+
+  The 15 that remain are all dev/build tooling, not shipped to users: 9 in the Expo/Metro chain and 6 in the Prisma CLI chain. Leave them until Expo and Prisma move their own floors.
+- **Legal drafts written (`LEGAL-01/10/11`, `B9`):** `docs/legal/` — a privacy policy draft (335 lines), a terms-of-use draft (251), and a README (259) listing every placeholder and attorney decision. **Deliberately NOT applied to `app/privacy/page.tsx` or `app/terms/page.tsx`**: they carry 49 `[PLACEHOLDER]` and 40 `[ATTORNEY]` markers, and publishing unreviewed legal text with holes in it is worse than the stale page. The README has the mechanical steps to apply them once a lawyer signs off.
+
+  Both are written to be accurate to the code above all, which means stating plainly what users would not expect: payout records survive account deletion, uploaded media is never deleted, there is no data export path, and waitlist entries cannot be removed at all. The verification pass fixed **39 false statements** and added **26 disclosures** — and, healthily, **rejected 2 proposed corrections** with reasoning rather than accepting them.
+
+  **It found a live code bug while drafting.** `lib/clerk-appearance.ts:22` puts `privacyPageUrl`, `termsPageUrl` and `helpPageUrl` under an `options:` key. Clerk's `Appearance` type has no such key — they belong under `layout` (verified against the installed `@clerk/shared` types, `privacyPageUrl` at `index.d.ts:5689`). The block is silently ignored, so **no terms or privacy link renders on the web sign-in or sign-up screens**. That is both a consent gap and an App Store 5.1.1(i) risk. **Not fixed** — it is a code change and this task was documents; the fix is to rename that one key from `options` to `layout`.
+
+  Also newly disclosed: **Sign in with Apple was shipped by the parallel session and was in no legal document** — it is an identity provider, a recipient, a connection that survives deletion, and Hide My Email changes the email address that keys both row adoption and payout mail.
 - **`lib/env.ts`**: Zod-validated environment with production-required variables and a Stripe key-mode check. Nothing runs at import time, so builds without secrets still work. [SEC-07]
 - **Five runbooks** in `docs/runbooks/` — deploy, migrate, rollback, incident, secrets. Read deploy.md before the first push.
 - **README and mobile/README rewritten** — the old root README described a product that no longer exists and told you to run a command that would reset the production database.
@@ -194,8 +208,6 @@ Changed today (audit findings in brackets):
 
 | Item | Audit ids | Notes |
 |---|---|---|
-| Dependency bumps | DEPS-01/02 | `next@16.3.4` closes 9 advisories including a proxy bypass; `@clerk/clerk-expo` ≥ 2.20 closes an authorization bypass. Left undone because a bump wants a full verification pass behind it, including `next build`. |
-| Legal drafts | LEGAL-01/10/11 | Blocked on entity name, age floor and venue anyway (blockers #13/#14). |
 
 ## 11. Where to look
 
